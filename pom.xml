@@ -10,14 +10,14 @@
     <version>1.642</version>
     <relativePath/>
   </parent>
-  <groupId>com.ca.apm.swat.jenkins</groupId>
+
   <artifactId>ca-apm</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>CA-APM Plugin</name>
   <description>CA-APM Plugin for Jenkins</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/ca-apm+Plugin</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/CA+APM+Plugin</url>
   <licenses>
     <license>
       <name>MIT License</name>
@@ -37,6 +37,19 @@
     </pluginRepository>
   </pluginRepositories>
 
+<scm>
+  <connection>scm:git:ssh://github.com/jenkinsci/ca-apm-plugin.git</connection>
+  <developerConnection>scm:git:ssh://git@github.com/jenkinsci/ca-apm-plugin.git</developerConnection>
+  <url>https://github.com/jenkinsci/ca-apm-plugin</url>
+</scm>
+
+<developers>
+    <developer>
+      <id>srikns</id>
+      <name>Srikant Noorani</name>
+      <email>srikns@yahoo.com</email>
+    </developer>
+  </developers>
 
   <dependencies>
   	<dependency>
