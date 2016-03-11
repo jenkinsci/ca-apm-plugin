@@ -40,7 +40,6 @@
   <connection>scm:git:ssh://github.com/jenkinsci/ca-apm-plugin.git</connection>
   <developerConnection>scm:git:ssh://git@github.com/jenkinsci/ca-apm-plugin.git</developerConnection>
   <url>https://github.com/jenkinsci/ca-apm-plugin</url>
-  <tag>ca-apm-1.0</tag>
   </scm>
 
 <developers>
