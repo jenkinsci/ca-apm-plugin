@@ -11,7 +11,7 @@
   </parent>
 
   <artifactId>ca-apm</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>CA-APM Plugin</name>
@@ -37,9 +37,10 @@
   </pluginRepositories>
 
 <scm>
-  <connection>scm:git:ssh://github.com/jenkinsci/ca-apm-plugin.git</connection>
-  <developerConnection>scm:git:ssh://git@github.com/jenkinsci/ca-apm-plugin.git</developerConnection>
+  <connection>scm:git:https://github.com/jenkinsci/ca-apm-plugin.git</connection>
+  <developerConnection>scm:git:https://git@github.com/jenkinsci/ca-apm-plugin.git</developerConnection>
   <url>https://github.com/jenkinsci/ca-apm-plugin</url>
+    <tag>HEAD</tag>
   </scm>
 
 <developers>
