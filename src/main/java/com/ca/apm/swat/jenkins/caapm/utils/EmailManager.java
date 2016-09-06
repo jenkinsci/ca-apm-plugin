@@ -110,8 +110,8 @@ public class EmailManager {
 	            || username == null || password == null )
 	        return;
 	    
-	    LOGGER.log(Level.FINEST, "EmailManager::sendMail smtp host " + smtpHost + " projectName " + projectName + 
-	               " recepient " + recepient + " password " + password );
+	    LOGGER.log(Level.FINEST, "EmailManager::sendMail smtp host #" + smtpHost + "# smtpPort #" + smtpPort + 
+	               "# recepient #" + recepient + "# password #" + password + "#smtpProtocol#"+smtpProtocol +"#username#" + username +"#");
 
 		//Properties props = new Properties();
 		props.put("mail.smtp.host", smtpHost);

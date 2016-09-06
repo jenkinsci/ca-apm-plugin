@@ -239,6 +239,7 @@ public class CAAPMJenkinsPublisher extends Recorder {
             PrintStream logger = listener.getLogger();
 
 
+
             LOGGER.log(Level.FINEST, "**** Running Perform method in Junkins Publisher " );
 
 
@@ -288,6 +289,8 @@ public class CAAPMJenkinsPublisher extends Recorder {
 
                     emailManager.sendMail(buildNumberStr, "FAIL", failReason);
                     
+                    listener.getLogger().println("BUILD FAILURE REASON: " + failReason);
+                    
                 return true;
             }
 
@@ -308,6 +311,8 @@ public class CAAPMJenkinsPublisher extends Recorder {
                 emailManager.sendMail(buildNumberStr, "FAIL", failReason);
 
                 apmCustomAttributeManager.insertCustomAttributes(  build.number+"","Fail" );
+                
+                listener.getLogger().println("BUILD FAILURE REASON: " +failReason);
                 //  }
                 return true;
             } else  {//Now we know DP map has some metric we need at least one metric with more than MIN numb of DP
@@ -341,6 +346,8 @@ public class CAAPMJenkinsPublisher extends Recorder {
                     apmCustomAttributeManager.insertCustomAttributes(  build.number+"","Fail" );
                     //}
 
+                    listener.getLogger().println("BUILD FAILURE REASON: " +failReason);
+                    
                     return true;
                 }
 
@@ -359,10 +366,13 @@ public class CAAPMJenkinsPublisher extends Recorder {
                 
                 emailManager.sendMail(buildNumberStr, "FAIL", report.getFailPassReason());
                 
+                listener.getLogger().println("BUILD FAILURE REASON: " +report.getFailPassReason());
+                
                 return true;
             }
 
             build.setResult(  Result.SUCCESS);
+            
             
             emailManager.sendMail(build.number+"", "SUCCESS", "");
 
