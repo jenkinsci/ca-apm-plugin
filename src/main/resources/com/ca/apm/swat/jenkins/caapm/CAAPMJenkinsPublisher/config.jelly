@@ -43,7 +43,7 @@
                 <tr>
                     <td/>
                     <td>
-                        <f:number field="lastNDataPoints" min="10" max="50" />
+                        <f:number field="lastNDataPoints" min="10" max="50"/>
                     </td>
                     <td style="text-align: center;"> With Frequency (sec)</td>
                       <td>

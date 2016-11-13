@@ -47,6 +47,7 @@ public class APMCustomAttributeManager
     String authToken = null;
     String apm10AppName = null;
     int timeout = 5000;
+    boolean isPublishAttrib = true;
     
     private static final Logger LOGGER = Logger.getLogger(APMCustomAttributeManager.class.getName());
 
@@ -55,10 +56,18 @@ public class APMCustomAttributeManager
         this.port = port;
         this.authToken = authToken;
         this.apm10AppName = apm10AppName;
+        
+        if(apm10AppName == null || authToken == null || apm10AppName.isEmpty() || authToken.isEmpty() ) {
+        	isPublishAttrib = false;
+        }
     }
 
 
     public boolean insertCustomAttributes( String buildNumber, String buildStatus ) {
+    	
+    	if (!isPublishAttrib)
+    		return false;
+    	
 
         CloseableHttpResponse response = null;
 
@@ -97,8 +106,11 @@ public class APMCustomAttributeManager
 
             //          }
             //update all nodes
+            
+            int count = 0;
             for ( VertexInfo vi : vis ) {
-                
+            	
+            	
                 connectionURL = "https://" + momHost + ":" + port + "/apm/appmap/vertex/" + vi.getID();
                 
 
@@ -141,6 +153,11 @@ public class APMCustomAttributeManager
                     System.out.println(" Custom Attrib failed " + stringResponse );
 
                     //return false;
+                }
+                
+                if(count++ == 2) {
+                	Thread.sleep(200);
+                	count = 0;
                 }
             }
 

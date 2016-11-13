@@ -273,8 +273,10 @@ public class CAAPMProjectAction implements Action
             if ( report == null )
                 continue;
             
+            //this 30 sec is padding so that when x-build dashboard is clicked and goes to WV its 30 sec in future
+            // and if any TT is generated then we include that
             if (lastBuildTime == null ) {
-                lastBuildTime = build.getStartTimeInMillis() +"";
+                lastBuildTime = (build.getStartTimeInMillis() + 30000 )+"";
                 LOGGER.log(Level.INFO, "**** CAAPMPROJECTACTION::constructViewURL last build numb " + buildNumber );
             }
 

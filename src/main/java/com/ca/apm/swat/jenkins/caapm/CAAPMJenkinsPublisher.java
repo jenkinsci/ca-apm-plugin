@@ -760,7 +760,11 @@ public class CAAPMJenkinsPublisher extends Recorder {
                 momPort= formData.getString("momPort");
                 username= formData.getString("username");
                 password= formData.getString("password");
-                lastNDataPoints= formData.getInt("lastNDataPoints");
+                try {
+                	lastNDataPoints= formData.getInt("lastNDataPoints");
+                } catch ( Exception ex ) {
+                	lastNDataPoints = 10;
+                }
                 frequencyInSec= formData.getInt("frequencyInSec");
                 allDataPoints = formData.getBoolean("allDataPoints");
                 agentPath= formData.getString("agentPath");
