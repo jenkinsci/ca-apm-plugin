@@ -20,6 +20,7 @@ public class Constants {
 	public static final String batchMetricData = "/apm/appmap/private/metric/batch";
 	public static final String queryMetricDataAPI = "/apm/appmap/private/apmData/query";
 
+	
 	// Arguments
 	public static final String BEARER = "Bearer ";
 	public static final String AUTHORIZATION = "Authorization";
