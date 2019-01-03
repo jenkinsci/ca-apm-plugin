@@ -1,0 +1,8 @@
+BUILD PERFORMANCE $buildStatus  CA APM Jenkins Plugin for CIGNA has completed analyzing the performance of build $buildNumber.  
+
+Build $buildNumber was load tested by $loadTestName Jenkins plugin.  The load test used $loadFileName script with $numberofLoadRunnerUsers synthetic users, and lasted for $duration starting at $startTime.
+
+Build $buildNumber was deployed to host $hostName, in a $processName process, and monitored by $agentName.  
+
+Here is the detailed report
+$comparisonResults

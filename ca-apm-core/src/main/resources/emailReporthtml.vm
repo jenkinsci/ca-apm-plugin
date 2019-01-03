@@ -1,0 +1,99 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="stylesheet.css">
+<style type="text/css">
+body {
+  background: #e9e9e9;
+  color:  #000000 ;
+  font-family: 'Calibri', 'Roboto', sans-serif;
+  font-size: 100%;
+   counter-reset: Serial; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.th{
+	color:  #6d4c41 ;
+	font-weight: bold;
+}
+
+tr:nth-child(even) {
+	background-color: #f2f2f2
+}
+
+th {
+   font-weight: bold;
+}
+
+tr{
+	font-weight: normal;
+}
+
+
+.tableReport {
+  position: relative;
+  background: #ffffff;
+  color:  #7a7887 ;
+  max-width: 45%;
+  width: 80%;
+  border-top: 100% solid  #6d4c41 ;
+  border-style:solid;
+  box-shadow: 0 0 20% rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  border: groove;
+  text-align : left;
+}
+
+.table.tr{
+	font-weight: normal;
+}
+    </style>
+</head>
+<body>
+<h1>BUILD PERFORMANCE RESULT</h1>  
+
+<p>CA APM Jenkins Plugin has completed analyzing the performance of build $buildNumber.</p>
+
+<p>The build performance was compared against performance of build number $benchmarkbuildnumber.</p>  
+
+<p>Build $buildNumber was load tested by $loadTestName Jenkins plugin.  
+
+The load lasted for $duration .</p>
+
+Here is the detailed performance report:
+<div class="container">
+#foreach ($strategyResult in ${comparisonResults})
+
+  <h2><caption>$strategyResult.strategyName<caption></h2>
+  
+   #foreach ($agentKey in ${strategyResult.result.result.entrySet()})
+   <h3><caption>Agent Name = $agentKey.getKey()</caption></h3>
+   #if(($agentKey.getValue().slowEntries.size()) > 0)
+    <table class="tableReport" border="1">
+     <font color="red"><caption>Transactions performed above threshold limits</caption></font>
+     <tr><th>Metric Path</th><th>Benchmark Value</th><th>Current Value</th><th>Deviation Percent</th>
+     #foreach($slow in $agentKey.getValue().slowEntries)
+    	<tr><td>$slow.metricPath</td><td>$slow.expectedValue</td><td>$slow.actualValue</td><font color="red"><td>$slow.percentageChange</td></font></tr>
+     #end
+    </table>
+   #else
+      <h4>No metric performed beyond the threshold limits</h4>
+   #end 
+    
+    <br>
+    #if(($agentKey.getValue().successEntries.size()) > 0) 
+    <table class="tableReport" border="1">
+     <font color="green"><caption>Transactions performed under the threshold limits</caption></font>
+     <tr><th>Transaction Name</th><th>Benchmark Value</th><th>Current Value</th><th>Deviation Percent</th>
+     #foreach($success in $agentKey.getValue().successEntries)
+    	<tr><td>$success.metricPath</td><td>$success.expectedValue</td><td>$success.actualValue</td><td>$success.percentageChange</td></tr>
+     #end
+    </table>
+    #else
+      <h4>No metric performed within the threshold limits</h4>
+   #end 
+   #end
+#end
+</div>
+</body>
+</html>

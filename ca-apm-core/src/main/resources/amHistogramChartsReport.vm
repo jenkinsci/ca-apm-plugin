@@ -1,0 +1,32 @@
+<html>
+<head>
+        <script type="text/javascript" src="../amcharts/amcharts.js"></script>
+		<script type="text/javascript" src="../amcharts/serial.js"></script>
+		<script type="text/javascript" src="../amcharts/themes/light.js"></script>
+		<style>  
+          html, body {
+				  width: 70%;
+				  height: 50%;
+				  margin: auto;
+				  
+				}
+				
+				.center {
+				    margin: auto;
+				    width: 50%;
+				    border: 3px solid black;
+				    padding: 12px;
+				}
+       </style>
+        <script type="text/javascript">
+	        #foreach ($strategyChart in ${strategyCharts})      
+	          AmCharts.makeChart("$strategyChart.divId",$strategyChart.chartJSONObject);
+	        #end
+        </script>
+</head>
+<body>
+  	     #foreach ($strategyChart in ${strategyCharts})     
+	        <div id="$strategyChart.divId" style="width: 100%; height: 500px; background-color: #FFFFFF; " class="center" ></div>
+	     #end
+</body>
+</html>

@@ -1,0 +1,17 @@
+<html>
+<head>
+       <link rel="stylesheet" href="chartOutput/amcharts/submenustyle.css">
+</head>
+<body>
+     <h2 class="menu-bar">CA-APM Jenkins Build Performance Report</h2>
+     <div class="container">
+       <table class="table">
+          <caption>Index</caption>
+          <tr><th>Strategy Name</th><th>Link to Chart Output</th></tr>
+          #foreach ($strategy in ${strategies})
+            <tr><td>$strategy.get('name')</td><td><a href="$strategy.get('link')">$strategy.get('name')</a></td></tr>
+          #end
+        </table>  
+     </div>
+</body>
+</html>

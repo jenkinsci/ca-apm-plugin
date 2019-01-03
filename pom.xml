@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <!-- Baseline Jenkins version you use to build and test the plugin. Users must have this version or newer to run. -->
-    <version>1.642</version>
-    <relativePath />
+    <version>2.2</version>
   </parent>
 
   <artifactId>ca-apm</artifactId>
-  <version>1.2</version>
-  <packaging>hpi</packaging>
+  <version>2.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
 
   <name>CA-APM Plugin</name>
   <description>CA-APM Plugin for Jenkins</description>
@@ -24,13 +22,45 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <id>srikns</id>
+      <name>Srikant Noorani</name>
+      <email>srikns@yahoo.com</email>
+    </developer>
+    <developer>
+      <id>pramodanarase</id>
+      <name>Pramod Anarase</name>
+      <email>pramodanarase@gmail.com</email>
+    </developer>
+  </developers>
+
+  <modules>
+    <module>ca-apm-api</module>
+    <module>ca-apm-core</module>
+    <module>ca-apm-default-strategy</module>
+    <module>ca-apm-jenkins</module>
+    <module>ca-apm-dist</module>
+  </modules>
+
+  <scm>
+    <connection>scm:git:ssh://github.com/jenkinsci/ca-apm-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/ca-apm-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/ca-apm-plugin</url>
+    <tag>ca-apm-1.0</tag>
+  </scm>
+
+  <properties>
+    <!-- overwrite jenkins version -->
+    <jenkins.version>1.609.1</jenkins.version>
+  </properties>
+
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
-
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
@@ -38,31 +68,44 @@
     </pluginRepository>
   </pluginRepositories>
 
-<scm>
-  <connection>scm:git:ssh://github.com/jenkinsci/ca-apm-plugin.git</connection>
-  <developerConnection>scm:git:ssh://git@github.com/jenkinsci/ca-apm-plugin.git</developerConnection>
-  <url>https://github.com/jenkinsci/ca-apm-plugin</url>
-    <tag>ca-apm-1.0</tag>
-  </scm>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>ca-apm-api</artifactId>
+        <version>${project.version}</version>
+        <type>jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>ca-apm-core</artifactId>
+        <version>${project.version}</version>
+        <type>jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>ca-apm-default-strategy</artifactId>
+        <version>${project.version}</version>
+        <type>jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>ca-apm-jenkins</artifactId>
+        <version>${project.version}</version>
+        <type>hpi</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
-<developers>
-    <developer>
-      <id>srikns</id>
-      <name>Srikant Noorani</name>
-      <email>srikns@yahoo.com</email>
-    </developer>
-  </developers>
-
-  <dependencies>
-  	<dependency>
-  		<groupId>org.json</groupId>
-  		<artifactId>json</artifactId>
-  		<version>20140107</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.apache.httpcomponents</groupId>
-  		<artifactId>httpclient</artifactId>
-  		<version>4.5</version>
-  	</dependency>
-  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
