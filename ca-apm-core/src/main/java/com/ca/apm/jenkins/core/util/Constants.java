@@ -16,11 +16,11 @@ public class Constants {
 	public static final String restPath = "/apm/appmap/private/apmData/schema";
 	public static final String tokenPath = "/apm/appmap/private/token/temporaryToken";
 	public static final String vertexIdByName = "/apm/appmap/vertex";
-	public static final String attributeUpdate = "/apm/appmap/private/attributes/assign";
+	public static final String attributeUpdate = "/apm/appmap/graph/vertex";
+	
 	public static final String batchMetricData = "/apm/appmap/private/metric/batch";
 	public static final String queryMetricDataAPI = "/apm/appmap/private/apmData/query";
 
-	
 	// Arguments
 	public static final String BEARER = "Bearer ";
 	public static final String AUTHORIZATION = "Authorization";
@@ -60,12 +60,14 @@ public class Constants {
 	public static final String emURL = "em.url";
 	public static final String emUserName = "em.username";
 	public static final String emPassword = "em.password";
+	public static final String emTimeZone = "em.timezone";
 
 	public static final String loadGeneratorName = "loadgenerator.name";
 	public static final String metadataReaderClassName = "metadatareader";
 
 	public static final String benchMarkBuildNumber = "build.benchmarkbuildnumber";
 	public static final String buildPassOrFail = "build.fail";
+	public static final String isPublishBuildResulttoEM = "buildresult.em.publish";
 
 	public static final String comparisonStrategiesList = "comparisonstrategies.list";
 	public static final String comparisonStrategyName = "comparisonstrategy.name";

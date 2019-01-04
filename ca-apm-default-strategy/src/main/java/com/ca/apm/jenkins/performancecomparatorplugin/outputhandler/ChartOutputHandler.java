@@ -40,8 +40,9 @@ public class ChartOutputHandler implements OutputHandler<StrategyResult> {
 		appMapURL = appMapURL.concat("&ts1="+startTimeMillis+"&ts2="+endTimeMillis);
 		String startDateTime= format.format(Long.parseLong(startTimeMillis));
 		String endDateTime = format.format(Long.parseLong(endTimeMillis));
+		String frequency = outputConfiguration.getCommonPropertyValue("frequency")+"ms";
 		AMChartHelper.produceChartOutput(strategyResults, workspaceFolder, jobName, benchMarkBuildNumber,
-				currentBuildNumber, appMapURL, startDateTime, endDateTime);
+				currentBuildNumber, appMapURL, startDateTime, endDateTime, frequency);
 	}
 
 }

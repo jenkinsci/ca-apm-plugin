@@ -72,7 +72,7 @@ public class AgentComparisonResult {
 				List<TimeSliceValue> actualValues = currentTimeSliceValues.get(comparisonResult.getMetricPath());
 				List<TimeSliceValue> expectedValues = new LinkedList<TimeSliceValue>();
 				for (int i = 0; i < actualValues.size(); i++) {
-					TimeSliceValue tsV = new TimeSliceValue(threshold, threshold, threshold, 1);
+					TimeSliceValue tsV = new TimeSliceValue(threshold, threshold, threshold, 1, actualValues.get(i).getfrequency());
 					expectedValues.add(tsV);
 				}
 				comparisonResult.setBenchMarkBuildTimeSliceValues(expectedValues);
@@ -84,7 +84,7 @@ public class AgentComparisonResult {
 				List<TimeSliceValue> actualValues = currentTimeSliceValues.get(comparisonResult.getMetricPath());
 				List<TimeSliceValue> expectedValues = new LinkedList<TimeSliceValue>();
 				for (int i = 0; i < actualValues.size(); i++) {
-					TimeSliceValue tsV = new TimeSliceValue(threshold, threshold, threshold, 1);
+					TimeSliceValue tsV = new TimeSliceValue(threshold, threshold, threshold, 1, actualValues.get(i).getfrequency());
 					expectedValues.add(tsV);
 				}
 				comparisonResult.setBenchMarkBuildTimeSliceValues(expectedValues);

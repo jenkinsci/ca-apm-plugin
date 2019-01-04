@@ -14,6 +14,7 @@ public class APMConnectionInfo {
 	private String emUserName;
 	private String emPassword;
 	private String authToken;
+	private String emTimeZone;
 
 	public APMConnectionInfo() {
 		super();
@@ -51,9 +52,18 @@ public class APMConnectionInfo {
 		this.authToken = authToken;
 	}
 
+	
+	public String getEmTimeZone() {
+		return emTimeZone;
+	}
+
+	public void setEmTimeZone(String emTimeZone) {
+		this.emTimeZone = emTimeZone;
+	}
+
 	@Override
 	public String toString() {
-		return "EMInfo [emURL=" + emURL + ", emUserName=" + emUserName + ", emPassword=" + emPassword + ", authToken="
-				+ authToken + "]";
+		return "APMConnectionInfo [emURL=" + emURL + ", emUserName=" + emUserName + ", emPassword=" + emPassword
+				+ ", authToken=" + authToken + ", emTimeZone=" + emTimeZone + "]";
 	}
 }

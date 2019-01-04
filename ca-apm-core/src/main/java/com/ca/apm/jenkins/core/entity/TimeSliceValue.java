@@ -13,13 +13,15 @@ public class TimeSliceValue {
 	private double max;
 	private double min;
 	private int count;
+	private double frequency;
 
-	public TimeSliceValue(double value, double max, double min, int count) {
+	public TimeSliceValue(double value, double max, double min, int count, double frequency) {
 		super();
 		this.value = value;
 		this.max = max;
 		this.min = min;
 		this.count = count;
+		this.frequency = frequency;
 	}
 
 	public double getValue() {
@@ -53,10 +55,21 @@ public class TimeSliceValue {
 	public void setCount(int count) {
 		this.count = count;
 	}
+	
+	public double getfrequency() {
+        return frequency;
+    }
 
-	@Override
-	public String toString() {
-		return "TimeSliceValue [value=" + value + ", max=" + max + ", min=" + min + ", count=" + count + "]";
-	}
+    public void setfrequency(double frequency) {
+        this.frequency = frequency;
+    }
+
+    @Override
+    public String toString() {
+        return "TimeSliceValue [value=" + value + ", max=" + max + ", min=" + min + ", count="
+            + count + ", frequency=" + frequency + "]";
+    }
+
+   
 
 }

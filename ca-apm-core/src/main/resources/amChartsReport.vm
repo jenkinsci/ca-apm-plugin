@@ -24,6 +24,8 @@
 	      <b style="font-size: 10px;">StartTime: </b> $startDateTime 
 	      </br>
 	      <b style="font-size: 10px;">EndTime: </b>$endDateTime 
+	      </br>
+	      <b style="font-size: 10px;">Frequency: </b>$frequency 
      </div>
      #foreach ($strategyChart in ${strategyCharts})      
       <div id="$strategyChart.divId" style="width: 100%; height: 400px; background-color: #FFFFFF;" ></div>

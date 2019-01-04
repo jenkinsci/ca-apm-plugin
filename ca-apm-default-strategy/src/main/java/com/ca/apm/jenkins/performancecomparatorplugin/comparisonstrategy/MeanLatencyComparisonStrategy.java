@@ -56,7 +56,7 @@ public class MeanLatencyComparisonStrategy implements ComparisonStrategy<Default
 		StrategyResult<DefaultStrategyResult> comparisonOutput = new StrategyResult<DefaultStrategyResult>();
 		DefaultStrategyResult strategyResult = new DefaultStrategyResult();
 		comparisonOutput.setResult(strategyResult);
-
+        boolean isFrequencySet = false;
 		for (String agentSpecifier : agentSpecifiers) {
 			AgentComparisonResult agentComparisonResult = null;
 			try {
@@ -73,6 +73,26 @@ public class MeanLatencyComparisonStrategy implements ComparisonStrategy<Default
 				Map<String, List<TimeSliceValue>> currentSliceValues = FormulaHelper
 						.getTimeSliceGroupByMetricPath(currentBuildPerformanceData);
 				agentComparisonResult.attachEveryPointResult(benchMarkSliceValues, currentSliceValues);
+                if (!isFrequencySet) {
+                    if(agentComparisonResult.getSuccessEntries()!=null || !(agentComparisonResult.getSuccessEntries().isEmpty())){
+                        if(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues()!=null || !(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty())){
+                    comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().get(0).getfrequency());
+                    isFrequencySet = true;
+                        }else if(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues()!=null || !(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues().isEmpty())){
+                    comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues().get(0).getfrequency());
+                    isFrequencySet = true;
+                        }
+                    
+                    }else if(agentComparisonResult.getSlowEntries()!=null || !(agentComparisonResult.getSlowEntries().isEmpty())){
+                        if(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues()!=null || !(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty())){
+                    comparisonOutput.setFrequency(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues().get(0).getfrequency());
+                    isFrequencySet = true;
+                        }else if(agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues()!=null || !(agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues().isEmpty())){
+                    comparisonOutput.setFrequency(agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues().get(0).getfrequency());
+                    isFrequencySet = true;
+                        }
+                    }
+                } 
 			} catch (BuildComparatorException e) {
 				JenkinsPlugInLogger.severe("An error has occured while collecting performance metrics for "
 						+ comparisonStrategyName + "from APM-> for agentSpecifier=" + agentSpecifier

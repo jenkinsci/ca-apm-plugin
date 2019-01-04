@@ -62,12 +62,16 @@ public class OutputHandlingExecutor {
 						OutputConfiguration.class);
 				outputConfiguration.setHandlerSpecificProperties(outputStrategies.get(outputHandler).getProperties());
 				outputConfiguration.addToCommonProperties("buildStatus", isFailToBuild==true?"FAILURE":"SUCCESS");
+				outputConfiguration.addToCommonProperties("frequency", String.valueOf(comparisonMetadata.getComparisonResult().getStrategyResults().get(0).getFrequency()));
 				setConfigurationMethod.invoke(outputHandlerObj, outputConfiguration);
 
 				if(outputHandler.equals(Constants.histogramoutputhtml)){
+					if(comparisonMetadata.getLoadRunnerMetadataInfo().getLoadRunnerPropertyValue(Constants.loadGeneratorName).equalsIgnoreCase("blazemeter")){
 					Method setComparisonMetadataMethod = pluginClass.getDeclaredMethod(Constants.ComparisonMetadataConfigMethod,
 							ComparisonMetadata.class);	
 					setComparisonMetadataMethod.invoke(outputHandlerObj, comparisonMetadata);
+					}else
+						continue;
 				}
 				Set<String> comparisonStrategies = strategiesInfo.getMappedComparisonStrategies(outputHandler);
 				List<StrategyResult<?>> selectedStrategyResult = comparisonResult

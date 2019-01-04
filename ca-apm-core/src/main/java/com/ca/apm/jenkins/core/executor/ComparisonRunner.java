@@ -6,6 +6,8 @@ import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
+import com.ca.apm.jenkins.core.helper.VertexAttributesUpdateHelper;
+
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 
 /**
@@ -78,6 +80,13 @@ public class ComparisonRunner {
 				}
 				
 				outputHandlingExecutor.execute(metadataLoader.getComparisonMetadata().getOutputConfiguration(),isFailToBuild);
+				
+				if (metadataLoader.getComparisonMetadata().isPublishBuildResulttoEM()) {
+					VertexAttributesUpdateHelper vertexAttributesUpdateHelper = new VertexAttributesUpdateHelper(
+							metadataLoader.getComparisonMetadata());
+					  vertexAttributesUpdateHelper.updateAttributeOfVertex(!isFailToBuild);
+				}
+						
 				
 			} catch (BuildComparatorException ex) {
 				if (isFailToBuild) {

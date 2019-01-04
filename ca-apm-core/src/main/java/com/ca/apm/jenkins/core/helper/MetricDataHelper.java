@@ -134,10 +134,10 @@ public class MetricDataHelper {
 			long endTime) {
 		String query = null;
 		JSONObject requestBodyJSON = new JSONObject();
-		query = "SELECT domain_name, agent_host,agent_process, agent_name, metric_path,  metric_attribute, ts, min_value, max_value, agg_value, value_count"
-				+ " FROM metric_data where ts > = " + startTime + " and ts <= " + endTime
-				+ " and agent_name like_regex '" + agentSpecifier + "' and metric_path like_regex '" + metricSpecifier
-				+ "'";
+		query = "SELECT domain_name, agent_host,agent_process, agent_name, metric_path,  metric_attribute, ts, min_value, max_value, agg_value, value_count, frequency"
+                + " FROM metric_data WHERE ts >= " + startTime + " AND ts <= " + endTime
+                + " AND agent_name like_regex '" + agentSpecifier + "' AND metric_path like_regex '"
+                + metricSpecifier + "'";
 		requestBodyJSON.put("query", query);
 		return requestBodyJSON.toString();
 	}
@@ -169,7 +169,8 @@ public class MetricDataHelper {
 			double max = rowArray.getDouble(8);
 			double min = rowArray.getDouble(7);
 			int count = rowArray.getInt(10);
-			TimeSliceValue timeSliceValue = new TimeSliceValue(value, max, min, count);
+            double frequency = rowArray.getDouble(11);
+			TimeSliceValue timeSliceValue = new TimeSliceValue(value, max, min, count, frequency);
 			if (performanceData.containsKey(metricPath)) {
 				metricPerformanceData = performanceData.get(metricPath);
 			} else {
@@ -216,7 +217,7 @@ public class MetricDataHelper {
 		long startTime = build.getStartTime();
 		long endTime = build.getEndTime();
 		JenkinsPlugInLogger.fine("MetricDataHelper input query ->" + "agentSpecifier = " + agentSpecifier
-				+ ", metricSpecifier=" + metricSpecifier + ", startTime=" + startTime + ",endTime=" + endTime);
+				+ ", metricSpecifier=" + metricSpecifier + ", startTime=" + startTime + ",endTime=" + endTime );
 		String body = prepareSqlRequestBody(agentSpecifier, metricSpecifier, startTime, endTime);
 		JenkinsPlugInLogger.fine("Request Body = " + body);
 		StringEntity bodyEntity;
@@ -279,154 +280,76 @@ public class MetricDataHelper {
 		}
 		return buildPerformanceData;
 	}
+	
+	 @SuppressWarnings("unused")
+	    private static BuildPerformanceData parseMetricResponse(JSONObject metricResponseJSON,
+	        String batchId) {
+	        JSONObject successfulBatches = (JSONObject) metricResponseJSON.get("successfulBatches");
+	        JSONArray batchInformation = (JSONArray) successfulBatches.get(batchId);
+	        BuildPerformanceData performanceData = new BuildPerformanceData();
+	        for (int i = 0; i < batchInformation.length(); i++) {
+	            JSONObject dataChunksArray = (JSONObject) batchInformation.get(i);
+	            JSONArray records = (JSONArray) dataChunksArray.get("dataChunks");
+	            MetricPerformanceData metricPerformanceData = new MetricPerformanceData();
+	            String metricPath = dataChunksArray.getString("id");
+	            metricPerformanceData.setMetricPath(metricPath);
+	            performanceData.getMetricData().add(metricPerformanceData);
+	            for (int j = 0; j < records.length(); j++) {
+	                JSONObject record = (JSONObject) records.get(j);
+	                JSONArray valuesArray = (JSONArray) record.get("values");
+	                JSONArray minArray = (JSONArray) record.get("mins");
+	                JSONArray maxArray = (JSONArray) record.get("maxes");
+	                JSONArray countArray = (JSONArray) record.get("counts");
+	                for (int k = 0; k < valuesArray.length(); k++) {
+	                    double value = valuesArray.getDouble(k);
+	                    double max = maxArray.getDouble(k);
+	                    double min = minArray.getDouble(k);
+	                    int count = countArray.getInt(k);
+	                    double freqncy = 15000;
+	                    TimeSliceValue sliceValue = new TimeSliceValue(value, max, min, count,freqncy);
+	                    metricPerformanceData.addToTimeSliceValue(sliceValue);
+	                }
+	            }
+	        }
+	        return performanceData;
+	    }
+	
+	 @SuppressWarnings("unused")
+	    private static JSONObject createMetricDataQueryRequestBody(String agentSpec, String metricRegex,
+	        long startTime, long endTime, double freqncy) throws JSONException {
+	        Collection<JSONObject> queries = new LinkedList<JSONObject>();
 
-	/*public static BuildPerformanceData getMetricData(String agentSpecifier, String metricSpecifier, BuildInfo build)
-			throws BuildComparatorException,BuildExecutionException {
-		if (agentSpecifier == null || metricSpecifier == null) {
-			throw new BuildComparatorException(
-					"Mandatory parameters to the query are null. Please enter non null values for the arguments");
-		}
-		JenkinsPlugInLogger.finest("Entering fetchBatchMetricDataFromEM method");
-		CloseableHttpClient httpClient = HttpClients.createDefault();
-		apmConnectionInfo.setAuthToken(getTemporaryAuthToken());
+	        String metricSpec = metricRegex;
+	        JSONObject query = new JSONObject();
+	        JSONObject agentSpecifier = new JSONObject();
+	        agentSpecifier.put("type", "REGEX");
+	        agentSpecifier.put("specifier", agentSpec);
+	        query.put("agentSpecifier", agentSpecifier);
+	        JSONObject metricSpecifier = new JSONObject();
+	        metricSpecifier.put("type", "REGEX");
+	        metricSpecifier.put("specifier", metricSpec);
+	        query.put("metricSpecifier", metricSpecifier);
+	        queries.add(query);
+	        JSONArray momFilterArray = new JSONArray(new JSONObject[] {null});
+	        query.put("momFilter", momFilterArray);
+	        JSONObject batchedMetrics = new JSONObject();
+	        batchedMetrics.put("metricQueries", new JSONArray(queries));
 
-		long startTime = build.getStartTime();
-		long endTime = build.getEndTime();
-		JSONObject body = createMetricDataQueryRequestBody(agentSpecifier, metricSpecifier, startTime, endTime);
-		JenkinsPlugInLogger.fine("MetricDataHelper input query ->" + "agentSpecifier = " + agentSpecifier
-				+ ", metricSpecifier=" + metricSpecifier + ", startTime=" + startTime + ",endTime=" + endTime);
-		JenkinsPlugInLogger.fine("Request Body = " + body.toString());
-		String bodyString = "[" + body.toString(2) + "]";
-		StringEntity bodyEntity;
-		JSONObject metricDataJson = null;
-		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), Constants.batchMetricData));
-		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getAuthToken());
-		httpPost.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
-		CloseableHttpResponse metricDataResponse = null;
-		try {
-			bodyEntity = new StringEntity(bodyString);
-			httpPost.setEntity(bodyEntity);
-			metricDataResponse = httpClient.execute(httpPost);
+	        JSONObject body = new JSONObject();
+	        body.put("batchedMetrics", batchedMetrics);
+	        body.put("batchId", 7);
 
-		} catch (UnsupportedEncodingException e1) {
-			JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
-		} catch (ClientProtocolException e1) {
-			JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
-		} catch (IOException e1) {
-			if(e1.getCause().toString().contains("Connection refused")){
-				int apmHostNameIndex = apmConnectionInfo.getEmURL().indexOf("//")+2;
-				if(e1.getMessage().contains(apmConnectionInfo.getEmURL().substring(apmHostNameIndex,apmConnectionInfo.getEmURL().lastIndexOf(':') ))){
-					JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
-					throw new BuildExecutionException(e1.getMessage().substring(0,e1.getMessage().lastIndexOf(':')));
-				}
-			}else{
-		    	JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
-			}
-		}
-		if (metricDataResponse == null) {
-			JenkinsPlugInLogger.severe("No response from APM REST API, hence returning null");
-			return null;
-		}
-		if (Response.Status.OK.getStatusCode() == metricDataResponse.getStatusLine().getStatusCode()) {
-			HttpEntity metricDataEntity = metricDataResponse.getEntity();
-			ByteArrayOutputStream metricDataOs = new ByteArrayOutputStream();
-			try {
-				metricDataEntity.writeTo(metricDataOs);
-			} catch (IOException e) {
-				JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e.getMessage(), e);
-			}
-			String metricDataContents = new String(metricDataOs.toByteArray());
-			metricDataJson = new JSONObject(metricDataContents);
-			JenkinsPlugInLogger.fine("Response JSON Body = " + metricDataJson);
-		} else {
-			if(metricDataResponse.getStatusLine().getReasonPhrase().contains("Unauthorized")){
-				throw new BuildExecutionException(metricDataResponse.getStatusLine().getReasonPhrase()+" APM Credentials");
-			}
-			int statusCode = metricDataResponse.getStatusLine().getStatusCode();
-			JenkinsPlugInLogger.severe("Metric data capture from CA-APM failed with status code " + statusCode);
-			JenkinsPlugInLogger.severe("Detailed Response from EM is  " + metricDataResponse.toString());
+	        long duration = endTime - startTime;
+
+	        JSONObject queryRange = new JSONObject();
+	        queryRange.put("frequency", 15000);
+	        queryRange.put("rangeSize", duration);
+
+	        queryRange.put("endTime", JenkinsPluginUtility.getGMTTime(endTime));
+	        batchedMetrics.put("queryRange", queryRange);
+	        batchedMetrics.put("aggregate", "false");
+	        batchedMetrics.put("clamp", Integer.parseInt(metricClamp));
+	        return body;
+	    }	
 			
-			throw new BuildComparatorException(
-					"Error occured while fetching metrics from CA-APM with response code ->" + statusCode);
-		}
-
-		JenkinsPlugInLogger.finest("Exiting fetchBatchMetricDataFromEM method");
-		BuildPerformanceData buildPerformanceData = parseMetricResponse(metricDataJson, "7");
-		if (buildPerformanceData.getMetricData().isEmpty()) {
-			JenkinsPlugInLogger.severe("No metric data available in APM with the given arguments ->" + agentSpecifier
-					+ "," + metricSpecifier);
-		}
-		return buildPerformanceData;
-	}
-	*/
-	
-	
-	@SuppressWarnings("unused")
-	private static BuildPerformanceData parseMetricResponse(JSONObject metricResponseJSON, String batchId) {
-		JSONObject successfulBatches = (JSONObject) metricResponseJSON.get("successfulBatches");
-		JSONArray batchInformation = (JSONArray) successfulBatches.get(batchId);
-		BuildPerformanceData performanceData = new BuildPerformanceData();
-		for (int i = 0; i < batchInformation.length(); i++) {
-			JSONObject dataChunksArray = (JSONObject) batchInformation.get(i);
-			JSONArray records = (JSONArray) dataChunksArray.get("dataChunks");
-			MetricPerformanceData metricPerformanceData = new MetricPerformanceData();
-			String metricPath = dataChunksArray.getString("id");
-			metricPerformanceData.setMetricPath(metricPath);
-			performanceData.getMetricData().add(metricPerformanceData);
-			for (int j = 0; j < records.length(); j++) {
-				JSONObject record = (JSONObject) records.get(j);
-				JSONArray valuesArray = (JSONArray) record.get("values");
-				JSONArray minArray = (JSONArray) record.get("mins");
-				JSONArray maxArray = (JSONArray) record.get("maxes");
-				JSONArray countArray = (JSONArray) record.get("counts");
-				for (int k = 0; k < valuesArray.length(); k++) {
-					double value = valuesArray.getDouble(k);
-					double max = maxArray.getDouble(k);
-					double min = minArray.getDouble(k);
-					int count = countArray.getInt(k);
-					TimeSliceValue sliceValue = new TimeSliceValue(value, max, min, count);
-					metricPerformanceData.addToTimeSliceValue(sliceValue);
-				}
-			}
-		}
-		return performanceData;
-	}
-
-	@SuppressWarnings("unused")
-	private static JSONObject createMetricDataQueryRequestBody(String agentSpec, String metricRegex, long startTime,
-			long endTime) throws JSONException {
-		Collection<JSONObject> queries = new LinkedList<JSONObject>();
-
-		String metricSpec = metricRegex;
-		JSONObject query = new JSONObject();
-		JSONObject agentSpecifier = new JSONObject();
-		agentSpecifier.put("type", "REGEX");
-		agentSpecifier.put("specifier", agentSpec);
-		query.put("agentSpecifier", agentSpecifier);
-		JSONObject metricSpecifier = new JSONObject();
-		metricSpecifier.put("type", "REGEX");
-		metricSpecifier.put("specifier", metricSpec);
-		query.put("metricSpecifier", metricSpecifier);
-		queries.add(query);
-		JSONArray momFilterArray = new JSONArray(new JSONObject[] { null });
-		query.put("momFilter", momFilterArray);
-		JSONObject batchedMetrics = new JSONObject();
-		batchedMetrics.put("metricQueries", new JSONArray(queries));
-
-		JSONObject body = new JSONObject();
-		body.put("batchedMetrics", batchedMetrics);
-		body.put("batchId", 7);
-
-		long duration = endTime - startTime;
-
-		JSONObject queryRange = new JSONObject();
-		queryRange.put("frequency", 15000);
-		queryRange.put("rangeSize", duration);
-
-		queryRange.put("endTime", JenkinsPluginUtility.getGMTTime(endTime));
-		batchedMetrics.put("queryRange", queryRange);
-		batchedMetrics.put("aggregate", "false");
-		batchedMetrics.put("clamp", Integer.parseInt(metricClamp));
-		return body;
-	}
 }

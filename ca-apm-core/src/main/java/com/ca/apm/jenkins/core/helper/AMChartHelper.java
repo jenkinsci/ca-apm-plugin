@@ -23,6 +23,7 @@ import com.ca.apm.jenkins.core.entity.MetricPathComparisonResult;
 import com.ca.apm.jenkins.core.entity.TimeSliceValue;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.IOUtility;
+import com.ca.apm.jenkins.core.util.JenkinsPluginUtility;
 
 /**
  * This utility helper class provides you to create charts and graphs
@@ -70,7 +71,7 @@ public class AMChartHelper {
 		return writer.toString();
 	}
 
-	private static String applyToVelocityTemplate(List<JenkinsAMChart> strategyCharts, String appMapURL, String startDateTime, String endDateTime) {
+	private static String applyToVelocityTemplate(List<JenkinsAMChart> strategyCharts, String appMapURL, String startDateTime, String endDateTime, String frequency) {
 		VelocityEngine ve = new VelocityEngine();
 		StringWriter writer = new StringWriter();
 		ve.setProperty("resource.loader", "classpath");
@@ -82,6 +83,7 @@ public class AMChartHelper {
 		context.put("url", appMapURL);
 		context.put("startDateTime", startDateTime);
 		context.put("endDateTime", endDateTime);
+		context.put("frequency", frequency);
 		t.merge(context, writer);
 		return writer.toString();
 	}
@@ -245,7 +247,7 @@ public class AMChartHelper {
 	 */
 	@SuppressWarnings("rawtypes")
 	public static void produceChartOutput(List<StrategyResult> strategyResults, String workspaceFolder, String jobName,
-			String benchMarkBuildNumber, String currentBuildNumber, String appMapURL, String startDateTime, String endDateTime) {
+			String benchMarkBuildNumber, String currentBuildNumber, String appMapURL, String startDateTime, String endDateTime, String frequency) {
 		Map<String, List<JenkinsAMChart>> strategyWiseCharts = null;
 
 		strategyWiseCharts = new LinkedHashMap<String, List<JenkinsAMChart>>();
@@ -283,7 +285,7 @@ public class AMChartHelper {
 			for (String comparisonStrategyName : strategyWiseCharts.keySet()) {
 				String htmlOutput = null;
 				List<JenkinsAMChart> strategyCharts = strategyWiseCharts.get(comparisonStrategyName);
-				htmlOutput = applyToVelocityTemplate(strategyCharts, appMapURL, startDateTime, endDateTime);
+				htmlOutput = applyToVelocityTemplate(strategyCharts, appMapURL, startDateTime, endDateTime, frequency);
 				FileHelper.exportOutputToFile(
 						workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber
 								+ File.separator + "chartOutput" + File.separator + "output",

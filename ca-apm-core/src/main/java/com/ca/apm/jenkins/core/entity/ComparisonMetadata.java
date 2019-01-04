@@ -30,6 +30,7 @@ public class ComparisonMetadata {
 	private String jobWorkSpaceFolder;
 	private boolean failTheBuild;
 	private Map<String, String> commonProperties;
+	private boolean isPublishBuildResulttoEM;
 
 	public ComparisonMetadata(JenkinsInfo jenkinsInfo) {
 		this.jenkinsInfo = jenkinsInfo;
@@ -123,6 +124,14 @@ public class ComparisonMetadata {
 		return null;
 	}
 
+	public boolean isPublishBuildResulttoEM() {
+		return isPublishBuildResulttoEM;
+	}
+
+	public void setPublishBuildResulttoEM(boolean isPublishBuildResulttoEM) {
+		this.isPublishBuildResulttoEM = isPublishBuildResulttoEM;
+	}
+
 	@Override
 	public String toString() {
 		return "ComparisonMetadata [jenkinsInfo=" + jenkinsInfo + ", apmConnectionInfo=" + apmConnectionInfo
@@ -130,8 +139,10 @@ public class ComparisonMetadata {
 				+ ", comparisonResult=" + comparisonResult + ", outputConfiguration=" + outputConfiguration
 				+ ", ioUtility=" + ioUtility + ", isMetadataIsIncorrect=" + isMetadataIsIncorrect
 				+ ", jobWorkSpaceFolder=" + jobWorkSpaceFolder + ", failTheBuild=" + failTheBuild
-				+ ", commonProperties=" + commonProperties + "]";
+				+ ", commonProperties=" + commonProperties 
+				+", isPublishBuildResulttoEM=" + isPublishBuildResulttoEM+ "]";
 	}
+
 
 		
 	

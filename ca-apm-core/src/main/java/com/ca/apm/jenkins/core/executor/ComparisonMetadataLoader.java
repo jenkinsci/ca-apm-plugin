@@ -31,6 +31,7 @@ import com.ca.apm.jenkins.core.entity.StrategiesInfo;
 import com.ca.apm.jenkins.core.helper.EmailHelper;
 import com.ca.apm.jenkins.core.helper.FileHelper;
 import com.ca.apm.jenkins.core.helper.MetricDataHelper;
+import com.ca.apm.jenkins.core.helper.VertexAttributesUpdateHelper;
 import com.ca.apm.jenkins.core.load.LoadRunnerMetadataRetriever;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
@@ -119,6 +120,11 @@ public class ComparisonMetadataLoader {
 		comparisonMetadata.getLoadRunnerMetadataInfo().setBenchMarkBuildNumber(benchMarkBuildNo);
 		boolean failTheBuild = properties.getBoolean(Constants.buildPassOrFail);
 		comparisonMetadata.setFailTheBuild(failTheBuild);
+		if(!properties.containsKey(Constants.isPublishBuildResulttoEM)||properties.getProperty(Constants.isPublishBuildResulttoEM).toString().isEmpty() ){
+		    comparisonMetadata.setPublishBuildResulttoEM(false);
+		}else {
+		    comparisonMetadata.setPublishBuildResulttoEM(properties.getBoolean(Constants.isPublishBuildResulttoEM));
+		}
 	}
 
 	private void readComparisonStrategiesInformation(PropertiesConfiguration properties) {
@@ -439,8 +445,18 @@ public class ComparisonMetadataLoader {
 			apmConnectionInfo.setEmPassword(properties.getString(Constants.emPassword));
 			if (apmConnectionInfo.getEmPassword().isEmpty())
 				apmConnectionInfo.setAuthToken(apmConnectionInfo.getEmUserName());
+			if(properties.getString(Constants.emTimeZone).isEmpty() || properties.getString(Constants.emTimeZone) == null){
+				
+				JenkinsPlugInLogger.severe(" em.timezone property value is not found");
+				JenkinsPlugInLogger.printLogOnConsole(2," em.timezone property value is not found");
+				isSuccess = false;
+			}else{
+				apmConnectionInfo.setEmTimeZone(properties.getString(Constants.emTimeZone));
+			   comparisonMetadata.addToCommonProperties(Constants.emTimeZone, properties.getString(Constants.emTimeZone));
+			}
 			JenkinsPlugInLogger.printLogOnConsole(2, "APM Properties file loading done");
 			MetricDataHelper.setAPMConnectionInfo(apmConnectionInfo);
+			VertexAttributesUpdateHelper.setAPMConnectionInfo(apmConnectionInfo);
 			} catch (NoSuchElementException ex) {
 			JenkinsPlugInLogger.severe("A required property not found ", ex);
 			isSuccess = false;

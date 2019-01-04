@@ -26,17 +26,50 @@ public class JenkinsPluginUtility {
 		return converter.format(now);
 	}
 
-	public static long getLongTimeValue(String dateStr) {
-		long time = 0;
-		SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		try {
-			Date date = inputDateFormat.parse(dateStr);
-			time = date.getTime();
-		} catch (ParseException e) {
-			time = 0;
-		}
-		return time;
-	}
+    public static long[] getEMTimeinMillis(long startTime, long endTime, String emTimeZone)
+        throws ParseException {
+        long[] emTimeinMillis = new long[2];
+        Date startDate = new Date(startTime);
+        Date endDate = new Date(endTime);
+        DateFormat converter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        converter.setTimeZone(TimeZone.getTimeZone(emTimeZone));
+        String emStartDate = converter.format(startDate);
+        String emEndDate = converter.format(endDate);
+        DateFormat apmnMSConverter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        long apmStartTimeinMillis = apmnMSConverter.parse(emStartDate).getTime();
+        long apmEndTimeinMillis = apmnMSConverter.parse(emEndDate).getTime();
+        emTimeinMillis[0] = apmStartTimeinMillis;
+        emTimeinMillis[1] = apmEndTimeinMillis;
+        return emTimeinMillis;
+
+    }
+
+    public static String[] getEMTimeinDateFormat(long startTime, long endTime, String emTimeZone)
+        throws ParseException {
+        String[] emTimeinDateFormat = new String[2];
+        Date startDate = new Date(startTime);
+        Date endDate = new Date(endTime);
+        DateFormat converter = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss z");
+        converter.setTimeZone(TimeZone.getTimeZone(emTimeZone));
+        String emStartDate = converter.format(startDate);
+        String emEndDate = converter.format(endDate);
+        emTimeinDateFormat[0] = emStartDate;
+        emTimeinDateFormat[1] = emEndDate;
+        return emTimeinDateFormat;
+
+    }
+
+    public static long getLongTimeValue(String dateStr) {
+        long time = 0;
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            Date date = inputDateFormat.parse(dateStr);
+            time = date.getTime();
+        } catch (ParseException e) {
+            time = 0;
+        }
+        return time;
+    }
 
 	public static long getDuration(String startDateStr, String endDateStr) {
 		SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
