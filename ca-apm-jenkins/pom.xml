@@ -19,28 +19,31 @@
 	</properties>
 
 	<dependencies>
+		<!-- project dependencies -->
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>ca-apm-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>ca-apm-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
+			<artifactId>ca-apm-default-strategy</artifactId>
+		</dependency>
+		<!-- jenkins dependencies -->
+		<dependency>
+			<groupId>org.jenkins-ci.plugins</groupId>
 			<artifactId>structs</artifactId>
-			<version>1.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins.workflow</groupId>
 			<artifactId>workflow-step-api</artifactId>
-			<version>2.12</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins.workflow</groupId>
 			<artifactId>workflow-cps</artifactId>
-			<version>2.39</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -51,8 +54,6 @@
 		<dependency>
 			<groupId>org.jenkins-ci.plugins.workflow</groupId>
 			<artifactId>workflow-basic-steps</artifactId>
-			<version>2.6</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -63,29 +64,10 @@
 		<dependency>
 			<groupId>org.jenkins-ci.plugins.workflow</groupId>
 			<artifactId>workflow-api</artifactId>
-			<version>2.20</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jenkins-ci.plugins.workflow</groupId>
 			<artifactId>workflow-support</artifactId>
-			<version>2.14</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.plugins</groupId>
-			<artifactId>ca-apm-api</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.plugins</groupId>
-			<artifactId>ca-apm-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jenkins-ci.plugins</groupId>
-			<artifactId>ca-apm-default-strategy</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 

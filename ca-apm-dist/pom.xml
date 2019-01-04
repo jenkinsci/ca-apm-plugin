@@ -21,32 +21,19 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>ca-apm-api</artifactId>
-      <version>${project.version}</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>ca-apm-core</artifactId>
-      <version>${project.version}</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>ca-apm-default-strategy</artifactId>
-      <version>${project.version}</version>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>ca-apm-jenkins</artifactId>
-      <version>${project.version}</version>
       <type>hpi</type>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 
