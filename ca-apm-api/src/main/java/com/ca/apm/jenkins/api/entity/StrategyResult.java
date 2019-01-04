@@ -20,6 +20,7 @@ public class StrategyResult<T> {
 
 	private String strategyName;
 	private T result;
+	private double frequency;
 
 	public T getResult() {
 		return result;
@@ -37,8 +38,21 @@ public class StrategyResult<T> {
 		this.result = result;
 	}
 
-	@Override
-	public String toString() {
-		return "StrategyResult [strategyName=" + strategyName + ", result=" + result + "]";
-	}
+    public double getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(double frequency) {
+        this.frequency = frequency;
+    }
+
+    @Override
+    public String toString() {
+        return "StrategyResult [strategyName=" + strategyName + ", result=" + result
+            + ", frequency=" + frequency + "]";
+    }
+	
+	
+
+	
 }
