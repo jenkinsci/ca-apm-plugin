@@ -25,6 +25,9 @@ public class Constants {
   // Metric Names
   public static final String AVG_RESPONSE_TIME_METRIC = "Average Response Time \\(ms\\)";
   public static final String STALL_COUNT_METRIC = "Health:Stall Count";
+  
+  public static final String cpuutilizationcomparisonstrategy = "CPUUtilizationComparisonStrategy";
+  public static final String gcheapcomparisonstrategy = "GCHeapComparisonStrategy";
   // Data Source
   public static final String CAAPM = "CA-APM";
   // Load Source
@@ -88,6 +91,8 @@ public class Constants {
   public static final String histogramoutputhtml = "histogramoutputhtml";
   public static final String ComparisonMetadataConfigMethod = "setComparisonMetadata";
   public static final String histogramBuildInfoList = "histogramBuildInfo";
+   
+  
 
   private Constants() {}
 }

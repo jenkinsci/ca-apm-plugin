@@ -46,7 +46,7 @@ import com.ca.apm.jenkins.core.util.Constants;
 @SuppressWarnings("rawtypes")
 public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 
-	private static final String HISTOGRAM ="histogram";
+	private static final String HISTOGRAM ="HistogramOutputHandler";
 	private ComparisonMetadata comparisonMetadata;
 	
 	private int currentBuildNumber;

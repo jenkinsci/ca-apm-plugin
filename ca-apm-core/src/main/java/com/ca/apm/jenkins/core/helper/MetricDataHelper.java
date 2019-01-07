@@ -163,7 +163,7 @@ public class MetricDataHelper {
 		for (int i = 0; i < rowArrays.length(); i++) {
 			
 			JSONArray rowArray = (JSONArray) rowArrays.get(i);
-			if(!comparisonStrategyName.equalsIgnoreCase("CPUUtilizationComparisonStrategy") && !comparisonStrategyName.equalsIgnoreCase("GCHeapComparisonStrategy"))
+			if(!comparisonStrategyName.equalsIgnoreCase(Constants.cpuutilizationcomparisonstrategy) && !comparisonStrategyName.equalsIgnoreCase(Constants.gcheapcomparisonstrategy))
 				if( !(rowArray.getString(4)).contains(applicationName))
 					continue;
 			String domainName = rowArray.getString(0);
