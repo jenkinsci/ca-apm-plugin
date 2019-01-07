@@ -4,48 +4,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.ca.apm.jenkins.core.entity.TimeSliceValue;
-
 public class StaticThresholdResult {
 
-	private boolean passed = false;
-	private int thresholdInMillis = 0;
-	private Map<String, List<TimeSliceValue>> metricSeries = new TreeMap<String, List<TimeSliceValue>>();
-	private int buildNumber;
+  private boolean passed = false;
+  private int thresholdInMillis = 0;
+  private Map<String, List<TimeSliceValue>> metricSeries =
+      new TreeMap<String, List<TimeSliceValue>>();
+  private int buildNumber;
 
-	public boolean isPassed() {
-		return passed;
-	}
+  public boolean isPassed() {
+    return passed;
+  }
 
-	public void setPassed(boolean passed) {
-		this.passed = passed;
-	}
+  public void setPassed(boolean passed) {
+    this.passed = passed;
+  }
 
-	public int getThresholdInMillis() {
-		return thresholdInMillis;
-	}
+  public int getThresholdInMillis() {
+    return thresholdInMillis;
+  }
 
-	public void setThresholdInMillis(int thresholdInMillis) {
-		this.thresholdInMillis = thresholdInMillis;
-	}
+  public void setThresholdInMillis(int thresholdInMillis) {
+    this.thresholdInMillis = thresholdInMillis;
+  }
 
-	public Map<String, List<TimeSliceValue>> getMetricSeries() {
-		return metricSeries;
-	}
+  public Map<String, List<TimeSliceValue>> getMetricSeries() {
+    return metricSeries;
+  }
 
-	public void setMetricSeries(Map<String, List<TimeSliceValue>> metricSeries) {
-		this.metricSeries = metricSeries;
-	}
+  public void setMetricSeries(Map<String, List<TimeSliceValue>> metricSeries) {
+    this.metricSeries = metricSeries;
+  }
 
-	public int getBuildNumber() {
-		return buildNumber;
-	}
+  public int getBuildNumber() {
+    return buildNumber;
+  }
 
-	public void setBuildNumber(int buildNumber) {
-		this.buildNumber = buildNumber;
-	}
-	
-	public boolean isEmpty(){
-		return (metricSeries == null || metricSeries.isEmpty());
-	}
+  public void setBuildNumber(int buildNumber) {
+    this.buildNumber = buildNumber;
+  }
+
+  public boolean isEmpty() {
+    return (metricSeries == null || metricSeries.isEmpty());
+  }
 }

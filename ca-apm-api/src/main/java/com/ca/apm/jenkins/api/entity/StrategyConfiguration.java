@@ -5,44 +5,43 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This entity holds the configuration of a comparison strategy which is
- * configured in strategyProperties file
- * 
- * @author Avinash Chandwani
+ * This entity holds the configuration of a comparison strategy which is configured in
+ * strategyProperties file
  *
+ * @author Avinash Chandwani
  */
 public class StrategyConfiguration {
 
-	private List<String> agentSpecifiers;
-	private Map<String, String> properties;
+  private List<String> agentSpecifiers;
+  private Map<String, String> properties;
 
-	public StrategyConfiguration() {
-		super();
-	}
+  public StrategyConfiguration() {
+    super();
+  }
 
-	public List<String> getAgentSpecifiers() {
-		return agentSpecifiers;
-	}
+  public List<String> getAgentSpecifiers() {
+    return agentSpecifiers;
+  }
 
-	public void setAgentSpecifiers(List<String> agentSpecifiers) {
-		this.agentSpecifiers = agentSpecifiers;
-	}
+  public void setAgentSpecifiers(List<String> agentSpecifiers) {
+    this.agentSpecifiers = agentSpecifiers;
+  }
 
-	public Map<String, String> getProperties() {
-		return properties;
-	}
+  public Map<String, String> getProperties() {
+    return properties;
+  }
 
-	public void addProperty(String key, String value) {
-		if (properties == null) {
-			properties = new HashMap<String, String>();
-		}
-		properties.put(key, value);
-	}
+  public void addProperty(String key, String value) {
+    if (properties == null) {
+      properties = new HashMap<String, String>();
+    }
+    properties.put(key, value);
+  }
 
-	public String getPropertyValue(String key) {
-		if (properties.containsKey(key)) {
-			return properties.get(key);
-		}
-		return null;
-	}
+  public String getPropertyValue(String key) {
+    if (properties.containsKey(key)) {
+      return properties.get(key);
+    }
+    return null;
+  }
 }
