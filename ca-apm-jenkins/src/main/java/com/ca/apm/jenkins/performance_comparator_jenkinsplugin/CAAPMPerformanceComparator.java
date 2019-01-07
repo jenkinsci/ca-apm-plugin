@@ -268,13 +268,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
     }
     histogramBuilds.add(String.valueOf(currentBuilderNumber));
     loadConfiguration();
-    for (int i = 1; i < buildsInHistogram; i++) {
+    /*for (int i = 1; i < buildsInHistogram; i++) {
       if (run.getPreviousBuild() != null) {
         run = run.getPreviousBuild();
         histogramBuilds.add(String.valueOf(run.number));
         JenkinsPlugInLogger.info("Histogram build ids.........." + histogramBuilds.get(i));
       } else break;
-    }
+    }*/
 
     boolean isRemoteExecution = filePath.isRemote();
     StringBuilder output = null;
