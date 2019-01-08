@@ -14,9 +14,7 @@
   <packaging>hpi</packaging>
 
   <name>CA-APM Plugin-2.0</name>
-  <description>This plug-in does performance comparison and exports outputs to various formats based
-    upon the configuration
-  </description>
+  <description>This plug-in does performance comparison and exports outputs to various formats based upon the configuration</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -36,42 +34,21 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>ca-apm-default-strategy</artifactId>
     </dependency>
-    <!-- jenkins dependencies -->
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>structs</artifactId>
-    </dependency>
+    <!-- jenkins pipeline dependency -->
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-step-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-cps</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-job</artifactId>
-      <version>2.11.2</version>
+      <artifactId>workflow-aggregator</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-basic-steps</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-durable-task-step</artifactId>
-      <version>2.13</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-support</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci</groupId>
+          <artifactId>symbol-annotation</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>scm-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
@@ -102,6 +79,13 @@
     </profile>
     <profile>
       <id>dev</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>scm-api</artifactId>
+          <scope>test</scope>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
           <plugin>
@@ -128,7 +112,6 @@
           </plugin>
         </plugins>
       </build>
-
     </profile>
   </profiles>
 </project>
