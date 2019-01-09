@@ -6,6 +6,7 @@ import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
 import com.ca.apm.jenkins.core.helper.VertexAttributesUpdateHelper;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
+import hudson.model.TaskListener;
 import java.util.logging.Level;
 
 /**
@@ -17,14 +18,16 @@ public class ComparisonRunner {
 
   private JenkinsInfo jenkinsInfo;
   private String performanceComparatorProperties;
+  private TaskListener taskListener;
 
   public ComparisonRunner() {
     super();
   }
 
-  public ComparisonRunner(JenkinsInfo jenkinsInfo, String performanceComparatorProperties) {
+  public ComparisonRunner(JenkinsInfo jenkinsInfo, String performanceComparatorProperties, TaskListener taskListener) {
     this.jenkinsInfo = jenkinsInfo;
     this.performanceComparatorProperties = performanceComparatorProperties;
+    this.taskListener = taskListener;
   }
 
   public JenkinsInfo getJenkinsInfo() {
@@ -58,6 +61,7 @@ public class ComparisonRunner {
     if (jenkinsInfo.getCurrentBuildNumber() == 1) {
       JenkinsPlugInLogger.log(
           Level.INFO, "Current build number is first build, hence no comparison will happen");
+      taskListener.getLogger().println("Current build number is first build, hence no comparison will happen");
     } else {
       try {
         ComparisonMetadataLoader metadataLoader =

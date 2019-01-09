@@ -83,14 +83,15 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       int previousSuccessfulBuild,
       List<String> histogramBuilds,
       String workspaceFolder,
-      String jobName)
+      String jobName,
+      TaskListener taskListener)
       throws BuildComparatorException, BuildValidationException, BuildExecutionException {
     boolean comparisonRunStatus = false;
     JenkinsInfo jenkinsInfo =
         new JenkinsInfo(
             currentBuildNumber, previousSuccessfulBuild, histogramBuilds, workspaceFolder, jobName);
     ComparisonRunner runner =
-        new ComparisonRunner(jenkinsInfo, this.performanceComparatorProperties);
+        new ComparisonRunner(jenkinsInfo, this.performanceComparatorProperties,taskListener);
     comparisonRunStatus = runner.executeComparison();
     return comparisonRunStatus;
   }
@@ -199,7 +200,8 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
               previousSuccessfulBuildNumber,
               histogramBuilds,
               workspaceFolder,
-              jobName);
+              jobName,
+              taskListener);
     } catch (BuildComparatorException e) {
       consoleLogString.append("Plugin Task failed due to :" + e.getMessage());
       clearAndStopLogging(taskListener, consoleLogString);
@@ -245,17 +247,17 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
     int currentBuilderNumber = run.number;
 
     String jobName = filePath.getBaseName();
-    taskListener.getLogger().println("jobName:" + jobName);
-    taskListener.getLogger().println("run.getDisplayName:" + run.getDisplayName());
-    taskListener.getLogger().println("run.getFullDisplayName:" + run.getFullDisplayName());
+    JenkinsPlugInLogger.info("jobName:" + jobName);
+    JenkinsPlugInLogger.info("run.getDisplayName:" + run.getDisplayName());
+    JenkinsPlugInLogger.info("run.getFullDisplayName:" + run.getFullDisplayName());
     File rootDir = run.getRootDir();
     FilePath jobPath = new FilePath(new File(rootDir.getParentFile().getParent()));
-    taskListener.getLogger().println("rootDir.getParent():" + rootDir.getParentFile().getParent());
-    taskListener.getLogger().println("jobPath:" + jobPath + Constants.NewLine);
-    taskListener.getLogger().println("jobPath.getRemote():" + jobPath.getRemote());
-    taskListener.getLogger().println("filePath.getRemote():" + filePath.getRemote());
+    JenkinsPlugInLogger.info("rootDir.getParent():" + rootDir.getParentFile().getParent());
+    JenkinsPlugInLogger.info("jobPath:" + jobPath + Constants.NewLine);
+    JenkinsPlugInLogger.info("jobPath.getRemote():" + jobPath.getRemote());
+    JenkinsPlugInLogger.info("filePath.getRemote():" + filePath.getRemote());
     FilePath sourceFilePath = new FilePath(new File(filePath.getRemote()));
-    taskListener.getLogger().println("sourceFilePath.getName():" + sourceFilePath.getName());
+    JenkinsPlugInLogger.info("sourceFilePath.getName():" + sourceFilePath.getName());
     String workspaceFolder = "" + filePath.getParent();
     int previousSuccessfulBuildNumber = 0;
 
@@ -267,12 +269,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       previousSuccessfulBuildNumber = run.getPreviousSuccessfulBuild().getNumber();
     }
     histogramBuilds.add(String.valueOf(currentBuilderNumber));
+    taskListener.getLogger().println("loading config file : " + this.performanceComparatorProperties);
     try {
       loadConfiguration();
     } catch (ConfigurationException | IOException e) {
       JenkinsPlugInLogger.severe("The configuration file is not found or configuration error ", e);
       // fail the build if configuration error
-      throw new RuntimeException(e.getMessage());
+      throw new AbortException(e.getMessage());
     }
     /*for (int i = 1; i < buildsInHistogram; i++) {
       if (run.getPreviousBuild() != null) {
@@ -297,7 +300,6 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       output = channel.call(callable);
     } else {
       taskListener.getLogger().println("Launching in master machine");
-      taskListener.getLogger().println("sourceFilePath " + sourceFilePath.toURI());
       output =
           doExecute(
               currentBuilderNumber,

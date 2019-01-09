@@ -70,7 +70,7 @@ public class FileHelper {
               + File.separator
               + "comparison-runner.log");
     }
-    JenkinsPlugInLogger.printLogOnConsole(3, "File exist" + fileExist);
+    JenkinsPlugInLogger.info("Log File exist" + fileExist);
   }
 
   public static void closeLogging() {
