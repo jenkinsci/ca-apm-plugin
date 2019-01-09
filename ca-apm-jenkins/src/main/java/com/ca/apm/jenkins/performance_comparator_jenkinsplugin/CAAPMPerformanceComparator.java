@@ -267,7 +267,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       previousSuccessfulBuildNumber = run.getPreviousSuccessfulBuild().getNumber();
     }
     histogramBuilds.add(String.valueOf(currentBuilderNumber));
-    loadConfiguration();
+    try {
+      loadConfiguration();
+    } catch (ConfigurationException | IOException e) {
+      JenkinsPlugInLogger.severe("The configuration file is not found or configuration error ", e);
+      // fail the build if configuration error
+      throw new RuntimeException(e.getMessage());
+    }
     /*for (int i = 1; i < buildsInHistogram; i++) {
       if (run.getPreviousBuild() != null) {
         run = run.getPreviousBuild();
@@ -275,7 +281,6 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
         JenkinsPlugInLogger.info("Histogram build ids.........." + histogramBuilds.get(i));
       } else break;
     }*/
-
     boolean isRemoteExecution = filePath.isRemote();
     StringBuilder output = null;
     if (isRemoteExecution) {
@@ -305,31 +310,22 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
     clearAndStopLogging(taskListener, output);
   }
 
-  private void loadConfiguration() {
+  private void loadConfiguration() throws ConfigurationException, IOException {
 
     PropertiesConfiguration properties = new PropertiesConfiguration();
     InputStream input;
-    try {
-      input = new FileInputStream(this.performanceComparatorProperties);
-      properties.load(input);
-      if (properties.containsKey(Constants.buildsInHistogram)) {
-        String nuOfBuildsForHistogram = properties.getString(Constants.buildsInHistogram);
-        if (nuOfBuildsForHistogram == null
-            || nuOfBuildsForHistogram.isEmpty()
-            || Integer.parseInt(nuOfBuildsForHistogram) <= 1
-            || Integer.parseInt(nuOfBuildsForHistogram) > 10) buildsInHistogram = 10;
-        else buildsInHistogram = Integer.parseInt(nuOfBuildsForHistogram);
+    input = new FileInputStream(this.performanceComparatorProperties);
+    properties.load(input);
+    if (properties.containsKey(Constants.buildsInHistogram)) {
+      String nuOfBuildsForHistogram = properties.getString(Constants.buildsInHistogram);
+      if (nuOfBuildsForHistogram == null
+          || nuOfBuildsForHistogram.isEmpty()
+          || Integer.parseInt(nuOfBuildsForHistogram) <= 1
+          || Integer.parseInt(nuOfBuildsForHistogram) > 10) buildsInHistogram = 10;
+      else buildsInHistogram = Integer.parseInt(nuOfBuildsForHistogram);
 
-      } else {
-        buildsInHistogram = 10;
-      }
-
-    } catch (IOException e) {
-      if (e instanceof FileNotFoundException) {
-        JenkinsPlugInLogger.severe("The configuration file is not found ", e);
-      }
-    } catch (ConfigurationException e) {
-      JenkinsPlugInLogger.severe("The configuration file has encountered some errors ", e);
+    } else {
+      buildsInHistogram = 10;
     }
   }
 

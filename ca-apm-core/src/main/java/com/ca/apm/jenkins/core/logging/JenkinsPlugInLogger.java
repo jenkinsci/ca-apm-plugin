@@ -35,19 +35,19 @@ public class JenkinsPlugInLogger {
   }
 
   private static Level getLoggingLevel(String level) {
-    if (level.equals("SEVERE")) {
+    if ("SEVERE".equals(level)) {
       return Level.SEVERE;
-    } else if (level.equals("WARNING")) {
+    } else if ("WARNING".equals(level)) {
       return Level.WARNING;
-    } else if (level.equals("INFO")) {
+    } else if ("INFO".equals(level)) {
       return Level.INFO;
-    } else if (level.equals("CONFIG")) {
+    } else if ("CONFIG".equals(level)) {
       return Level.CONFIG;
-    } else if (level.equals("FINE")) {
+    } else if ("FINE".equals(level)) {
       return Level.FINE;
-    } else if (level.equals("FINER")) {
+    } else if ("FINER".equals(level)) {
       return Level.FINER;
-    } else if (level.equals("FINEST")) {
+    } else if ("FINEST".equals(level)) {
       return Level.FINEST;
     } else {
       return Level.SEVERE;
