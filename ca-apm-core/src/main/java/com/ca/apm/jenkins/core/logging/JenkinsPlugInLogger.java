@@ -1,6 +1,7 @@
 package com.ca.apm.jenkins.core.logging;
 
 import com.ca.apm.jenkins.core.util.Constants;
+import hudson.model.TaskListener;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,12 +17,11 @@ import java.util.logging.Logger;
 public class JenkinsPlugInLogger {
 
   private static Logger logger = Logger.getLogger("JP_LOGGER");
-  private static StringBuilder consoleLogString;
+
   private static JenkinsPluginCustomFileHandler fileHandler;
 
-  static {
-    consoleLogString = new StringBuilder();
-  }
+  private static TaskListener taskListener;
+
 
   /*
    *
@@ -29,6 +29,11 @@ public class JenkinsPlugInLogger {
   private JenkinsPlugInLogger() {
     super();
   }
+
+  public static void setTaskListener(TaskListener taskListener){
+    JenkinsPlugInLogger.taskListener = taskListener;
+  }
+
 
   public static Logger getLogger() {
     return logger;
@@ -194,15 +199,14 @@ public class JenkinsPlugInLogger {
   }
 
   public static void printLogOnConsole(int level, String message) {
+    StringBuilder consoleLogString = new StringBuilder();
     for (int i = 0; i < level; i++) {
       consoleLogString.append(" ");
     }
-    consoleLogString.append(message).append(Constants.NewLine);
+    consoleLogString.append(message);
+    taskListener.getLogger().println(consoleLogString.toString());
   }
 
-  public static StringBuilder getConsoleLogString() {
-    return consoleLogString;
-  }
 
   /*
    * public static void configurePrintStream(StringBuilder consoleLogString2)

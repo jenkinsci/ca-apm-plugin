@@ -5,6 +5,7 @@ import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
 import com.ca.apm.jenkins.core.executor.ComparisonRunner;
+import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import hudson.model.TaskListener;
 import java.io.File;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ public class PluginRunSimulation {
     histogramBuilds.add(String.valueOf(34));
     histogramBuilds.add(String.valueOf(33));
     TaskListener taskListener = new TaskListenerMock() ;
+    JenkinsPlugInLogger.setTaskListener(taskListener);
     JenkinsInfo jenkinsInfo =
         new JenkinsInfo(35, 29, histogramBuilds, path + "workspace", "CIGNAOne");
     ComparisonRunner runner = new ComparisonRunner(jenkinsInfo, path + File.separator + fileName,taskListener);

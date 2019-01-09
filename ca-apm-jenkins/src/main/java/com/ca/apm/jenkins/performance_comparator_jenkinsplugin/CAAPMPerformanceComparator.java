@@ -24,7 +24,6 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -112,14 +111,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       StringBuilder consoleLogString = new StringBuilder();
 
       public StringBuilder call() throws IOException {
-        consoleLogString =
-            doExecute(
-                currentBuildNumber,
-                previousSuccessfulBuildNumber,
-                histogramBuilds,
-                workspaceFolder,
-                jobName,
-                taskListener);
+        doExecute(
+            currentBuildNumber,
+            previousSuccessfulBuildNumber,
+            histogramBuilds,
+            workspaceFolder,
+            jobName,
+            taskListener);
         return consoleLogString;
       }
 
@@ -183,7 +181,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
    * ); } }
    */
 
-  private StringBuilder doExecute(
+  private  void doExecute(
       int currentBuildNumber,
       int previousSuccessfulBuildNumber,
       List<String> histogramBuilds,
@@ -192,7 +190,6 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       TaskListener taskListener)
       throws AbortException {
     boolean isSuccessful = false;
-    StringBuilder consoleLogString = JenkinsPlugInLogger.getConsoleLogString();
     try {
       isSuccessful =
           runAction(
@@ -203,47 +200,37 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
               jobName,
               taskListener);
     } catch (BuildComparatorException e) {
-      consoleLogString.append("Plugin Task failed due to :" + e.getMessage());
-      clearAndStopLogging(taskListener, consoleLogString);
+      taskListener.getLogger().println("Plugin Task failed due to :" + e.getMessage());
       throw new AbortException(
           "*******Performance Comparison Failed*******due to" + Constants.NewLine + e.getMessage());
     } catch (BuildValidationException ex) {
-      consoleLogString.append("Plugin Task failed due to :" + ex.getMessage());
-      clearAndStopLogging(taskListener, consoleLogString);
+      taskListener.getLogger().println("Plugin Task failed due to :" + ex.getMessage());
       throw new AbortException(
           "*******Performance Comparison Failed******* due to"
               + Constants.NewLine
               + ex.getMessage());
     } catch (BuildExecutionException ex) {
-      consoleLogString.append("Plugin Task failed due to :" + ex.getMessage());
-      clearAndStopLogging(taskListener, consoleLogString);
+      taskListener.getLogger().println("Plugin Task failed due to :" + ex.getMessage());
       throw new AbortException(
           "*******Performance Comparison Failed******* due to"
               + Constants.NewLine
               + ex.getMessage());
     }
     if (isSuccessful) {
-      JenkinsPlugInLogger.printLogOnConsole(
-          0, "CA-APM Jenkins Plugin execution has completed successfully");
+      taskListener.getLogger().println("CA-APM Jenkins Plugin execution has completed successfully");
     } else {
-      consoleLogString.append("Plugin Task is not completed");
-      clearAndStopLogging(taskListener, consoleLogString);
+      taskListener.getLogger().println("Plugin Task is not completed");
       throw new AbortException(
           "*******Performance Comparison Failed******* due to performance crossed the threshold mark, please review results for more details");
     }
-    return consoleLogString;
-  }
-
-  private void clearAndStopLogging(TaskListener taskListener, StringBuilder output) {
-    taskListener.getLogger().println(output.toString());
-    output.setLength(0);
-    JenkinsPlugInLogger.closeLogger();
   }
 
   @Override
   public void perform(
       Run<?, ?> run, FilePath filePath, Launcher launcher, TaskListener taskListener)
       throws InterruptedException, IOException {
+    //set logger
+    JenkinsPlugInLogger.setTaskListener(taskListener);
     int currentBuilderNumber = run.number;
 
     String jobName = filePath.getBaseName();
@@ -300,16 +287,14 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       output = channel.call(callable);
     } else {
       taskListener.getLogger().println("Launching in master machine");
-      output =
-          doExecute(
-              currentBuilderNumber,
-              previousSuccessfulBuildNumber,
-              histogramBuilds,
-              workspaceFolder,
-              jobName,
-              taskListener);
+      doExecute(
+          currentBuilderNumber,
+          previousSuccessfulBuildNumber,
+          histogramBuilds,
+          workspaceFolder,
+          jobName,
+          taskListener);
     }
-    clearAndStopLogging(taskListener, output);
   }
 
   private void loadConfiguration() throws ConfigurationException, IOException {
