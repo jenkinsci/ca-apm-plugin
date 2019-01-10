@@ -15,6 +15,7 @@
 
   <name>CA-APM Plugin</name>
   <description>This plug-in does performance comparison and exports outputs to various formats based upon the configuration</description>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/CA+APM+Plugin</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -59,6 +60,7 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <build>
+        <finalName>ca-apm</finalName>
         <plugins>
           <plugin>
             <groupId>org.jenkins-ci.tools</groupId>
@@ -87,6 +89,7 @@
         </dependency>
       </dependencies>
       <build>
+        <finalName>ca-apm</finalName>
         <plugins>
           <plugin>
             <artifactId>maven-resources-plugin</artifactId>
