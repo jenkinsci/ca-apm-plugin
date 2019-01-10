@@ -99,10 +99,7 @@ public class CPUUtilizationComparisonStrategy implements ComparisonStrategy<Defa
                         }
                     }
                 }
-				if (!isFrequencySet) {
-                    comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().get(0).getfrequency());
-                    isFrequencySet = true;
-                }
+				
 			} catch (BuildComparatorException e) {
 				JenkinsPlugInLogger.severe("An error has occured while collecting performance metrics for "
 						+ comparisonStrategyName + "from APM-> for agentSpecifier=" + agentSpecifier
