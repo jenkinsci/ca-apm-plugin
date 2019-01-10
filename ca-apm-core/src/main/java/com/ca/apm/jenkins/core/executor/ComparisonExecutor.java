@@ -115,7 +115,8 @@ public class ComparisonExecutor {
             .append(Constants.NewLine);
         continue;
       } catch (InvocationTargetException e) {
-        if (e.getTargetException().getMessage().toString().contains("Connection refused")) {
+    	 if((e.getTargetException().getMessage()!=null)&& (e.getTargetException().getMessage().toString().contains("Connection refused")))
+        {
           apmConnectionInfo = comparisonMetadata.getApmConnectionInfo();
           int apmHostNameIndex = apmConnectionInfo.getEmURL().indexOf("//") + 2;
           if (e.getTargetException()
@@ -127,14 +128,14 @@ public class ComparisonExecutor {
                           apmHostNameIndex, apmConnectionInfo.getEmURL().lastIndexOf(':')))) {
             throw new BuildExecutionException(e.getTargetException().getMessage());
           }
-        } else if (e.getTargetException().getMessage().toString().contains("Unauthorized")) {
+        } else if ((e.getTargetException().getMessage()!=null) && (e.getTargetException().getMessage().toString().contains("Unauthorized"))) {
           throw new BuildExecutionException(e.getTargetException().getMessage());
         } else {
           JenkinsPlugInLogger.severe(
               "Error in executing comparison strategy ->"
                   + comparisonStrategy
                   + " with ->"
-                  + e.getTargetException().getMessage(),
+                  + e.getTargetException(),
               e);
           builder
               .append("     ")
