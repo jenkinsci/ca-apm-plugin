@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>CA APM Threshold Chart</title>
+<style>
+.chart_div
+{
+  position: absolute;
+  margin: auto;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: #ccc;
+  border-radius: 3px;
+}
+</style>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script>
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = new google.visualization.DataTable();
+      <!-- data.addColumn('number', 'Day'); -->
+      @@METRIC_PATHS@@
+
+      data.addRows([
+      @@TIMESLICES@@
+      ]);
+
+      var options = {
+        title: 'Build @@BUILD_NUMBER@@ Metrics Compared to Threshold - Average Response Time (ms)',
+        width: 1600,
+        height: 1200,
+        series: {
+          0: { lineDashStyle: [4, 2], color: 'red' }
+        }
+      };
+
+      var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    }
+</script>
+</head>
+<body bgcolor="white">
+<div id="chart_div" style="
+    display: inline-block;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 1600px;
+    height: 1200px;
+    margin: auto;
+    background-color: #f3f3f3;"/>
+</body>
+</html>

@@ -1,9 +1,0 @@
-<div>
-Mark the build as fail if ratio of the two metrics specified is greater or less than the specified value. For e.g   (Superdomain|hostA|ProcessA|AgentA|Frontends|CalledBackends:TotalDataBaseCalls / Superdomain|hostA|ProcessA|AgentA|Frontends:TotalTransactions) > 1.5.
-<br><b>Note:</b>
-<br>The metric value is calculated by averaging the values of all the data points.
-<br>Make sure the metrics specified are discovered as part of agent and metric regex above. 
-<br>The metrics have to be exact match include the domain name. Pls complete metric path from domain name to metric.
-<br>Metric name is case sensitive and no regex pls. 
-<br>Can be combined with single Metric condition above.
-<br>For the build to pass both single metric, if specified, and multi metric condition will have to pass</div>
