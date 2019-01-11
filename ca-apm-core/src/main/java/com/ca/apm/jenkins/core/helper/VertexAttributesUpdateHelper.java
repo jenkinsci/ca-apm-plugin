@@ -125,9 +125,8 @@ public class VertexAttributesUpdateHelper {
 	}
 
 	private static boolean callUpdateVertexAttribute(Map<String, Set<String>> vertexIdTsMap, Map attributesMap) {
-		JenkinsPlugInLogger.fine("Inside callUpdateVertexAttribute method");
-		JenkinsPlugInLogger.printLogOnConsole(2, "Inside callUpdateVertexAttribute method");
-		//System.out.println("Inside callUpdateVertexAttribute method");
+		JenkinsPlugInLogger.info("Inside callUpdateVertexAttribute method");
+		//JenkinsPlugInLogger.printLogOnConsole(2, "Inside callUpdateVertexAttribute method");
 		if (vertexIdTsMap.isEmpty()) {
 			return false;
 		}
@@ -135,7 +134,6 @@ public class VertexAttributesUpdateHelper {
 		HttpClientBuilder client = HttpClientBuilder.create();
 		HttpPatch request = new HttpPatch(attributeUpdURL);
 		CloseableHttpResponse response = null;
-		// client.disableAutomaticRetries();
 		try {
 
 			client = IgnoreSSLClient(client);
@@ -200,9 +198,8 @@ public class VertexAttributesUpdateHelper {
 		} catch (Exception e) {
 			JenkinsPlugInLogger.info("Error in callUpdateAttributeAPI ->" + e.getMessage());
 		}
-		//JenkinsPlugInLogger.printLogOnConsole(2, "$$$$$$$$RESPONSE$$$$$$$$$$$" + response.getStatusLine().toString());
-		
-		if (Response.Status.OK.getStatusCode() == response.getStatusLine().getStatusCode() || response.toString().contains("Multi Status")) {
+				
+		if (Response.Status.OK.getStatusCode() == response.getStatusLine().getStatusCode() || ((response.toString()!=null) && response.toString().contains("Multi Status"))) {
 			StringBuffer result = new StringBuffer();
 			try {
 				BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
@@ -221,9 +218,7 @@ public class VertexAttributesUpdateHelper {
 	}
 
 	public boolean updateAttributeOfVertex(boolean isBuildSuccess) {
-		JenkinsPlugInLogger.fine("Entered updateAttributeOfVertex method");
-		JenkinsPlugInLogger.printLogOnConsole(2, "Updating custom attributes of application vertices");
-		System.out.println("inside updateAttributeOfVertex method");
+		JenkinsPlugInLogger.info("Entered updateAttributeOfVertex method");
 		String buildStatus = isBuildSuccess == true ? "SUCCESS" : "FAIL";
 		Map<String, String> attributesMap = new HashMap<String, String>();
 		OutputConfiguration outputConfiguration = comparisonMetadata.getOutputConfiguration();
@@ -242,8 +237,6 @@ public class VertexAttributesUpdateHelper {
 					apmConnectionInfo.getEmTimeZone());
 			attributesMap.put("loadGeneratorStartTime", emDateTime[0]);
 			attributesMap.put("loadGeneratorEndTime", emDateTime[1]);
-			/*JenkinsPlugInLogger.printLogOnConsole(2, "*****starttime******" + emDateTime[0]);
-			JenkinsPlugInLogger.printLogOnConsole(2, "*****endTime*******" + emDateTime[1]);*/
 		} catch (ParseException e) {
 			JenkinsPlugInLogger.printLogOnConsole(2, e.getMessage());
 		}
@@ -290,8 +283,7 @@ public class VertexAttributesUpdateHelper {
 					vertexIdsURL + "?q=attributes.applicationName:" + applicationName + "&attributes.agent:" + agent);
 
 			JenkinsPlugInLogger.info("***Fetching the graph data, URL is ****" + httpGet.getURI().toString());
-			// System.out.println("*URL****" + httpGet.getURI().toString());*/
-			
+					
 			try {
 				httpGet.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
 				httpGet.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getAuthToken());
@@ -375,9 +367,7 @@ public class VertexAttributesUpdateHelper {
 	}
 
 	private static void vertexAttrSet(Map<String, AgentComparisonResult> result) {
-		JenkinsPlugInLogger.fine("inside vertexAttrSet method");
-		JenkinsPlugInLogger.printLogOnConsole(2, "inside vertexAttrSet method");
-		System.out.println("inside vertexAttrSet method");
+		JenkinsPlugInLogger.info("inside vertexAttrSet method");
 		Iterator it = result.entrySet().iterator();
 		while (it.hasNext()) {
 
@@ -414,7 +404,7 @@ public class VertexAttributesUpdateHelper {
 					vertexAttributes.add(metricPath[1]);
 					vertexAttributes.add(metricPath[1] + "|" + metricPath[2] + "|" + metricPath[3]);
 					vertexAttributes.add(metricPath[5]);
-					vertexAttributes.add(metricPath[6].substring(0, metricPath[6].indexOf("via")).trim());
+					//vertexAttributes.add(metricPath[6].substring(0, metricPath[6].indexOf("via")).trim());
 					verticesAttributeSet.add(vertexAttributes);
 
 				}

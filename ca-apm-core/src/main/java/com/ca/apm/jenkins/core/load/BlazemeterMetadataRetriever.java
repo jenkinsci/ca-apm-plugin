@@ -82,7 +82,7 @@ public class BlazemeterMetadataRetriever implements LoadRunnerMetadataRetriever 
   }
 
   private void init() throws BuildComparatorException {
-    JenkinsPlugInLogger.printLogOnConsole(3, "Inside init() of BlazemeterMetadataRetriever");
+    //JenkinsPlugInLogger.printLogOnConsole(3, "Inside init() of BlazemeterMetadataRetriever");
     JenkinsPlugInLogger.info("****Initializing BlazemeterMetadataRetriever****");
     fetchTestRunDurations();
     fetchTestName();
