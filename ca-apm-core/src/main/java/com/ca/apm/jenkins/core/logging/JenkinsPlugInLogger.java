@@ -207,10 +207,4 @@ public class JenkinsPlugInLogger {
     taskListener.getLogger().println(consoleLogString.toString());
   }
 
-
-  /*
-   * public static void configurePrintStream(StringBuilder consoleLogString2)
-   * { consoleLogString = consoleLogString2; }
-   */
-
 }
