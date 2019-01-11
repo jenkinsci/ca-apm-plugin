@@ -64,6 +64,7 @@
             <artifactId>maven-hpi-plugin</artifactId>
             <configuration>
               <disabledTestInjection>true</disabledTestInjection>
+              <compatibleSinceVersion>2.0</compatibleSinceVersion>
             </configuration>
           </plugin>
           <plugin>
