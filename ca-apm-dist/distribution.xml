@@ -39,7 +39,7 @@
         <include>org.jenkins-ci.plugins:ca-apm-api:jar:</include>
         <include>org.jenkins-ci.plugins:ca-apm-core:jar:</include>
         <include>org.jenkins-ci.plugins:ca-apm-default-strategy:jar:</include>
-        <include>org.jenkins-ci.plugins:ca-apm-jenkins:hpi:</include>
+        <include>org.jenkins-ci.plugins:ca-apm:hpi:</include>
       </includes>
     </dependencySet>
   </dependencySets>
