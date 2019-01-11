@@ -4,11 +4,11 @@
 
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
-    <artifactId>ca-apm</artifactId>
+    <artifactId>ca-apm-plugin</artifactId>
     <version>2.0-alpha-1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>ca-apm-jenkins</artifactId>
+  <artifactId>ca-apm</artifactId>
   <packaging>hpi</packaging>
 
   <name>CA-APM Plugin</name>
@@ -58,7 +58,6 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <build>
-        <finalName>ca-apm</finalName>
         <plugins>
           <plugin>
             <groupId>org.jenkins-ci.tools</groupId>
@@ -87,7 +86,6 @@
         </dependency>
       </dependencies>
       <build>
-        <finalName>ca-apm</finalName>
         <plugins>
           <plugin>
             <artifactId>maven-resources-plugin</artifactId>
