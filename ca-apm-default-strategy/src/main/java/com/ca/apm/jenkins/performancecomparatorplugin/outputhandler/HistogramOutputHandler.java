@@ -128,9 +128,10 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 			Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap, String workspaceFolder,
 			String jobName) {
 		List<JenkinsAMChart> metricPathsChart = null;
+		String appMapURL = outputConfiguration.getCommonPropertyValue(Constants.appMapURL);
 		metricPathsChart = getChartsForMetricPaths(stgyBldMetricPathAverageValuesMap);
 		String htmlOutput = null;
-		htmlOutput = applyToVelocityTemplate(metricPathsChart);
+		htmlOutput = applyToVelocityTemplate(appMapURL,metricPathsChart);
 		FileHelper
 				.exportOutputToFile(
 						workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber
@@ -139,7 +140,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 
 	}
 
-	private static String applyToVelocityTemplate(List<JenkinsAMChart> strategyCharts) {
+	private static String applyToVelocityTemplate(String appMapURL, List<JenkinsAMChart> strategyCharts) {
 		VelocityEngine ve = new VelocityEngine();
 		StringWriter writer = new StringWriter();
 		ve.setProperty("resource.loader", "classpath");
@@ -148,7 +149,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		Template t = ve.getTemplate("amHistogramChartsReport.vm");
 		VelocityContext context = new VelocityContext();
 		context.put("strategyCharts", strategyCharts);
-
+		context.put("url", appMapURL);
 		t.merge(context, writer);
 		return writer.toString();
 	}
