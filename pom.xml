@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>ca-apm-plugin</artifactId>
-  <version>2.0-alpha-2</version>
+  <version>2.0-alpha-3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -48,7 +48,7 @@
     <developerConnection>scm:git:ssh://git@github.com/jenkinsci/ca-apm-plugin.git
     </developerConnection>
     <url>https://github.com/jenkinsci/ca-apm-plugin</url>
-    <tag>ca-apm-plugin-2.0-alpha-2</tag>
+    <tag>ca-apm-1.0</tag>
   </scm>
 
   <properties>
