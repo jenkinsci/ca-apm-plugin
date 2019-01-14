@@ -41,7 +41,7 @@ Code base Set up
 2. On successful build, in ca-apm-dist/target, tar and zip files are present
 3. It contains two folders repo and properties files
 4. Repo folder contains the following:
-   a. The ca-apm-jenkins.hpi file, which acts as a plugin file for installing on Jenkins instance
+   a. The ca-apm.hpi file, which acts as a plugin file for installing on Jenkins instance
    b. ca-apm-api jar file is the core library, which contain the interfaces and entities
    c. ca-apm-core jar file contains the helper classes and the comparison and output-handler executors
    d. ca-apm-default-strategy file contain the basic/default implementations of comparison-strategies and output-handlers

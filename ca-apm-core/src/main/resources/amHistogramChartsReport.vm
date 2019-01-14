@@ -24,7 +24,8 @@
 	        #end
         </script>
 </head>
-<body>
+<body>   
+      <a href="$url" target="_blank" style=" color: #0000FF; font-weight: bold; position: absolute; top: 15px; right: 34px; font-size: 14px; "> To CA-APM </a>
   	     #foreach ($strategyChart in ${strategyCharts})     
 	        <div id="$strategyChart.divId" style="width: 100%; height: 500px; background-color: #FFFFFF; " class="center" ></div>
 	     #end

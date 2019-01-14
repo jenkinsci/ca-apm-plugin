@@ -78,7 +78,7 @@ public class MeanLatencyComparisonStrategy implements ComparisonStrategy<Default
 						.getTimeSliceGroupByMetricPath(currentBuildPerformanceData);
 				agentComparisonResult.attachEveryPointResult(benchMarkSliceValues, currentSliceValues);
                 if (!isFrequencySet) {
-                	if(!(agentComparisonResult.getSuccessEntries().isEmpty())){// || agentComparisonResult.getSuccessEntries()!=null){
+                	if(!(agentComparisonResult.getSuccessEntries().isEmpty())){
                         if(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues()!=null || !(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty())){
                     comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().get(0).getfrequency());
                     isFrequencySet = true;
@@ -87,7 +87,7 @@ public class MeanLatencyComparisonStrategy implements ComparisonStrategy<Default
                     isFrequencySet = true;
                         }
                     
-                    }else if( !(agentComparisonResult.getSlowEntries().isEmpty())){// || agentComparisonResult.getSlowEntries()!=null){
+                    }else if( !(agentComparisonResult.getSlowEntries().isEmpty())){
                         if(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues()!=null || !(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty())){
                     comparisonOutput.setFrequency(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues().get(0).getfrequency());
                     isFrequencySet = true;
