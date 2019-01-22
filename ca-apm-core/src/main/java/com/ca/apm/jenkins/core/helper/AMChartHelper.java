@@ -69,7 +69,7 @@ public class AMChartHelper {
     Template t = ve.getTemplate("amChartHomePage.vm");
     VelocityContext context = new VelocityContext();
     List<HashMap<String, String>> strategies = new LinkedList<HashMap<String, String>>();
-    String name = "buildtoBuildComparisonStrategy";
+    String name = "buildtoBuildStrategy";
     String link = "chartOutput/output/"+name+"-chart-output.html";
     HashMap<String, String> strategyMap = new HashMap<String, String>();
     strategyMap.put("name", name);

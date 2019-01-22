@@ -136,7 +136,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 				.exportOutputToFile(
 						workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber
 								+ File.separator + "chartOutput" + File.separator + "output",
-						"buildtoBuildComparisonStrategy-chart-output.html", htmlOutput);
+						"buildtoBuildStrategy-chart-output.html", htmlOutput);
 
 	}
 
