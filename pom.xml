@@ -8,8 +8,9 @@
     <version>3.28</version>
   </parent>
 
-  <artifactId>ca-apm-plugin</artifactId>
-  <version>2.0-alpha-1-SNAPSHOT</version>
+  <groupId>org.jenkins-ci.plugins.ca-apm</groupId>
+  <artifactId>ca-apm-parent</artifactId>
+  <version>2.0-alpha-5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>${project.artifactId}</name>
@@ -73,17 +74,17 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
+        <groupId>org.jenkins-ci.plugins.ca-apm</groupId>
         <artifactId>ca-apm-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
+        <groupId>org.jenkins-ci.plugins.ca-apm</groupId>
         <artifactId>ca-apm-core</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
+        <groupId>org.jenkins-ci.plugins.ca-apm</groupId>
         <artifactId>ca-apm-default-strategy</artifactId>
         <version>${project.version}</version>
       </dependency>
