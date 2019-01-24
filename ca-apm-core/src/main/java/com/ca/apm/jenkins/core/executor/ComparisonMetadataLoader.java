@@ -384,8 +384,6 @@ public class ComparisonMetadataLoader {
 	private void validateBenchMarkBuildNumber(StringBuilder errorMessages) {
 		int currentBuildNumber = comparisonMetadata.getJenkinsInfo().getCurrentBuildNumber();
 		int jenkinsLastSuccessfulBuildNumber = comparisonMetadata.getJenkinsInfo().getLastSuccessfulBuildNumber();
-		if( jenkinsLastSuccessfulBuildNumber <= 0)
-			jenkinsLastSuccessfulBuildNumber = currentBuildNumber - 1;
 		String propertiesBenchMarkBuildValue = comparisonMetadata.getStrategiesInfo()
 				.getPropertyValue(Constants.benchMarkBuildNumber);
 		int propertiesBenchMarkBuildNumber = 0;
@@ -418,8 +416,6 @@ public class ComparisonMetadataLoader {
 	private void assignBenchMarkBuildNumber() {
 		int currentBuildNumber = comparisonMetadata.getJenkinsInfo().getCurrentBuildNumber();
 		int jenkinsLastSuccessfulBuildNumber = comparisonMetadata.getJenkinsInfo().getLastSuccessfulBuildNumber();
-		if( jenkinsLastSuccessfulBuildNumber <= 0)
-			jenkinsLastSuccessfulBuildNumber = currentBuildNumber - 1;
 		String propertiesBenchMarkBuildValue = comparisonMetadata.getStrategiesInfo()
 				.getPropertyValue(Constants.benchMarkBuildNumber);
 		int propertiesBenchMarkBuildNumber = 0;
