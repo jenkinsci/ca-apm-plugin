@@ -7,7 +7,7 @@
      <div class="container">
        <table class="table">
           <caption>Index</caption>
-          <tr><th>Strategy Name</th><th>Link to Chart Output</th></tr>
+          <tr><th style="text-align:left">Strategy Name</th><th style="text-align:left">Link to Chart Output</th></tr>
           #foreach ($strategy in ${strategies})
             <tr><td>$strategy.get('name')</td><td><a href="$strategy.get('link')">$strategy.get('name')</a></td></tr>
           #end

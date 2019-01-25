@@ -264,13 +264,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       // fail the build if configuration error
       throw new AbortException(e.getMessage());
     }
-    /*for (int i = 1; i < buildsInHistogram; i++) {
+    for (int i = 1; i < buildsInHistogram; i++) {
       if (run.getPreviousBuild() != null) {
         run = run.getPreviousBuild();
         histogramBuilds.add(String.valueOf(run.number));
-        JenkinsPlugInLogger.info("Histogram build ids.........." + histogramBuilds.get(i));
-      } else break;
-    }*/
+       } else break;
+    }
+    JenkinsPlugInLogger.info("Histogram build ids.........." + histogramBuilds);
     boolean isRemoteExecution = filePath.isRemote();
     StringBuilder output = null;
     if (isRemoteExecution) {

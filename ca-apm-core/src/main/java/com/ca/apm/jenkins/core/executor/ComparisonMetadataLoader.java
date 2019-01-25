@@ -409,7 +409,7 @@ public class ComparisonMetadataLoader {
 		}
 		if (benchMarkBuildNumber <= 0) {
 			comparisonMetadata.setMetadataInCorrect(true);
-			errorMessages.append("Invalid Benchmark build number").append(Constants.NewLine);
+			errorMessages.append("There is no previous successful build or invalid benchmark build number, please enter valid Benchmark build number").append(Constants.NewLine);
 		}
 	}
 

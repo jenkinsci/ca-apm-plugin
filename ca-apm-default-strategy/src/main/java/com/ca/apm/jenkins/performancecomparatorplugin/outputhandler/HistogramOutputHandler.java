@@ -4,6 +4,7 @@ package com.ca.apm.jenkins.performancecomparatorplugin.outputhandler;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,8 +38,8 @@ import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
 
 /**
- * An implementation of Output Handler to render the multiple builds results, metric wise into
- * histogram Charts
+ * An implementation of Output Handler to render the multiple builds results,
+ * metric wise into histogram Charts
  * 
  * @author Avinash Chandwani
  *
@@ -46,16 +47,16 @@ import com.ca.apm.jenkins.core.util.Constants;
 @SuppressWarnings("rawtypes")
 public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 
-	private static final String HISTOGRAM ="HistogramOutputHandler";
+	private static final String HISTOGRAM = "HistogramOutputHandler";
 	private ComparisonMetadata comparisonMetadata;
-	
+
 	private int currentBuildNumber;
 	private OutputConfiguration outputConfiguration;
 
 	public void setComparisonMetadata(ComparisonMetadata comparisonMetadata) {
 		this.comparisonMetadata = comparisonMetadata;
 	}
-	
+
 	public void setOutputConfiguration(OutputConfiguration outputConfiguration) {
 		this.outputConfiguration = outputConfiguration;
 
@@ -66,16 +67,18 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		List<BuildInfo> histogramBuildInfoList = outputConfiguration.getHistogramBuildInfoList();
 		String workspaceFolder = outputConfiguration.getCommonPropertyValue(Constants.workSpaceDirectory);
 		String jobName = outputConfiguration.getCommonPropertyValue(Constants.jenkinsJobName);
-		Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap = getMetricData(histogramBuildInfoList);
+		Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap = getMetricData(
+				histogramBuildInfoList);
 		produceChartOutput(stgyBldMetricPathAverageValuesMap, workspaceFolder, jobName);
 
 	}
 
-	private Map<String, Map<String, Map<String, Double>>> getMetricData(List<BuildInfo> buildInfoList) throws BuildExecutionException{
+	private Map<String, Map<String, Map<String, Double>>> getMetricData(List<BuildInfo> buildInfoList)
+			throws BuildExecutionException {
 		Set<String> comparisonStrategiesSet = comparisonMetadata.getStrategiesInfo()
 				.getOutputHandlerToComparisonStrategies().get(Constants.histogramoutputhtml);
-		 StrategyConfiguration strategyConfiguration;
-		 String comparisonStrategyName;
+		StrategyConfiguration strategyConfiguration;
+		String comparisonStrategyName;
 		List<String> comparisonStrategies = new ArrayList<String>(comparisonStrategiesSet);
 		Map<String, Map<String, Double>> buildMetricPathAvgValuesMap = null;
 		Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap = new LinkedHashMap<String, Map<String, Map<String, Double>>>();
@@ -102,7 +105,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 
 						buildMetricPathAvgValuesMap.put(String.valueOf(buildInfoList.get(k).getNumber()),
 								metricPathAverageValuesMap);
-						
+
 					}
 				} catch (BuildComparatorException e) {
 					JenkinsPlugInLogger.severe("An error has occured while collecting performance metrics for "
@@ -116,27 +119,22 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 					buildMetricPathAvgValuesMap);
 
 		}
-         return stgyBldMetricPathAverageValuesMap;
-		
+		return stgyBldMetricPathAverageValuesMap;
 
 	}
 
-	
-
 	@SuppressWarnings("rawtypes")
-	private void produceChartOutput(
-			Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap, String workspaceFolder,
-			String jobName) {
+	private void produceChartOutput(Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap,
+			String workspaceFolder, String jobName) {
 		List<JenkinsAMChart> metricPathsChart = null;
 		String appMapURL = outputConfiguration.getCommonPropertyValue(Constants.appMapURL);
 		metricPathsChart = getChartsForMetricPaths(stgyBldMetricPathAverageValuesMap);
 		String htmlOutput = null;
-		htmlOutput = applyToVelocityTemplate(appMapURL,metricPathsChart);
-		FileHelper
-				.exportOutputToFile(
-						workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber
-								+ File.separator + "chartOutput" + File.separator + "output",
-						"BuildtoBuildComparison-chart-output.html", htmlOutput);
+		htmlOutput = applyToVelocityTemplate(appMapURL, metricPathsChart);
+		FileHelper.exportOutputToFile(
+				workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber + File.separator
+						+ "chartOutput" + File.separator + "output",
+				"buildtoBuildStrategy-chart-output.html", htmlOutput);
 
 	}
 
@@ -164,40 +162,49 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		List<String> buildNumbers = null;
 		Set<String> metricPathSet = null;
 		Map<String, Double> buildAvgValMap = new LinkedHashMap<String, Double>();
-		for(String strategyName : strategyWiseBuildAvgValues.keySet()) {
+		Set<String> metricPathSeqSet = new HashSet<String>();
+		for (String strategyName : strategyWiseBuildAvgValues.keySet()) {
 			metricSpecifier = strategyName.substring(strategyName.indexOf('|') + 1);
 			Map<String, Map<String, Double>> buildMerticAvgValMap = strategyWiseBuildAvgValues.get(strategyName);
 			buildNumbers = new ArrayList(buildMerticAvgValMap.keySet());
-			for (int i = 0; i < buildNumbers.size(); i++) {
+			int[] buildNumbersSeq = new int[buildNumbers.size()];
+			for(int i = 0; i < buildNumbersSeq.length; i++){
+				buildNumbersSeq[i] = Integer.parseInt(buildNumbers.get(i));
+			}
+			Arrays.sort(buildNumbersSeq);
+			for (int i = 0; i < buildNumbersSeq.length; i++) {
 				metricPathSet = new HashSet<String>();
-				for (String metricPath : buildMerticAvgValMap.get(buildNumbers.get(i)).keySet()) {
+				for (String metricPath : buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[i])).keySet()) {
 					metricPathSet.add(metricPath);
 				}
 			}
 			List<String> metricPathList = new ArrayList<String>(metricPathSet);
-            Collections.sort(buildNumbers, Collections.reverseOrder());
+			//Collections.sort(buildNumbers, Collections.reverseOrder());
+			
 			for (int j = 0; j < metricPathList.size(); j++) {
 				String metricPathchart = null;
-				for (int k = 0; k < buildNumbers.size(); k++) {
+				for (int k = 0; k < buildNumbersSeq.length; k++) {
 
-					for (String metricPath : buildMerticAvgValMap.get(buildNumbers.get(k)).keySet()) {
+					for (String metricPath : buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[k])).keySet()) {
 
 						if (metricPath.equals(metricPathList.get(j))) {
 							metricPathchart = metricPath;
 							buildAvgValMap.put(buildNumbers.get(k),
-									buildMerticAvgValMap.get(buildNumbers.get(k)).get(metricPath));
+									buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[k])).get(metricPath));
 
 						}
 					}
 
 				}
-				JSONObject amChartJSON = generateAMChartsJSON(metricPathchart, buildAvgValMap);
-				if (!amChartJSON.get("dataProvider").equals("empty")) {
-					amChart = new JenkinsAMChart();
-					amChart.setChartJSONObject(amChartJSON);
-					amChart.setDivId("div" + divId);
-					amCharts.add(amChart);
-					divId++;
+				if (metricPathSeqSet.add(metricPathchart)) {
+					JSONObject amChartJSON = generateAMChartsJSON(metricPathchart, buildAvgValMap);
+					if (!amChartJSON.get("dataProvider").equals("empty")) {
+						amChart = new JenkinsAMChart();
+						amChart.setChartJSONObject(amChartJSON);
+						amChart.setDivId("div" + divId);
+						amCharts.add(amChart);
+						divId++;
+					}
 				}
 			}
 
@@ -206,10 +213,9 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 
 	}
 
-	private static JSONObject generateAMChartsJSON(String metricPath, 
-			Map<String, Double> buildAvgValues) {
+	private static JSONObject generateAMChartsJSON(String metricPath, Map<String, Double> buildAvgValues) {
 
-		String metricName = metricPath.substring(metricPath.lastIndexOf('|')+1);
+		String metricName = metricPath.substring(metricPath.lastIndexOf('|') + 1);
 		JSONObject amCharts = new JSONObject();
 		amCharts.put("type", "serial");
 		amCharts.put("theme", "light");
@@ -224,7 +230,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 				isDataSet = true;
 				recordObj.put("BuildNumber", Integer.parseInt(buildNumber));
 				recordObj.put("AverageValue", buildAvgValues.get(buildNumber));
-								
+
 				dataProviderArray.put(recordObj);
 			}
 		}
@@ -239,17 +245,16 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		JSONObject valueAxis = new JSONObject();
 		valueAxis.put("id", "ValueAxis-1");
 		valueAxis.put("title", metricName);
-		
+
 		JSONObject categoryAxis = new JSONObject();
 		categoryAxis.put("startOnAxis", true);
 		categoryAxis.put("title", "BuildNumber");
 		amCharts.put("categoryAxis", categoryAxis);
-					
+
 		JSONArray valueAxesArray = new JSONArray();
 		valueAxesArray.put(valueAxis);
 		amCharts.put("valueAxes", valueAxesArray);
-		
-					
+
 		JSONObject titleObj = new JSONObject();
 		titleObj.put("id", "Title-1");
 		titleObj.put("text", metricPath);
@@ -264,7 +269,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		graphobj.put("lineAlpha", "0.2");
 		graphobj.put("type", "column");
 		graphobj.put("valueField", "AverageValue");
-				
+
 		JSONArray graphArrayObj = new JSONArray();
 		graphArrayObj.put(graphobj);
 

@@ -69,14 +69,20 @@ public class AMChartHelper {
     Template t = ve.getTemplate("amChartHomePage.vm");
     VelocityContext context = new VelocityContext();
     List<HashMap<String, String>> strategies = new LinkedList<HashMap<String, String>>();
+    String name = "buildtoBuildStrategy";
+    String link = "chartOutput/output/"+name+"-chart-output.html";
+    HashMap<String, String> strategyMap = new HashMap<String, String>();
+    strategyMap.put("name", name);
+    strategyMap.put("link", link);
+    strategies.add(strategyMap);
     for (StrategyResult<?> strategyResult : strategyResults) {
-      String name = strategyResult.getStrategyName();
-      String link = "chartOutput/output/" + name + "-chart-output.html";
-      HashMap<String, String> strategyResultMap = new HashMap<String, String>();
-      strategyResultMap.put("name", name);
-      strategyResultMap.put("link", link);
-      strategies.add(strategyResultMap);
-    }
+        String startegyName = strategyResult.getStrategyName();
+        String strategyLink = "chartOutput/output/" + startegyName + "-chart-output.html";
+        HashMap<String, String> strategyResultMap = new HashMap<String, String>();
+        strategyResultMap.put("name", startegyName);
+        strategyResultMap.put("link", strategyLink);
+        strategies.add(strategyResultMap);
+      }   
     context.put("strategies", strategies);
     t.merge(context, writer);
     return writer.toString();
