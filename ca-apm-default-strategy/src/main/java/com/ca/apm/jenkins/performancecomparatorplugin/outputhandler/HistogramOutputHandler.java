@@ -4,6 +4,7 @@ package com.ca.apm.jenkins.performancecomparatorplugin.outputhandler;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -161,35 +162,41 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		List<String> buildNumbers = null;
 		Set<String> metricPathSet = null;
 		Map<String, Double> buildAvgValMap = new LinkedHashMap<String, Double>();
-		Set<String> metricPathsSet = new HashSet<String>();
+		Set<String> metricPathSeqSet = new HashSet<String>();
 		for (String strategyName : strategyWiseBuildAvgValues.keySet()) {
 			metricSpecifier = strategyName.substring(strategyName.indexOf('|') + 1);
 			Map<String, Map<String, Double>> buildMerticAvgValMap = strategyWiseBuildAvgValues.get(strategyName);
 			buildNumbers = new ArrayList(buildMerticAvgValMap.keySet());
-			for (int i = 0; i < buildNumbers.size(); i++) {
+			int[] buildNumbersSeq = new int[buildNumbers.size()];
+			for(int i = 0; i < buildNumbersSeq.length; i++){
+				buildNumbersSeq[i] = Integer.parseInt(buildNumbers.get(i));
+			}
+			Arrays.sort(buildNumbersSeq);
+			for (int i = 0; i < buildNumbersSeq.length; i++) {
 				metricPathSet = new HashSet<String>();
-				for (String metricPath : buildMerticAvgValMap.get(buildNumbers.get(i)).keySet()) {
+				for (String metricPath : buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[i])).keySet()) {
 					metricPathSet.add(metricPath);
 				}
 			}
 			List<String> metricPathList = new ArrayList<String>(metricPathSet);
-			Collections.sort(buildNumbers, Collections.reverseOrder());
+			//Collections.sort(buildNumbers, Collections.reverseOrder());
+			
 			for (int j = 0; j < metricPathList.size(); j++) {
 				String metricPathchart = null;
-				for (int k = 0; k < buildNumbers.size(); k++) {
+				for (int k = 0; k < buildNumbersSeq.length; k++) {
 
-					for (String metricPath : buildMerticAvgValMap.get(buildNumbers.get(k)).keySet()) {
+					for (String metricPath : buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[k])).keySet()) {
 
 						if (metricPath.equals(metricPathList.get(j))) {
 							metricPathchart = metricPath;
 							buildAvgValMap.put(buildNumbers.get(k),
-									buildMerticAvgValMap.get(buildNumbers.get(k)).get(metricPath));
+									buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[k])).get(metricPath));
 
 						}
 					}
 
 				}
-				if (metricPathsSet.add(metricPathchart)) {
+				if (metricPathSeqSet.add(metricPathchart)) {
 					JSONObject amChartJSON = generateAMChartsJSON(metricPathchart, buildAvgValMap);
 					if (!amChartJSON.get("dataProvider").equals("empty")) {
 						amChart = new JenkinsAMChart();
