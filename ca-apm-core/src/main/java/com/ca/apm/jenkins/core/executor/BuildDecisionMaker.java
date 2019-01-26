@@ -1,5 +1,8 @@
 package com.ca.apm.jenkins.core.executor;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.ca.apm.jenkins.api.entity.StrategyResult;
 import com.ca.apm.jenkins.core.entity.AgentComparisonResult;
 import com.ca.apm.jenkins.core.entity.ComparisonResult;
@@ -7,7 +10,6 @@ import com.ca.apm.jenkins.core.entity.DefaultStrategyResult;
 import com.ca.apm.jenkins.core.entity.MetricPathComparisonResult;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
-import java.util.List;
 
 public class BuildDecisionMaker {
 
@@ -19,8 +21,7 @@ public class BuildDecisionMaker {
 
   boolean isFailed() {
     boolean isFailed = false;
-    JenkinsPlugInLogger.info(
-        "Inside isFailed Method-->" + comparisonResult.getStrategyResults().size());
+    JenkinsPlugInLogger.info("Inside isFailed Method ");
     if (comparisonResult == null
         || comparisonResult.getStrategyResults() == null
         || comparisonResult.getStrategyResults().isEmpty()) {
@@ -42,9 +43,13 @@ public class BuildDecisionMaker {
           AgentComparisonResult agentComparisonResult =
               defaultStrategyResult.getResult().get(agentSpecifier);
           List<MetricPathComparisonResult> slowEntries = agentComparisonResult.getSlowEntries();
+
           if (slowEntries == null || slowEntries.isEmpty()) {
             continue;
           }
+          List<MetricPathComparisonResult> slowEntrieslist = agentComparisonResult.getSlowEntries();
+          Iterator it = slowEntrieslist.iterator();
+
           JenkinsPlugInLogger.info(
               "Decision maker found failure in strategy result "
                   + strategyResult.getStrategyName());
@@ -53,6 +58,38 @@ public class BuildDecisionMaker {
               "  *******"
                   + strategyResult.getStrategyName()
                   + "'s performance crossed the threshold mark *******");
+          while (it.hasNext()) {
+            MetricPathComparisonResult metricPathComparisonResult =
+                (MetricPathComparisonResult) it.next();
+            JenkinsPlugInLogger.info(
+                "  "
+                    + strategyResult.getStrategyName()
+                    + ": metricPath = "
+                    + metricPathComparisonResult.getMetricPath()
+                    + ", expectedValue = "
+                    + metricPathComparisonResult.getExpectedValue()
+                    + ", actualValue = "
+                    + metricPathComparisonResult.getActualValue()
+                    + ", percentageChange = "
+                    + metricPathComparisonResult.getPercentageChange()
+                    + ", thresholdValue = "
+                    + metricPathComparisonResult.getThresholdPercentage());
+
+            JenkinsPlugInLogger.printLogOnConsole(
+                2,
+                "  "
+                    + strategyResult.getStrategyName()
+                    + ": metricPath = "
+                    + metricPathComparisonResult.getMetricPath()
+                    + ", expectedValue = "
+                    + metricPathComparisonResult.getExpectedValue()
+                    + ", actualValue = "
+                    + metricPathComparisonResult.getActualValue()
+                    + ", percentageChange = "
+                    + metricPathComparisonResult.getPercentageChange()
+                    + ", thresholdValue = "
+                    + metricPathComparisonResult.getThresholdPercentage());
+          }
           isFailed = true;
           break;
         }

@@ -1,5 +1,10 @@
 package com.ca.apm.jenkins.core.helper;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.ca.apm.jenkins.core.entity.AgentComparisonResult;
 import com.ca.apm.jenkins.core.entity.BuildPerformanceData;
 import com.ca.apm.jenkins.core.entity.MetricPathComparisonResult;
@@ -7,10 +12,6 @@ import com.ca.apm.jenkins.core.entity.MetricPerformanceData;
 import com.ca.apm.jenkins.core.entity.TimeSliceValue;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.JenkinsPluginUtility;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Helper utility to provide you the average, minimum, max values of the performance data per
@@ -196,7 +197,7 @@ public class FormulaHelper {
       metricPathComparisonResult.setActualValue(actualValue);
       metricPathComparisonResult.setExpectedValue(expectedValue);
       metricPathComparisonResult.setMetricPath(metricPath);
-
+      metricPathComparisonResult.setThresholdPercentage(thresholdPercentage);
       metricPathComparisonResult.setPercentageChange(percentageChange);
       if (percentageChange > thresholdPercentage) {
         agentComparisonResult.addToSlowTransactions(metricPathComparisonResult);
@@ -231,6 +232,7 @@ public class FormulaHelper {
       metricPathComparisonResult.setExpectedValue(thresholdValue);
       metricPathComparisonResult.setMetricPath(metricPath);
       metricPathComparisonResult.setPercentageChange(percentageChange);
+      metricPathComparisonResult.setThresholdPercentage(thresholdValue);
       if (percentageChange > thresholdValue) {
         agentComparisonResult.addToSlowTransactions(metricPathComparisonResult);
       } else {

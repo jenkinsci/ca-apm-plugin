@@ -1,13 +1,9 @@
-
 package com.ca.apm.jenkins.performancecomparatorplugin.outputhandler;
 
 import java.io.File;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,252 +34,263 @@ import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
 
 /**
- * An implementation of Output Handler to render the multiple builds results,
- * metric wise into histogram Charts
- * 
- * @author Avinash Chandwani
+ * An implementation of Output Handler to render the multiple builds results, metric wise into
+ * histogram Charts
  *
+ * @author Avinash Chandwani
  */
 @SuppressWarnings("rawtypes")
 public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 
-	private static final String HISTOGRAM = "HistogramOutputHandler";
-	private ComparisonMetadata comparisonMetadata;
+  private static final String HISTOGRAM = "HistogramOutputHandler";
+  private ComparisonMetadata comparisonMetadata;
 
-	private int currentBuildNumber;
-	private OutputConfiguration outputConfiguration;
+  private int currentBuildNumber;
+  private OutputConfiguration outputConfiguration;
+  private String workspaceFolder = null;
+  private String jobName = null;
 
-	public void setComparisonMetadata(ComparisonMetadata comparisonMetadata) {
-		this.comparisonMetadata = comparisonMetadata;
-	}
+  private LinkedHashMap<String, LinkedHashMap<String, Double>> metrictoBuildAvgValMap =
+      new LinkedHashMap<String, LinkedHashMap<String, Double>>();
 
-	public void setOutputConfiguration(OutputConfiguration outputConfiguration) {
-		this.outputConfiguration = outputConfiguration;
+  public void setComparisonMetadata(ComparisonMetadata comparisonMetadata) {
+    this.comparisonMetadata = comparisonMetadata;
+  }
 
-	}
+  public void setOutputConfiguration(OutputConfiguration outputConfiguration) {
+    this.outputConfiguration = outputConfiguration;
+  }
 
-	public void publishOutput(List<StrategyResult> strategyResults)
-			throws BuildComparatorException, BuildExecutionException {
-		List<BuildInfo> histogramBuildInfoList = outputConfiguration.getHistogramBuildInfoList();
-		String workspaceFolder = outputConfiguration.getCommonPropertyValue(Constants.workSpaceDirectory);
-		String jobName = outputConfiguration.getCommonPropertyValue(Constants.jenkinsJobName);
-		Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap = getMetricData(
-				histogramBuildInfoList);
-		produceChartOutput(stgyBldMetricPathAverageValuesMap, workspaceFolder, jobName);
+  /**
+   * Entry method to generate buildtoBuildChart
+   *
+   * @param strategyResults
+   * @throws BuildComparatorException
+   * @throws BuildExecutionException
+   */
+  public void publishOutput(List<StrategyResult> strategyResults)
+      throws BuildComparatorException, BuildExecutionException {
+    List<BuildInfo> histogramBuildInfoList = outputConfiguration.getHistogramBuildInfoList();
+    workspaceFolder = outputConfiguration.getCommonPropertyValue(Constants.workSpaceDirectory);
+    jobName = outputConfiguration.getCommonPropertyValue(Constants.jenkinsJobName);
+    getMetricData(histogramBuildInfoList, strategyResults);
+  }
 
-	}
+  /**
+   * The method to pull metrics from EM and builds a map for each metric path to build number and
+   * average value
+   *
+   * @param strategyResults
+   * @throws BuildExecutionException
+   */
+  private void getMetricData(List<BuildInfo> buildInfoList, List<StrategyResult> strategyResults)
+      throws BuildExecutionException {
+    Map<String, StrategyConfiguration> comparisonStrategies =
+        comparisonMetadata.getStrategiesInfo().getComparisonStrategiesInfo();
+    Map<String, Map<String, Double>> strategyWiseBuildtoMetricAvgValMap = null;
+    Set<String> metricPathSet = null;
+    currentBuildNumber = buildInfoList.get(0).getNumber();
+    for (int i = 0; i < strategyResults.size(); i++) {
+      metricPathSet = new HashSet<String>();
+      strategyWiseBuildtoMetricAvgValMap = new LinkedHashMap<String, Map<String, Double>>();
+      String strategyName = strategyResults.get(i).getStrategyName();
+      StrategyConfiguration strategyConfiguration = comparisonStrategies.get(strategyName);
+      String metricSpecifier =
+          strategyConfiguration.getPropertyValue(strategyName + "." + Constants.metricSpecifier);
+      List<String> agentSpecifiers = strategyConfiguration.getAgentSpecifiers();
+      for (String agentSpecifier : agentSpecifiers) {
 
-	private Map<String, Map<String, Map<String, Double>>> getMetricData(List<BuildInfo> buildInfoList)
-			throws BuildExecutionException {
-		Set<String> comparisonStrategiesSet = comparisonMetadata.getStrategiesInfo()
-				.getOutputHandlerToComparisonStrategies().get(Constants.histogramoutputhtml);
-		StrategyConfiguration strategyConfiguration;
-		String comparisonStrategyName;
-		List<String> comparisonStrategies = new ArrayList<String>(comparisonStrategiesSet);
-		Map<String, Map<String, Double>> buildMetricPathAvgValuesMap = null;
-		Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap = new LinkedHashMap<String, Map<String, Map<String, Double>>>();
-		String metricSpecifier = null;
-		currentBuildNumber = buildInfoList.get(0).getNumber();
-		for (int i = 0; i < comparisonStrategies.size(); i++) {
-			comparisonStrategyName = comparisonStrategies.get(i);
-			buildMetricPathAvgValuesMap = new LinkedHashMap<String, Map<String, Double>>();
-			Map<String, StrategyConfiguration> comparisonStrategiesInfo = comparisonMetadata.getStrategiesInfo()
-					.getComparisonStrategiesInfo();
-			strategyConfiguration = comparisonStrategiesInfo.get(comparisonStrategyName);
-			List<String> agentSpecifiers = strategyConfiguration.getAgentSpecifiers();
-			metricSpecifier = strategyConfiguration
-					.getPropertyValue(comparisonStrategyName + "." + Constants.metricSpecifier);
+        for (int j = 0; j < buildInfoList.size(); j++) {
+          try {
+            BuildPerformanceData buildPerformanceData =
+                MetricDataHelper.getMetricData(
+                    agentSpecifier, metricSpecifier, "HISTOGRAM", buildInfoList.get(j));
+            Map<String, Double> metricAverageValuesMap =
+                FormulaHelper.getAverageValues(buildPerformanceData);
+            for (String metricPath : metricAverageValuesMap.keySet()) {
+              metricPathSet.add(metricPath);
+            }
+            strategyWiseBuildtoMetricAvgValMap.put(
+                String.valueOf(buildInfoList.get(j).getNumber()), metricAverageValuesMap);
+          } catch (BuildComparatorException e) {
+            JenkinsPlugInLogger.severe(
+                "An error has occured while collecting performance metrics for "
+                    + strategyName
+                    + "from APM-> for agentSpecifier="
+                    + agentSpecifier
+                    + ",metricSpecifier ="
+                    + metricSpecifier
+                    + e.getMessage(),
+                e);
+          }
+        }
+      }
 
-			for (String agentSpecifier : agentSpecifiers) {
+      getMetrictoBuildAvgValMap(strategyWiseBuildtoMetricAvgValMap, metricPathSet);
+    }
+    produceChartOutput(metrictoBuildAvgValMap);
+  }
 
-				try {
-					for (int k = 0; k < buildInfoList.size(); k++) {
-						BuildPerformanceData benchMarkPerformanceData = MetricDataHelper.getMetricData(agentSpecifier,
-								metricSpecifier, HISTOGRAM, buildInfoList.get(k));
-						Map<String, Double> metricPathAverageValuesMap = FormulaHelper
-								.getAverageValues(benchMarkPerformanceData);
+  /**
+   * The method to build a map for each metric path to build number and average value map
+   *
+   * @param strategyWiseBuildtoMetricAvgValMap
+   * @param metricPathSet
+   */
+  private void getMetrictoBuildAvgValMap(
+      Map<String, Map<String, Double>> strategyWiseBuildtoMetricAvgValMap,
+      Set<String> metricPathSet) {
+    LinkedHashMap<String, Double> buildtoAvgValMap = null;
+    Iterator<String> it = metricPathSet.iterator();
+    String metricPath = null;
+    while (it.hasNext()) {
+      metricPath = it.next();
+      buildtoAvgValMap = new LinkedHashMap<String, Double>();
+      for (String buildNumber : strategyWiseBuildtoMetricAvgValMap.keySet()) {
+        Map<String, Double> metrictoAvgValMap = strategyWiseBuildtoMetricAvgValMap.get(buildNumber);
+        if (metrictoAvgValMap.containsKey(metricPath)) {
+          buildtoAvgValMap.put(buildNumber, metrictoAvgValMap.get(metricPath));
+        }
+      }
+      metrictoBuildAvgValMap.put(metricPath, buildtoAvgValMap);
+    }
+  }
 
-						buildMetricPathAvgValuesMap.put(String.valueOf(buildInfoList.get(k).getNumber()),
-								metricPathAverageValuesMap);
+  /**
+   * The method to produce chart
+   *
+   * @param metricPathSet
+   */
+  @SuppressWarnings("rawtypes")
+  private void produceChartOutput(
+      Map<String, LinkedHashMap<String, Double>> strategyWiseMetrictoBuildAvgValMap) {
+    List<JenkinsAMChart> metricPathsChart = null;
+    String appMapURL = outputConfiguration.getCommonPropertyValue(Constants.appMapURL);
+    metricPathsChart = getChartsForMetricPaths(strategyWiseMetrictoBuildAvgValMap);
+    String htmlOutput = null;
+    htmlOutput = applyToVelocityTemplate(appMapURL, metricPathsChart);
+    FileHelper.exportOutputToFile(
+        workspaceFolder
+            + File.separator
+            + jobName
+            + File.separator
+            + currentBuildNumber
+            + File.separator
+            + "chartOutput"
+            + File.separator
+            + "output",
+        "buildtoBuildStrategy-chart-output.html",
+        htmlOutput);
+  }
 
-					}
-				} catch (BuildComparatorException e) {
-					JenkinsPlugInLogger.severe("An error has occured while collecting performance metrics for "
-							+ comparisonStrategyName + "from APM-> for agentSpecifier=" + agentSpecifier
-							+ ",metricSpecifier =" + metricSpecifier + e.getMessage(), e);
+  private static String applyToVelocityTemplate(
+      String appMapURL, List<JenkinsAMChart> strategyCharts) {
+    VelocityEngine ve = new VelocityEngine();
+    StringWriter writer = new StringWriter();
+    ve.setProperty("resource.loader", "classpath");
+    ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+    ve.init();
+    Template t = ve.getTemplate("amHistogramChartsReport.vm");
+    VelocityContext context = new VelocityContext();
+    context.put("strategyCharts", strategyCharts);
+    context.put("url", appMapURL);
+    t.merge(context, writer);
+    return writer.toString();
+  }
 
-				}
+  private static List<JenkinsAMChart> getChartsForMetricPaths(
+      Map<String, LinkedHashMap<String, Double>> strategyWiseMetrictoBuildAvgValMap) {
+    List<JenkinsAMChart> amCharts = null;
+    amCharts = new LinkedList<JenkinsAMChart>();
+    JenkinsAMChart amChart = null;
+    int divId = 0;
 
-			}
-			stgyBldMetricPathAverageValuesMap.put(comparisonStrategyName + "|" + metricSpecifier,
-					buildMetricPathAvgValuesMap);
+    for (String metricPath : strategyWiseMetrictoBuildAvgValMap.keySet()) {
 
-		}
-		return stgyBldMetricPathAverageValuesMap;
+      JSONObject amChartJSON =
+          generateAMChartsJSON(metricPath, strategyWiseMetrictoBuildAvgValMap.get(metricPath));
+      if (!amChartJSON.get("dataProvider").equals("empty")) {
+        amChart = new JenkinsAMChart();
+        amChart.setChartJSONObject(amChartJSON);
+        amChart.setDivId("div" + divId);
+        amCharts.add(amChart);
+        divId++;
+      }
+    }
 
-	}
+    return amCharts;
+  }
 
-	@SuppressWarnings("rawtypes")
-	private void produceChartOutput(Map<String, Map<String, Map<String, Double>>> stgyBldMetricPathAverageValuesMap,
-			String workspaceFolder, String jobName) {
-		List<JenkinsAMChart> metricPathsChart = null;
-		String appMapURL = outputConfiguration.getCommonPropertyValue(Constants.appMapURL);
-		metricPathsChart = getChartsForMetricPaths(stgyBldMetricPathAverageValuesMap);
-		String htmlOutput = null;
-		htmlOutput = applyToVelocityTemplate(appMapURL, metricPathsChart);
-		FileHelper.exportOutputToFile(
-				workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber + File.separator
-						+ "chartOutput" + File.separator + "output",
-				"buildtoBuildStrategy-chart-output.html", htmlOutput);
+  private static JSONObject generateAMChartsJSON(
+      String metricPath, Map<String, Double> buildAvgValues) {
 
-	}
+    String metricName = metricPath.substring(metricPath.lastIndexOf('|') + 1);
+    JSONObject amCharts = new JSONObject();
+    amCharts.put("type", "serial");
+    amCharts.put("theme", "light");
 
-	private static String applyToVelocityTemplate(String appMapURL, List<JenkinsAMChart> strategyCharts) {
-		VelocityEngine ve = new VelocityEngine();
-		StringWriter writer = new StringWriter();
-		ve.setProperty("resource.loader", "classpath");
-		ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-		ve.init();
-		Template t = ve.getTemplate("amHistogramChartsReport.vm");
-		VelocityContext context = new VelocityContext();
-		context.put("strategyCharts", strategyCharts);
-		context.put("url", appMapURL);
-		t.merge(context, writer);
-		return writer.toString();
-	}
+    JSONArray dataProviderArray = new JSONArray();
+    boolean isDataSet = false;
+    JSONObject recordObj = null;
+    for (String buildNumber : buildAvgValues.keySet()) {
 
-	private static List<JenkinsAMChart> getChartsForMetricPaths(
-			Map<String, Map<String, Map<String, Double>>> strategyWiseBuildAvgValues) {
-		List<JenkinsAMChart> amCharts = null;
-		amCharts = new LinkedList<JenkinsAMChart>();
-		JenkinsAMChart amChart = null;
-		int divId = 0;
-		String metricSpecifier = null;
-		List<String> buildNumbers = null;
-		Set<String> metricPathSet = null;
-		Map<String, Double> buildAvgValMap = new LinkedHashMap<String, Double>();
-		Set<String> metricPathSeqSet = new HashSet<String>();
-		for (String strategyName : strategyWiseBuildAvgValues.keySet()) {
-			metricSpecifier = strategyName.substring(strategyName.indexOf('|') + 1);
-			Map<String, Map<String, Double>> buildMerticAvgValMap = strategyWiseBuildAvgValues.get(strategyName);
-			buildNumbers = new ArrayList(buildMerticAvgValMap.keySet());
-			int[] buildNumbersSeq = new int[buildNumbers.size()];
-			for(int i = 0; i < buildNumbersSeq.length; i++){
-				buildNumbersSeq[i] = Integer.parseInt(buildNumbers.get(i));
-			}
-			Arrays.sort(buildNumbersSeq);
-			for (int i = 0; i < buildNumbersSeq.length; i++) {
-				metricPathSet = new HashSet<String>();
-				for (String metricPath : buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[i])).keySet()) {
-					metricPathSet.add(metricPath);
-				}
-			}
-			List<String> metricPathList = new ArrayList<String>(metricPathSet);
-			//Collections.sort(buildNumbers, Collections.reverseOrder());
-			
-			for (int j = 0; j < metricPathList.size(); j++) {
-				String metricPathchart = null;
-				for (int k = 0; k < buildNumbersSeq.length; k++) {
+      if (buildAvgValues.get(buildNumber) != 0) {
+        recordObj = new JSONObject();
+        isDataSet = true;
+        recordObj.put("BuildNumber", Integer.parseInt(buildNumber));
+        recordObj.put("AverageValue", buildAvgValues.get(buildNumber));
 
-					for (String metricPath : buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[k])).keySet()) {
+        dataProviderArray.put(recordObj);
+      }
+    }
+    if (isDataSet) {
+      amCharts.put("dataProvider", dataProviderArray);
+    } else {
+      amCharts.put("dataProvider", "empty");
+    }
 
-						if (metricPath.equals(metricPathList.get(j))) {
-							metricPathchart = metricPath;
-							buildAvgValMap.put(buildNumbers.get(k),
-									buildMerticAvgValMap.get(String.valueOf(buildNumbersSeq[k])).get(metricPath));
+    JSONObject graphobj = new JSONObject();
 
-						}
-					}
+    JSONObject valueAxis = new JSONObject();
+    valueAxis.put("id", "ValueAxis-1");
+    valueAxis.put("title", metricName);
 
-				}
-				if (metricPathSeqSet.add(metricPathchart)) {
-					JSONObject amChartJSON = generateAMChartsJSON(metricPathchart, buildAvgValMap);
-					if (!amChartJSON.get("dataProvider").equals("empty")) {
-						amChart = new JenkinsAMChart();
-						amChart.setChartJSONObject(amChartJSON);
-						amChart.setDivId("div" + divId);
-						amCharts.add(amChart);
-						divId++;
-					}
-				}
-			}
+    JSONObject categoryAxis = new JSONObject();
+    categoryAxis.put("startOnAxis", true);
+    categoryAxis.put("title", "BuildNumber");
+    amCharts.put("categoryAxis", categoryAxis);
 
-		}
-		return amCharts;
+    JSONArray valueAxesArray = new JSONArray();
+    valueAxesArray.put(valueAxis);
+    amCharts.put("valueAxes", valueAxesArray);
 
-	}
+    JSONObject titleObj = new JSONObject();
+    titleObj.put("id", "Title-1");
+    titleObj.put("text", metricPath);
+    JSONArray titlesArray = new JSONArray();
+    titlesArray.put(titleObj);
 
-	private static JSONObject generateAMChartsJSON(String metricPath, Map<String, Double> buildAvgValues) {
+    amCharts.put("titles", titlesArray);
 
-		String metricName = metricPath.substring(metricPath.lastIndexOf('|') + 1);
-		JSONObject amCharts = new JSONObject();
-		amCharts.put("type", "serial");
-		amCharts.put("theme", "light");
+    amCharts.put("valueAxes", valueAxesArray);
 
-		JSONArray dataProviderArray = new JSONArray();
-		boolean isDataSet = false;
-		JSONObject recordObj = null;
-		for (String buildNumber : buildAvgValues.keySet()) {
+    graphobj.put("fillAlphas", 0.9);
+    graphobj.put("lineAlpha", "0.2");
+    graphobj.put("type", "column");
+    graphobj.put("valueField", "AverageValue");
 
-			if (buildAvgValues.get(buildNumber) != 0) {
-				recordObj = new JSONObject();
-				isDataSet = true;
-				recordObj.put("BuildNumber", Integer.parseInt(buildNumber));
-				recordObj.put("AverageValue", buildAvgValues.get(buildNumber));
+    JSONArray graphArrayObj = new JSONArray();
+    graphArrayObj.put(graphobj);
 
-				dataProviderArray.put(recordObj);
-			}
-		}
-		if (isDataSet) {
-			amCharts.put("dataProvider", dataProviderArray);
-		} else {
-			amCharts.put("dataProvider", "empty");
-		}
+    amCharts.put("graphs", graphArrayObj);
 
-		JSONObject graphobj = new JSONObject();
+    amCharts.put("categoryField", "BuildNumber");
 
-		JSONObject valueAxis = new JSONObject();
-		valueAxis.put("id", "ValueAxis-1");
-		valueAxis.put("title", metricName);
+    JSONObject chartCursorobj = new JSONObject();
+    chartCursorobj.put("fullWidth", "true");
+    chartCursorobj.put("cursorAlpha", "0.1");
+    amCharts.put("chartCursor", chartCursorobj);
 
-		JSONObject categoryAxis = new JSONObject();
-		categoryAxis.put("startOnAxis", true);
-		categoryAxis.put("title", "BuildNumber");
-		amCharts.put("categoryAxis", categoryAxis);
-
-		JSONArray valueAxesArray = new JSONArray();
-		valueAxesArray.put(valueAxis);
-		amCharts.put("valueAxes", valueAxesArray);
-
-		JSONObject titleObj = new JSONObject();
-		titleObj.put("id", "Title-1");
-		titleObj.put("text", metricPath);
-		JSONArray titlesArray = new JSONArray();
-		titlesArray.put(titleObj);
-
-		amCharts.put("titles", titlesArray);
-
-		amCharts.put("valueAxes", valueAxesArray);
-
-		graphobj.put("fillAlphas", 0.9);
-		graphobj.put("lineAlpha", "0.2");
-		graphobj.put("type", "column");
-		graphobj.put("valueField", "AverageValue");
-
-		JSONArray graphArrayObj = new JSONArray();
-		graphArrayObj.put(graphobj);
-
-		amCharts.put("graphs", graphArrayObj);
-
-		amCharts.put("categoryField", "BuildNumber");
-
-		JSONObject chartCursorobj = new JSONObject();
-		chartCursorobj.put("fullWidth", "true");
-		chartCursorobj.put("cursorAlpha", "0.1");
-		amCharts.put("chartCursor", chartCursorobj);
-
-		return amCharts;
-
-	}
-
+    return amCharts;
+  }
 }
