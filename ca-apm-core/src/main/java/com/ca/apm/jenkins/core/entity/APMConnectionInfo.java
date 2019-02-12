@@ -9,9 +9,7 @@ package com.ca.apm.jenkins.core.entity;
 public class APMConnectionInfo {
 
   private String emURL;
-  private String emUserName;
-  private String emPassword;
-  private String authToken;
+  private String emAuthToken;
   private String emTimeZone;
 
   public APMConnectionInfo() {
@@ -26,28 +24,12 @@ public class APMConnectionInfo {
     this.emURL = emURL;
   }
 
-  public String getEmUserName() {
-    return emUserName;
+  public String getEmAuthToken() {
+    return emAuthToken;
   }
 
-  public void setEmUserName(String emUserName) {
-    this.emUserName = emUserName;
-  }
-
-  public String getEmPassword() {
-    return emPassword;
-  }
-
-  public void setEmPassword(String emPassword) {
-    this.emPassword = emPassword;
-  }
-
-  public String getAuthToken() {
-    return authToken;
-  }
-
-  public void setAuthToken(String authToken) {
-    this.authToken = authToken;
+  public void setEmAuthToken(String emAuthToken) {
+    this.emAuthToken = emAuthToken;
   }
 
   public String getEmTimeZone() {
@@ -62,12 +44,8 @@ public class APMConnectionInfo {
   public String toString() {
     return "APMConnectionInfo [emURL="
         + emURL
-        + ", emUserName="
-        + emUserName
-        + ", emPassword="
-        + emPassword
         + ", authToken="
-        + authToken
+        + emAuthToken
         + ", emTimeZone="
         + emTimeZone
         + "]";

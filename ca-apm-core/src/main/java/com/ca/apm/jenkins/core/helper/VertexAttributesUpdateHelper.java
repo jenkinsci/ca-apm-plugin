@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.security.KeyStore.Entry;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -13,10 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
@@ -27,7 +26,6 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -37,14 +35,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.ca.apm.jenkins.api.entity.OutputConfiguration;
-import com.ca.apm.jenkins.api.entity.StrategyResult;
-import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.core.entity.APMConnectionInfo;
-import com.ca.apm.jenkins.core.entity.AgentComparisonResult;
 import com.ca.apm.jenkins.core.entity.ComparisonMetadata;
 import com.ca.apm.jenkins.core.entity.ComparisonResult;
-import com.ca.apm.jenkins.core.entity.DefaultStrategyResult;
-import com.ca.apm.jenkins.core.entity.MetricPathComparisonResult;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
 import com.ca.apm.jenkins.core.util.JenkinsPluginUtility;
@@ -66,63 +59,7 @@ public class VertexAttributesUpdateHelper {
 	public VertexAttributesUpdateHelper(ComparisonMetadata comparisonMetadata) {
 		this.comparisonMetadata = comparisonMetadata;
 	}
-
-	private static String getTemporaryAuthToken() throws BuildComparatorException {
-		if (apmConnectionInfo.getEmPassword().isEmpty()) {
-			JenkinsPlugInLogger.fine("Password is empty, hence considering username as auth token --:>"
-					+ apmConnectionInfo.getEmUserName());
-			JenkinsPlugInLogger.fine("Length is --:>" + apmConnectionInfo.getEmUserName().length());
-			return apmConnectionInfo.getEmUserName();
-		}
-		if (apmConnectionInfo.getAuthToken() == null) {
-			JenkinsPlugInLogger.severe("Password is not empty, hence requesting temporary token from EM");
-			String tokenUrl = generateURL(apmConnectionInfo.getEmURL(), Constants.tokenPath);
-			CloseableHttpClient client = HttpClients.createDefault();
-			HttpPost httpPost = new HttpPost(tokenUrl);
-			JSONObject reqBody = new JSONObject();
-			reqBody.put("username", apmConnectionInfo.getEmUserName());
-			reqBody.put("password", apmConnectionInfo.getEmPassword());
-			StringEntity entity = null;
-			CloseableHttpResponse response = null;
-			try {
-				entity = new StringEntity(reqBody.toString());
-				httpPost.setEntity(entity);
-				httpPost.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
-				response = client.execute(httpPost);
-			} catch (UnsupportedEncodingException e) {
-				JenkinsPlugInLogger.severe("Error while getting temporary token ->" + e.getMessage(), e);
-			} catch (ClientProtocolException e) {
-				JenkinsPlugInLogger.severe("Error while getting temporary token ->" + e.getMessage(), e);
-			} catch (IOException e) {
-				JenkinsPlugInLogger.severe("Error while getting temporary token ->" + e.getMessage(), e);
-			}
-			if (Response.Status.OK.getStatusCode() == response.getStatusLine().getStatusCode()) {
-				StringBuffer result = new StringBuffer();
-				try {
-					BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-					String line = "";
-					while ((line = rd.readLine()) != null) {
-						result.append(line);
-					}
-				} catch (IOException e) {
-					return null;
-				}
-				JSONObject responseObj = new JSONObject(result.toString());
-				apmConnectionInfo.setAuthToken((String) responseObj.get("token"));
-			} else {
-				int statusCode = response.getStatusLine().getStatusCode();
-				JenkinsPlugInLogger.severe("Getting Auth token from CA-APM failed with status code " + statusCode);
-				JenkinsPlugInLogger.severe("Detailed Response from EM is  " + response.toString());
-
-				throw new BuildComparatorException(
-						"Error occured while getting auth token from CA-APM with response code ->" + statusCode);
-			}
-		} else {
-			return apmConnectionInfo.getAuthToken();
-		}
-		return apmConnectionInfo.getAuthToken();
-	}
-
+	
 	private static boolean callUpdateVertexAttribute(Map<String, Set<String>> vertexIdTsMap, Map attributesMap) {
 		JenkinsPlugInLogger.info("Inside callUpdateVertexAttribute method");
 		if (vertexIdTsMap.isEmpty()) {
@@ -136,7 +73,7 @@ public class VertexAttributesUpdateHelper {
 
 			client = IgnoreSSLClient(client);
 			request.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
-			request.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getAuthToken());
+			request.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 			request.addHeader("Accept", "application/json");
 			Iterator iterator = vertexIdTsMap.entrySet().iterator();
 			boolean isFirstID = true;
@@ -241,10 +178,7 @@ public class VertexAttributesUpdateHelper {
 		boolean processStatus = false;
 		Set<String> vertexIds = null;
 		String vertexId = null;
-		if (!apmConnectionInfo.getEmPassword().isEmpty()) {
-			JenkinsPlugInLogger.info("User didn't provide auth token, hence generating a temporary token");
-			apmConnectionInfo.setAuthToken(getTemporaryAuthToken());
-		}
+		
 		String vertexIdsURL = generateURL(apmConnectionInfo.getEmURL(), Constants.vertexIdByName);
 
 		HttpGet httpGet = null;
@@ -270,7 +204,7 @@ public class VertexAttributesUpdateHelper {
 
 		try {
 			httpGet.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
-			httpGet.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getAuthToken());
+			httpGet.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 			response = client.execute(httpGet);
 
 		} catch (UnsupportedEncodingException e) {

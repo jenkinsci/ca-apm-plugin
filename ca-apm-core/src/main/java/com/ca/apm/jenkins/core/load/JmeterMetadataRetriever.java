@@ -7,6 +7,8 @@ import com.ca.apm.jenkins.core.entity.LoadRunnerMetadata;
 import com.ca.apm.jenkins.core.load.reader.JmeterCSVReader;
 import com.ca.apm.jenkins.core.load.reader.JmeterXMLReader;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
+import com.ca.apm.jenkins.core.util.Constants;
+
 import java.io.File;
 
 /**
@@ -17,7 +19,7 @@ public class JmeterMetadataRetriever implements LoadRunnerMetadataRetriever {
 
   String loadRunnerName = null;
   String jmeterCurrentRunOutputFile = null;
-  String jmeterBenchmarkRunOutputFile = null;
+  String jmeterBenchmarkRunOutputFile = null;  
   JenkinsInfo jenkinsInfo = null;
   long cStartTime, cEndTime, bStartTime, bEndTime = 0;
   long[] values;
@@ -43,14 +45,8 @@ public class JmeterMetadataRetriever implements LoadRunnerMetadataRetriever {
   public void fetchExtraMetadata() throws BuildValidationException {
 
     this.loadRunnerName = loadRunnerMetadata.getLoadRunnerPropertyValue("loadgenerator.name");
-
-    this.jmeterCurrentRunOutputFile =
-        loadRunnerMetadata.getLoadRunnerPropertyValue(loadRunnerName + ".currentrunoutputfile");
-
-    this.jmeterBenchmarkRunOutputFile =
-        loadRunnerMetadata.getLoadRunnerPropertyValue(loadRunnerName + ".benchmarkrunoutputfile");
-
-    this.jenkinsInfo = loadRunnerMetadata.getJenkinsInfo();
+    
+   this.jenkinsInfo = loadRunnerMetadata.getJenkinsInfo();
 
     readLoadGenFile();
   }
@@ -76,8 +72,9 @@ public class JmeterMetadataRetriever implements LoadRunnerMetadataRetriever {
               + File.separator
               + jenkinsInfo.getCurrentBuildNumber()
               + File.separator
-              + jmeterCurrentRunOutputFile;
-
+              + Constants.jmeterOutputFileName
+              +"."+fileType.toLowerCase();
+             
       values = new long[2];
 
       values = jmeterCSVMetadataReader.getBuildTSFromOutputFile(jmeterCurrentRunOutputFile);
@@ -94,8 +91,9 @@ public class JmeterMetadataRetriever implements LoadRunnerMetadataRetriever {
               + File.separator
               + loadRunnerMetadata.getBenchMarkBuildNumber()
               + File.separator
-              + jmeterBenchmarkRunOutputFile;
-
+              + Constants.jmeterOutputFileName
+              +"."+fileType.toLowerCase();
+            
       values = new long[2];
 
       values = jmeterCSVMetadataReader.getBuildTSFromOutputFile(jmeterBenchmarkRunOutputFile);
@@ -114,8 +112,9 @@ public class JmeterMetadataRetriever implements LoadRunnerMetadataRetriever {
               + File.separator
               + jenkinsInfo.getCurrentBuildNumber()
               + File.separator
-              + jmeterCurrentRunOutputFile;
-
+              + Constants.jmeterOutputFileName
+              +"."+fileType.toLowerCase();
+            
       values = new long[2];
 
       values = jmeterXMLMetadataRetriever.getBuildTSFromOutputFile(jmeterCurrentRunOutputFile);
@@ -132,8 +131,9 @@ public class JmeterMetadataRetriever implements LoadRunnerMetadataRetriever {
               + File.separator
               + loadRunnerMetadata.getBenchMarkBuildNumber()
               + File.separator
-              + jmeterBenchmarkRunOutputFile;
-
+              + Constants.jmeterOutputFileName
+              +"."+fileType.toLowerCase();
+             
       values = new long[2];
 
       values = jmeterXMLMetadataRetriever.getBuildTSFromOutputFile(jmeterBenchmarkRunOutputFile);

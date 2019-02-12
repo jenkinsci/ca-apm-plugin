@@ -1,6 +1,7 @@
 package com.ca.apm.jenkins.core.executor;
 
 import com.ca.apm.jenkins.api.entity.OutputConfiguration;
+import com.ca.apm.jenkins.api.entity.StrategyConfiguration;
 import com.ca.apm.jenkins.api.entity.StrategyResult;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.core.entity.ComparisonMetadata;
@@ -50,8 +51,7 @@ public class OutputHandlingExecutor {
     ComparisonResult comparisonResult = comparisonMetadata.getComparisonResult();
     for (String outputHandler : outputStrategies.keySet()) {
       Class<?> pluginClass = null;
-      String outputHandlerClass =
-          outputStrategies.get(outputHandler).getPropertyValue(outputHandler + ".outputhandler");
+      String outputHandlerClass = getOutputHandlerClass(outputHandler, outputStrategies);
       try {
         pluginClass = comparisonMetadata.getIoUtility().findClass(outputHandlerClass);
         Object outputHandlerObj = pluginClass.newInstance();
@@ -76,7 +76,7 @@ public class OutputHandlingExecutor {
           if (comparisonMetadata
               .getLoadRunnerMetadataInfo()
               .getLoadRunnerPropertyValue(Constants.loadGeneratorName)
-              .equalsIgnoreCase("blazemeter")) {
+              .equals("blazemeter")) {
             Method setComparisonMetadataMethod =
                 pluginClass.getDeclaredMethod(
                     Constants.ComparisonMetadataConfigMethod, ComparisonMetadata.class);
@@ -213,5 +213,26 @@ public class OutputHandlingExecutor {
     JenkinsPlugInLogger.printLogOnConsole(2, "Output Handling Phase is completed successfully");
     JenkinsPlugInLogger.info("Output Handler Step completed");
     comparisonMetadata.getIoUtility().closeClassLoader();
+  }
+  
+  private String getOutputHandlerClass(String outputHandler, Map<String, OutputHandlerConfiguration> outputStrategies){
+	  String outputHandlerClass = null;
+	  if (outputHandler.equals(Constants.emailOutputHandlerName)) {
+	        outputHandlerClass =
+	            "com.ca.apm.jenkins.performancecomparatorplugin.outputhandler.PlainTextEmailOutputHandler";
+	      } else if (outputHandler.equals(Constants.jsonFileOutputHandlerName)) {
+	        outputHandlerClass =
+	            "com.ca.apm.jenkins.performancecomparatorplugin.outputhandler.JSONFileStoreOutputHandler";
+	      } else if (outputHandler.equals(Constants.chartOutputHandlerName)) {
+	        outputHandlerClass =
+	            "com.ca.apm.jenkins.performancecomparatorplugin.outputhandler.ChartOutputHandler";
+	      } else if (outputHandler.equals(Constants.histogramOutputHandlerName)) {
+	        outputHandlerClass =
+	            "com.ca.apm.jenkins.performancecomparatorplugin.outputhandler.HistogramOutputHandler";
+	      } else {
+	        outputHandlerClass =
+	            outputStrategies.get(outputHandler).getPropertyValue(outputHandler + ".outputhandler");
+	      }
+	  return outputHandlerClass;
   }
 }

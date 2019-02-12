@@ -68,73 +68,7 @@ public class MetricDataHelper {
 		return emURL + relativeURL;
 	}
 
-	/**
-	 * This method is used to test the connection with APM REST APIs, which
-	 * provide metric performance data for build performance comparison
-	 * 
-	 * @throws BuildComparatorException
-	 */
-	public static void testConnection() throws BuildComparatorException {
-		getTemporaryAuthToken();
- 
-	}
-
-	private static String getTemporaryAuthToken() throws BuildComparatorException {
-		if (apmConnectionInfo.getEmPassword().isEmpty()) {
-			JenkinsPlugInLogger.fine("Password is empty, hence considering username as auth token --:>"
-					+ apmConnectionInfo.getEmUserName());
-			JenkinsPlugInLogger.fine("Length is --:>" + apmConnectionInfo.getEmUserName().length());
-			return apmConnectionInfo.getEmUserName();
-		}
-		if (apmConnectionInfo.getAuthToken() == null) {
-			JenkinsPlugInLogger.severe("Password is not empty, hence requesting temporary token from EM");
-			String tokenUrl = generateURL(apmConnectionInfo.getEmURL(), Constants.tokenPath);
-			CloseableHttpClient client = HttpClients.createDefault();
-			HttpPost httpPost = new HttpPost(tokenUrl);
-			JSONObject reqBody = new JSONObject();
-			reqBody.put("username", apmConnectionInfo.getEmUserName());
-			reqBody.put("password", apmConnectionInfo.getEmPassword());
-			StringEntity entity = null;
-			CloseableHttpResponse response = null;
-			try {
-				entity = new StringEntity(reqBody.toString());
-				httpPost.setEntity(entity);
-				httpPost.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
-				response = client.execute(httpPost);
-			} catch (UnsupportedEncodingException e) {
-				JenkinsPlugInLogger.severe("Error while getting temporary token ->" + e.getMessage(), e);
-			} catch (ClientProtocolException e) {
-				JenkinsPlugInLogger.severe("Error while getting temporary token ->" + e.getMessage(), e);
-			} catch (IOException e) {
-				JenkinsPlugInLogger.severe("Error while getting temporary token ->" + e.getMessage(), e);
-			}
-			if (Response.Status.OK.getStatusCode() == response.getStatusLine().getStatusCode()) {
-				StringBuffer result = new StringBuffer();
-				try {
-					BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-					String line = "";
-					while ((line = rd.readLine()) != null) {
-						result.append(line);
-					}
-				} catch (IOException e) {
-					return null;
-				}
-				JSONObject responseObj = new JSONObject(result.toString());
-				apmConnectionInfo.setAuthToken((String) responseObj.get("token"));
-			} else {
-				int statusCode = response.getStatusLine().getStatusCode();
-				JenkinsPlugInLogger.severe("Getting Auth token from CA-APM failed with status code " + statusCode);
-				JenkinsPlugInLogger.severe("Detailed Response from EM is  " + response.toString());
-
-				throw new BuildComparatorException(
-						"Error occured while getting auth token from CA-APM with response code ->" + statusCode);
-			}
-		} else {
-			return apmConnectionInfo.getAuthToken();
-		}
-		return apmConnectionInfo.getAuthToken();
-	}
-
+	
 	private static String prepareSqlRequestBody(String agentSpecifier, String metricSpecifier, long startTime,
 			long endTime) {
 		String query = null;
@@ -218,7 +152,6 @@ public class MetricDataHelper {
 		}
 		JenkinsPlugInLogger.finest("Entering fetchBatchMetricDataFromEM method");
 		CloseableHttpClient httpClient = HttpClients.createDefault();
-		apmConnectionInfo.setAuthToken(getTemporaryAuthToken());
 		comparisonStrategyName= strategyName; 
 		long startTime = build.getStartTime();
 		long endTime = build.getEndTime();
@@ -229,7 +162,7 @@ public class MetricDataHelper {
 		StringEntity bodyEntity;
 		JSONObject metricDataJson = null;
 		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), Constants.queryMetricDataAPI));
-		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getAuthToken());
+		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 		httpPost.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
 		CloseableHttpResponse metricDataResponse = null;
 		try {

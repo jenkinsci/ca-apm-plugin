@@ -165,7 +165,12 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
   private void produceChartOutput(
       Map<String, LinkedHashMap<String, Double>> strategyWiseMetrictoBuildAvgValMap) {
     List<JenkinsAMChart> metricPathsChart = null;
-    String appMapURL = outputConfiguration.getCommonPropertyValue(Constants.appMapURL);
+    String emURL = outputConfiguration.getCommonPropertyValue(Constants.emURL);
+    String startTimeMillis = outputConfiguration.getCommonPropertyValue("runner.start");
+    String endTimeMillis = outputConfiguration.getCommonPropertyValue("runner.end");
+    String emWebViewPort = outputConfiguration.getCommonPropertyValue(Constants.emWebViewPort);
+    String appMapURL = emURL.replace(emURL.substring(emURL.lastIndexOf(':')+1, emURL.length()-1),emWebViewPort) + Constants.emExpViewURLPostfix + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
+   // String appMapURL = outputConfiguration.getCommonPropertyValue(Constants.atcViewURL);
     metricPathsChart = getChartsForMetricPaths(strategyWiseMetrictoBuildAvgValMap);
     String htmlOutput = null;
     htmlOutput = applyToVelocityTemplate(appMapURL, metricPathsChart);
@@ -228,7 +233,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
     JSONObject amCharts = new JSONObject();
     amCharts.put("type", "serial");
     amCharts.put("theme", "light");
-
+        
     JSONArray dataProviderArray = new JSONArray();
     boolean isDataSet = false;
     JSONObject recordObj = null;
@@ -239,6 +244,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
         isDataSet = true;
         recordObj.put("BuildNumber", Integer.parseInt(buildNumber));
         recordObj.put("AverageValue", buildAvgValues.get(buildNumber));
+        //recordObj.put("color", "#CD0D74");
 
         dataProviderArray.put(recordObj);
       }
@@ -258,6 +264,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
     JSONObject categoryAxis = new JSONObject();
     categoryAxis.put("startOnAxis", true);
     categoryAxis.put("title", "BuildNumber");
+    categoryAxis.put("gridPosition", "start");
     amCharts.put("categoryAxis", categoryAxis);
 
     JSONArray valueAxesArray = new JSONArray();
@@ -275,7 +282,8 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
     amCharts.put("valueAxes", valueAxesArray);
 
     graphobj.put("fillAlphas", 0.9);
-    graphobj.put("lineAlpha", "0.2");
+    graphobj.put("lineAlpha", 0.2);
+    graphobj.put("fillColorsField", "color");
     graphobj.put("type", "column");
     graphobj.put("valueField", "AverageValue");
 
@@ -287,8 +295,9 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
     amCharts.put("categoryField", "BuildNumber");
 
     JSONObject chartCursorobj = new JSONObject();
-    chartCursorobj.put("fullWidth", "true");
-    chartCursorobj.put("cursorAlpha", "0.1");
+    chartCursorobj.put("categoryBalloonEnabled", true);
+    chartCursorobj.put("cursorAlpha", 0);
+    chartCursorobj.put("zoomable", false);
     amCharts.put("chartCursor", chartCursorobj);
 
     return amCharts;
