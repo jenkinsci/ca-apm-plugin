@@ -85,9 +85,14 @@ public class Constants {
   public static final String outputHandlers = "outputhandlers";
   public static final String outputHandlersList = "outputhandlers.list";
   public static final String outputHandlerClassName = "outputhandler";
+  
+  
   public static final String outputHandlerClassPath = "com.ca.apm.jenkins.performancecomparatorplugin.outputhandler";
   public static final String outputHandlerSuffix = "OutputHandler";
   
+  public static final String emailMode = "email.mode";
+  public static final String gmailSmtpPort = "email.gmailsmtpport";
+  public static final String gmailSocketPort = "email.gmailsocketport";
   public static final String emailSMTPHost = "email.smtp.host";
   public static final String emailSMTPAuth = "email.smtp.auth";
   public static final String emailSenderId = "email.sender.id";

@@ -683,6 +683,12 @@ public class ComparisonMetadataLoader {
       emailInfo.setSmtpHost(value);
     } else if (key.equals(Constants.emailSMTPAuth)) {
       emailInfo.setMailSmtpAuth(Boolean.parseBoolean(value));
+	} else if (key.equals(Constants.emailMode)) {
+		emailInfo.setMailMode(value);
+	} else if (key.equals(Constants.gmailSmtpPort)) {
+		emailInfo.setGmailSmtpPort(value);
+	} else if (key.equals(Constants.gmailSocketPort )) {
+		emailInfo.setGmailSocketPort (value);			
     } else if (key.equals(Constants.emailSenderId)) {
       emailInfo.setSenderEmailId(value);
     } else if (key.equals(Constants.emailPassword)) {

@@ -54,6 +54,13 @@ public class EmailHelper {
     Properties props = new Properties();
     props.put("mail.smtp.host", emailInfo.getSmtpHost());
     props.put("mail.smtp.auth", emailInfo.isMailSmtpAuth());
+    props.put("mail.mode", emailInfo.getMailMode());
+    if(emailInfo.getMailMode().equalsIgnoreCase("gmail")) {
+    	props.put("mail.smtp.starttls.enable","true");
+        props.put("mail.smtp.protocol","TLS");
+    	props.put("mail.smtp.socketFactory.port", emailInfo.getGmailSocketPort());
+    	props.put("mail.smtp.port", emailInfo.getGmailSmtpPort());
+    }
     Session session =
         Session.getDefaultInstance(
             props,
