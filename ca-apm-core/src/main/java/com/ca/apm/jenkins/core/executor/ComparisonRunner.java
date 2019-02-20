@@ -25,7 +25,7 @@ public class ComparisonRunner {
 	private JenkinsInfo jenkinsInfo;
 	private String performanceComparatorProperties;
 	private TaskListener taskListener;
-
+	
 	public ComparisonRunner() {
 		super();
 	}
@@ -60,7 +60,7 @@ public class ComparisonRunner {
 	 *         failure of execution
 	 * @throws BuildComparatorException
 	 *             : In case of any error/exception during the execution occurs,
-	 *             this exception is throw with appropriate message
+	 *              this exception is throw with appropriate message
 	 * @throws BuildValidationException
 	 */
 	public boolean executeComparison()
