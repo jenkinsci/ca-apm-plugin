@@ -50,6 +50,7 @@ public class ComparisonMetadataLoader {
 
   private String performanceComparatorProperties;
 
+  
   public ComparisonMetadataLoader(JenkinsInfo jenkinsInfo, String performanceComparatorProperties) {
     super();
     comparisonMetadata = new ComparisonMetadata(jenkinsInfo);
