@@ -1,5 +1,21 @@
 package com.ca.apm.jenkins.performance_comparator_jenkinsplugin;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.jenkinsci.Symbol;
+import org.jenkinsci.remoting.RoleChecker;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
+
+import com.ca.apm.jenkins.api.entity.BuildInfo;
 import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
@@ -7,6 +23,7 @@ import com.ca.apm.jenkins.core.entity.JenkinsInfo;
 import com.ca.apm.jenkins.core.executor.ComparisonRunner;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
+
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
@@ -22,21 +39,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.jenkinsci.Symbol;
-import org.jenkinsci.remoting.RoleChecker;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
 
 /** @author Avinash Chandwani */
 public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildStep, Serializable {
@@ -80,7 +84,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
   private boolean runAction(
       int currentBuildNumber,
       int previousSuccessfulBuild,
-      List<String> histogramBuilds,
+      List<BuildInfo> histogramBuildInfoList,
       String workspaceFolder,
       String jobName,
       TaskListener taskListener)
@@ -88,7 +92,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
     boolean comparisonRunStatus = false;
     JenkinsInfo jenkinsInfo =
         new JenkinsInfo(
-            currentBuildNumber, previousSuccessfulBuild, histogramBuilds, workspaceFolder, jobName);
+            currentBuildNumber, previousSuccessfulBuild, histogramBuildInfoList, workspaceFolder, jobName);
     ComparisonRunner runner =
         new ComparisonRunner(jenkinsInfo, this.performanceComparatorProperties,taskListener);
     comparisonRunStatus = runner.executeComparison();
@@ -98,7 +102,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
   private Callable<StringBuilder, IOException> executeComparison(
       final int currentBuildNumber,
       final int previousSuccessfulBuildNumber,
-      final List<String> histogramBuilds,
+      final List<BuildInfo> histogramBuildInfoList,
       final String workspaceFolder,
       final String jobName,
       final TaskListener taskListener)
@@ -114,7 +118,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
         doExecute(
             currentBuildNumber,
             previousSuccessfulBuildNumber,
-            histogramBuilds,
+            histogramBuildInfoList,
             workspaceFolder,
             jobName,
             taskListener);
@@ -184,7 +188,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
   private  void doExecute(
       int currentBuildNumber,
       int previousSuccessfulBuildNumber,
-      List<String> histogramBuilds,
+      List<BuildInfo> histogramBuildInfoList,
       String workspaceFolder,
       String jobName,
       TaskListener taskListener)
@@ -195,7 +199,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
           runAction(
               currentBuildNumber,
               previousSuccessfulBuildNumber,
-              histogramBuilds,
+              histogramBuildInfoList,
               workspaceFolder,
               jobName,
               taskListener);
@@ -232,6 +236,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
     //set logger
     JenkinsPlugInLogger.setTaskListener(taskListener);
     int currentBuilderNumber = run.number;
+    BuildInfo buildInfo = null;
 
     String jobName = filePath.getBaseName();
     JenkinsPlugInLogger.info("jobName:" + jobName);
@@ -248,14 +253,16 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
     String workspaceFolder = "" + filePath.getParent();
     int previousSuccessfulBuildNumber = 0;
 
-    List<String> histogramBuilds = new ArrayList<String>();
+    List<BuildInfo> histogramBuildInfoList = new ArrayList();
 
     if (run.getPreviousSuccessfulBuild() == null) {
       previousSuccessfulBuildNumber = 0;
     } else {
       previousSuccessfulBuildNumber = run.getPreviousSuccessfulBuild().getNumber();
     }
-    histogramBuilds.add(String.valueOf(currentBuilderNumber));
+    buildInfo = new BuildInfo();
+    buildInfo.setNumber(currentBuilderNumber);
+    histogramBuildInfoList.add(buildInfo);
     taskListener.getLogger().println("loading config file : " + this.performanceComparatorProperties);
     try {
       loadConfiguration();
@@ -264,13 +271,24 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       // fail the build if configuration error
       throw new AbortException(e.getMessage());
     }
-    for (int i = 1; i < buildsInHistogram; i++) {
-      if (run.getPreviousBuild() != null) {
-        run = run.getPreviousBuild();
-        histogramBuilds.add(String.valueOf(run.number));
-       } else break;
+    for (int i = 1; i < this.buildsInHistogram; i++)
+    {
+      if (run.getPreviousBuild() == null) {
+        break;
+      }
+      run = run.getPreviousBuild();
+      buildInfo = new BuildInfo();
+      buildInfo.setNumber(run.number);
+      if (run.getResult().toString().contains("SUCCESS")) {
+        buildInfo.setStatus("SUCCESS");
+      } else if (run.getResult().toString().contains("FAILURE")) {
+        buildInfo.setStatus("FAILURE");
+      }
+      histogramBuildInfoList.add(buildInfo);
     }
-    JenkinsPlugInLogger.info("Histogram build ids.........." + histogramBuilds);
+    for (int i = 0; i < histogramBuildInfoList.size(); i++) {
+      JenkinsPlugInLogger.info("Histogram build ids.........." + ((BuildInfo)histogramBuildInfoList.get(i)).getNumber() + ", ");
+    }
     boolean isRemoteExecution = filePath.isRemote();
     StringBuilder output = null;
     if (isRemoteExecution) {
@@ -279,7 +297,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
           executeComparison(
               currentBuilderNumber,
               previousSuccessfulBuildNumber,
-              histogramBuilds,
+              histogramBuildInfoList,
               workspaceFolder,
               jobName,
               taskListener);
@@ -290,7 +308,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
       doExecute(
           currentBuilderNumber,
           previousSuccessfulBuildNumber,
-          histogramBuilds,
+          histogramBuildInfoList,
           workspaceFolder,
           jobName,
           taskListener);

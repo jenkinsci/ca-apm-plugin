@@ -660,7 +660,12 @@ public class ComparisonMetadataLoader {
       }
       String loadRunnerName = properties.getString(Constants.loadGeneratorName);
       loadRunnerMetadataInfo.addToLoadRunnerProperties(Constants.loadGeneratorName, loadRunnerName);
-      String metadataReaderClassName = null;
+       if ((loadRunnerName.equals("jmeter")) && ((loadRunnerMetadataInfo.getLoadRunnerPropertyValue(loadRunnerName + ".filetype").isEmpty()) || (loadRunnerMetadataInfo.getLoadRunnerPropertyValue(loadRunnerName + ".filetype") == null)))
+      {
+        JenkinsPlugInLogger.printLogOnConsole(2, "Jmeter filetype property value is not found");
+        isSuccess = false;
+      }
+	  String metadataReaderClassName = null;
       if (loadRunnerName.equals(Constants.blazemeter)) {
         metadataReaderClassName = Constants.blazemeterMetadataReaderClassName;
       } else if (loadRunnerName.equals(Constants.jmeter)) {
@@ -668,7 +673,9 @@ public class ComparisonMetadataLoader {
       } else if (loadRunnerName.equals(Constants.manual)) {
         metadataReaderClassName = Constants.manualMetadataReaderClassName;
       }
-      loadMetaDataRetriever(loadRunnerMetadataInfo, metadataReaderClassName);
+      if (isSuccess) {
+          loadMetaDataRetriever(loadRunnerMetadataInfo, metadataReaderClassName);
+        }
       JenkinsPlugInLogger.printLogOnConsole(2, "Loadrunner-metadata file loading done");
     } catch (NoSuchElementException ex) {
       isSuccess = false;
@@ -819,7 +826,7 @@ public class ComparisonMetadataLoader {
         Constants.emWebViewPort,
         "" + comparisonMetadata.getCommonPropertyValue(Constants.emWebViewPort));
     outputConfiguration.setHistogramBuildInfoList(
-        comparisonMetadata.getLoadRunnerMetadataInfo().getHistogramBuildInfo());
+        comparisonMetadata.getLoadRunnerMetadataInfo().getHistogramBuildInfoList());
   }
 
   public ComparisonMetadata getComparisonMetadata() {

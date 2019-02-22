@@ -198,10 +198,10 @@ public class BlazemeterMetadataRetriever implements LoadRunnerMetadataRetriever 
   }
 
   private void fetchTestRunDurations() throws BuildComparatorException {
-    List<String> histogramBuilds = loadRunnerMetadata.getJenkinsInfo().getHistogramBuilds();
-    int buildsInHistogram = histogramBuilds.size();
+	List<BuildInfo> histogramBuildInfoList = this.loadRunnerMetadata.getJenkinsInfo().getHistogramBuildInfoList();
+	int buildsInHistogram = histogramBuildInfoList.size();
     int limit = 0;
-    int leastHistogramBuild = Integer.parseInt(histogramBuilds.get(buildsInHistogram - 1));
+    int leastHistogramBuild = ((BuildInfo)histogramBuildInfoList.get(buildsInHistogram - 1)).getNumber();
     if (leastHistogramBuild < loadRunnerMetadata.getBenchMarkBuildNumber()) {
       limit = loadRunnerMetadata.getCurrentBuildNumber() - leastHistogramBuild + 1;
     } else {
@@ -269,9 +269,8 @@ public class BlazemeterMetadataRetriever implements LoadRunnerMetadataRetriever 
           ((JSONObject) currentInformation.get("session")).getLong(("updated")) * 1000;
       loadRunnerMetadata.setCurrentBuildTimes(currentBuildStartTime, currentBuildEndTime);
 
-      List<BuildInfo> histogramBuildInfoList = new ArrayList<BuildInfo>();
       BuildInfo histBuildInfo = null;
-      histogramBuildInfoList.add(0, loadRunnerMetadata.getCurrentBuildInfo());
+      histogramBuildInfoList.set(0, this.loadRunnerMetadata.getCurrentBuildInfo());
       int histogramlength = 0;
       if (labelsArray.length() > buildsInHistogram) {
         histogramlength = buildsInHistogram;
@@ -280,22 +279,16 @@ public class BlazemeterMetadataRetriever implements LoadRunnerMetadataRetriever 
       }
       for (int i = 1; i < histogramlength; i++) {
         histBuildInfo = new BuildInfo();
-        JSONObject histogramBuildInformation =
-            (JSONObject)
-                labelsArray.get(
-                    loadRunnerMetadata.getCurrentBuildNumber()
-                        - Integer.parseInt(histogramBuilds.get(i)));
+        JSONObject histogramBuildInformation = (JSONObject)labelsArray.get(this.loadRunnerMetadata.getCurrentBuildNumber() - ((BuildInfo)histogramBuildInfoList.get(i)).getNumber());
         long histogramBuildStartTime =
             ((JSONObject) histogramBuildInformation.get("session")).getLong(("created")) * 1000;
         long histogramBuildEndTime =
             ((JSONObject) histogramBuildInformation.get("session")).getLong(("updated")) * 1000;
-        histBuildInfo.setNumber(Integer.parseInt(histogramBuilds.get(i)));
-        histBuildInfo.setStartTime(histogramBuildStartTime);
-        histBuildInfo.setEndTime(histogramBuildEndTime);
-        histogramBuildInfoList.add(i, histBuildInfo);
+        ((BuildInfo)histogramBuildInfoList.get(i)).setStartTime(histogramBuildStartTime);
+        ((BuildInfo)histogramBuildInfoList.get(i)).setEndTime(histogramBuildEndTime);
       }
 
-      loadRunnerMetadata.setHistogramBuildInfo(histogramBuildInfoList);
+       loadRunnerMetadata.setHistogramBuildInfoList(histogramBuildInfoList);
     } else if (Response.Status.NOT_FOUND.getStatusCode()
         == response.getStatusLine().getStatusCode()) {
       JenkinsPlugInLogger.severe(

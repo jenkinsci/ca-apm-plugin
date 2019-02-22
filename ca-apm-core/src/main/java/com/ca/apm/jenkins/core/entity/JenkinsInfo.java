@@ -2,6 +2,8 @@ package com.ca.apm.jenkins.core.entity;
 
 import java.util.List;
 
+import com.ca.apm.jenkins.api.entity.BuildInfo;
+
 /**
  * This entity holds the Jenkins Specific Information for the use by Plug-in run
  *
@@ -13,12 +15,12 @@ public class JenkinsInfo {
   private int lastSuccessfulBuildNumber;
   private String buildWorkSpaceFolder;
   private String jobName;
-  private List<String> histogramBuilds;
+  private List<BuildInfo> histogramBuildInfoList;
 
   public JenkinsInfo(
       int currentBuildNumber,
       int lastSuccessfulBuildNumber,
-      List<String> histogramBuilds,
+      List<BuildInfo> histogramBuildInfoList,
       String buildWorkSpaceFolder,
       String jobName) {
     super();
@@ -26,7 +28,7 @@ public class JenkinsInfo {
     this.lastSuccessfulBuildNumber = lastSuccessfulBuildNumber;
     this.buildWorkSpaceFolder = buildWorkSpaceFolder;
     this.jobName = jobName;
-    this.histogramBuilds = histogramBuilds;
+    this.histogramBuildInfoList = histogramBuildInfoList;
   }
 
   public int getCurrentBuildNumber() {
@@ -61,7 +63,7 @@ public class JenkinsInfo {
     this.jobName = jobName;
   }
 
-  public List<String> getHistogramBuilds() {
-    return histogramBuilds;
+  public List<BuildInfo> getHistogramBuildInfoList() {
+    return histogramBuildInfoList;
   }
 }

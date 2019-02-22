@@ -109,6 +109,7 @@ public class ComparisonRunner {
 					isFailToBuild = decisionMaker.isFailed();
 				}
 
+				metadataLoader.getComparisonMetadata().getLoadRunnerMetadataInfo().getCurrentBuildInfo().setStatus(isFailToBuild == true ? "FAILURE" : "SUCCESS");
 				outputHandlingExecutor.execute(metadataLoader.getComparisonMetadata().getOutputConfiguration(),
 						isFailToBuild);
 
