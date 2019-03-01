@@ -2,9 +2,21 @@ package com.ca.apm.jenkins.core.helper;
 
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.core.entity.EmailInfo;
+import com.ca.apm.jenkins.core.executor.CommonEncryptionProvider;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Properties;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -15,6 +27,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 
 /**
  * This utility is provided to you to send email output. For this you have to configure all email
@@ -128,4 +143,50 @@ public class EmailHelper {
     }
     return isSent;
   }
+  
+  public static String passwordEncrytion(PropertiesConfiguration properties, String key, String value,
+		  String performanceComparatorProperties) {
+	  CommonEncryptionProvider encryptProvider = new CommonEncryptionProvider();
+	  try {
+		  if (value.startsWith("ENC(")) {
+			  value = encryptProvider.decrypt(value.substring(4));
+		  } else {
+			  String encryptedPassword = encryptProvider.encrypt(value);
+			  String APM_ENCRYPTION_PREFIX = "ENC(";
+			  if (encryptedPassword != null && !encryptedPassword.equals("")
+					  && !encryptedPassword.startsWith(APM_ENCRYPTION_PREFIX)) {
+				  encryptedPassword = APM_ENCRYPTION_PREFIX + encryptedPassword;
+			  }
+			  FileOutputStream out;
+			  try {
+				  out = new FileOutputStream(performanceComparatorProperties);
+				  properties.setProperty(key, encryptedPassword);
+				  properties.save(out);
+				  out.close();
+			  } catch (FileNotFoundException e) {
+				  JenkinsPlugInLogger.severe("Property file is not accessible or does not found", e);
+			  } catch (ConfigurationException e) {
+				  JenkinsPlugInLogger.severe("The requested encoding is not supported, try the default encoding.", e);
+			  } catch (IOException e) {
+				  JenkinsPlugInLogger.severe("Input-Output Operation Failed or Interrupted", e);
+			  }
+		  }
+	  } catch (InvalidKeyException e) {
+		  JenkinsPlugInLogger.severe("Invalid Encrytion key", e);
+	  } catch (NoSuchAlgorithmException e) {
+		  JenkinsPlugInLogger.severe("Encrytion Algorithm is not available or not working", e);
+	  } catch (InvalidKeySpecException e) {
+		  JenkinsPlugInLogger.severe("Invalid Encrytion/Decryption Key", e);
+	  } catch (NoSuchPaddingException e) {
+		  JenkinsPlugInLogger.severe("Invalid Encrpyt/Decrypt Parameters", e);
+	  } catch (InvalidAlgorithmParameterException e) {
+		  JenkinsPlugInLogger.severe("Invalid or Incorrect AlgorithmParameter", e);
+	  } catch (BadPaddingException e) {
+		  JenkinsPlugInLogger.severe("Incorrect Encrpyt/Decrypt Parameters", e);
+	  } catch (IllegalBlockSizeException e) {
+		  JenkinsPlugInLogger.severe("Input data length not matching to block size", e);
+	  }
+	  return value;
+  }
+  
 }

@@ -202,6 +202,9 @@ public class ComparisonMetadataLoader {
     while (keys.hasNext()) {
       String key = keys.next();
       String value = properties.getString(key);
+      if (key.equals("email.password")) {
+    	  value = EmailHelper.passwordEncrytion(properties, key, value, performanceComparatorProperties);
+      }
       setEmailProperty(emailInfo, key, value);
     }
     EmailHelper.setEmailInfo(emailInfo);
