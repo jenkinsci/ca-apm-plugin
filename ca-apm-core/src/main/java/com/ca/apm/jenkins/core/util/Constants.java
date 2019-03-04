@@ -59,6 +59,8 @@ public class Constants {
   public static final String benchMarkBuildNumber = "build.benchmarkbuildnumber";
   public static final String buildPassOrFail = "build.fail";
   public static final String isPublishBuildResulttoEM = "build.result.publishtoem";
+  public static final String isReadJenkinsLoadRunnerStageDuration = "build.jenkins.loadrunnerstage.duration";
+
   public static final String comparisonStrategiesList = "metric.list";
   public static final String comparisonStrategyName = "comparisonstrategy.name";
   public static final String comparatorClasssName = "comparator";

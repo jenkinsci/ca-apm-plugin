@@ -86,7 +86,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 				.getComparisonStrategiesInfo();
 		Map<BuildInfo, Map<String, Double>> strategyWiseBuildtoMetricAvgValMap = null;
 		Set<String> metricPathSet = null;
-		// currentBuildNumber = buildInfoList.get(0).getNumber();
+		currentBuildNumber = buildInfoList.get(0).getNumber();
 		for (int i = 0; i < strategyResults.size(); i++) {
 			metricPathSet = new HashSet<String>();
 			strategyWiseBuildtoMetricAvgValMap = new LinkedHashMap<BuildInfo, Map<String, Double>>();
