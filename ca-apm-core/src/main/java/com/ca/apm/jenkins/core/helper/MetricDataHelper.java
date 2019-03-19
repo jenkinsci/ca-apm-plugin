@@ -76,7 +76,7 @@ public class MetricDataHelper {
 		query = "SELECT domain_name, agent_host,agent_process, agent_name, metric_path,  metric_attribute, ts, min_value, max_value, agg_value, value_count, frequency"
                 + " FROM metric_data WHERE ts >= " + startTime + " AND ts <= " + endTime
                 + " AND agent_name like_regex '" + agentSpecifier + "' AND metric_path like_regex '"
-                + metricSpecifier + "'";
+                + metricSpecifier + "'" + " limit "+Integer.parseInt(metricClamp) ;
 		requestBodyJSON.put("query", query);
 		return requestBodyJSON.toString();
 	}

@@ -50,6 +50,8 @@ public class ComparisonMetadataLoader {
 	private ComparisonMetadata comparisonMetadata;
 
 	private String performanceComparatorProperties;
+	
+	private static String DEFAULT_METRIC_CLAMP = "10";
 
 	public ComparisonMetadataLoader(BuildInfo currentBuildInfo, BuildInfo benchmarkBuildInfo, JenkinsInfo jenkinsInfo,
 			String performanceComparatorProperties) {
@@ -548,13 +550,16 @@ public class ComparisonMetadataLoader {
 				comparisonMetadata.addToCommonProperties(Constants.isReadJenkinsLoadRunnerStageDuration,
 						properties.getString(Constants.isReadJenkinsLoadRunnerStageDuration));
 			}
+			if (!properties.containsKey(Constants.metricClamp) || properties.getString(Constants.metricClamp).isEmpty()
+					|| properties.getString(Constants.metricClamp).toString() == null) {
+				comparisonMetadata.addToCommonProperties(Constants.metricClamp, DEFAULT_METRIC_CLAMP);
 
-			/*
-			 * comparisonMetadata.addToCommonProperties(Constants.metricClamp,
-			 * properties.getString(Constants.metricClamp));
-			 * MetricDataHelper.setMetricClamp(properties.getString(Constants.
-			 * metricClamp));
-			 */
+			} else {
+				comparisonMetadata.addToCommonProperties(Constants.metricClamp,
+						properties.getString(Constants.metricClamp));
+			}
+
+			MetricDataHelper.setMetricClamp(comparisonMetadata.getCommonPropertyValue(Constants.metricClamp));
 			MetricDataHelper.setApplicationName(properties.getString(Constants.applicationName));
 		} catch (NoSuchElementException ex) {
 			JenkinsPlugInLogger.severe("A required property not found ", ex);
