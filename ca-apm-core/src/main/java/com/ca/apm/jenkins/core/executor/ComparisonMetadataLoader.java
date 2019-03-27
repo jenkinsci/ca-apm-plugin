@@ -376,7 +376,7 @@ public class ComparisonMetadataLoader {
 
 		if (comparisonMetadata.getCommonPropertyValue(Constants.emWebViewPort) == null
 				|| comparisonMetadata.getCommonPropertyValue(Constants.emWebViewPort).isEmpty())
-			errorMessages.append("em.atc.expview.url property value is not found");
+			errorMessages.append(Constants.emWebViewPort+" property value is not found");
 		if (comparisonMetadata.getCommonPropertyValue(Constants.applicationName) == null
 				|| comparisonMetadata.getCommonPropertyValue(Constants.applicationName).isEmpty())
 			errorMessages.append("application.name property value is not found");
