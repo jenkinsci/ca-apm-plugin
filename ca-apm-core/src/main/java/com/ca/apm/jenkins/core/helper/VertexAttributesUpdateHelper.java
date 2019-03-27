@@ -200,7 +200,7 @@ public class VertexAttributesUpdateHelper {
 		 */
 		httpGet = new HttpGet(vertexIdsURL + "?q=attributes.applicationName:" + applicationName);
 
-		JenkinsPlugInLogger.info("***Fetching the graph data, URL is ****" + httpGet.getURI().toString());
+		//JenkinsPlugInLogger.info("***Fetching the graph data, URL is ****" + httpGet.getURI().toString());
 
 		try {
 			httpGet.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
@@ -281,8 +281,7 @@ public class VertexAttributesUpdateHelper {
 		if (vertexIdTs.isEmpty()) {
 			JenkinsPlugInLogger.severe("No vertices data is fetched for the application  " + applicationName
 					+ " and the URL  " + httpGet.getURI());
-			JenkinsPlugInLogger.printLogOnConsole(2, "No vertices data is fetched for the application  "
-					+ applicationName + " and the URL  " + httpGet.getURI());
+			JenkinsPlugInLogger.printLogOnConsole(2, "No vertices data is fetched for the application  "+ applicationName);
 
 		} else {
 			processStatus = callUpdateVertexAttribute(vertexIdTs, attributesMap);

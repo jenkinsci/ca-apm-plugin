@@ -381,9 +381,11 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	}
 
 	public String getParamValue(ParametersAction pAction, String paramName) {
+		if(pAction != null){
 		ParameterValue parameterValue = pAction.getParameter(paramName);
 		if (parameterValue != null)
 			return (String) parameterValue.getValue();
+		}
 		return "0";
 	}
 

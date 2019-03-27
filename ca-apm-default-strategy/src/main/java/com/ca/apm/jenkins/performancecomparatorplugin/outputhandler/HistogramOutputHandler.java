@@ -167,7 +167,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		FileHelper.exportOutputToFile(
 				workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber + File.separator
 						+ "chartOutput" + File.separator + "output",
-				"buildtoBuildStrategy-chart-output.html", htmlOutput);
+				"buildtoBuild-chart-output.html", htmlOutput);
 	}
 
 	private static String applyToVelocityTemplate(String appMapURL, List<JenkinsAMChart> strategyCharts) {
@@ -241,11 +241,14 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		JSONObject valueAxis = new JSONObject();
 		valueAxis.put("id", "ValueAxis-1");
 		valueAxis.put("title", metricName);
-
+		valueAxis.put("gridThickness",0);
+		
 		JSONObject categoryAxis = new JSONObject();
-		categoryAxis.put("startOnAxis", true);
+		categoryAxis.put("startOnAxis", false);
 		categoryAxis.put("title", "BuildNumber");
 		categoryAxis.put("gridPosition", "start");
+		categoryAxis.put("gridThickness",0);
+		categoryAxis.put("gridAlpha", 0);
 		amCharts.put("categoryAxis", categoryAxis);
 
 		JSONArray valueAxesArray = new JSONArray();
@@ -262,23 +265,26 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 
 		amCharts.put("valueAxes", valueAxesArray);
 
-		graphobj.put("fillAlphas", 0.9);
+		graphobj.put("fillAlphas", 0.8);
 		graphobj.put("lineAlpha", 0.2);
 		graphobj.put("fillColorsField", "color");
 		graphobj.put("type", "column");
+		//value field y-axis
 		graphobj.put("valueField", "AverageValue");
+		
 
 		JSONArray graphArrayObj = new JSONArray();
 		graphArrayObj.put(graphobj);
 
 		amCharts.put("graphs", graphArrayObj);
-
+        //category field x-axis
 		amCharts.put("categoryField", "BuildNumber");
 
 		JSONObject chartCursorobj = new JSONObject();
 		chartCursorobj.put("categoryBalloonEnabled", true);
 		chartCursorobj.put("cursorAlpha", 0);
 		chartCursorobj.put("zoomable", false);
+		amCharts.put("gridAboveGraphs",false);
 		amCharts.put("chartCursor", chartCursorobj);
 
 		return amCharts;
