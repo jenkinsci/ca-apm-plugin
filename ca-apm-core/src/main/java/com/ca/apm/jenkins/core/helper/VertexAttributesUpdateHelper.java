@@ -111,15 +111,12 @@ public class VertexAttributesUpdateHelper {
 			}
 
 			payload.append("] }");
-			// JenkinsPlugInLogger.info("*****Payload is *******" + payload);
-
 			StringEntity entity = new StringEntity(payload.toString());
 			request.setEntity(entity);
 			response = client.build().execute(request);
 			client.disableAutomaticRetries();
 			client.disableConnectionState();
 			client.build().close();
-			JenkinsPlugInLogger.info(response.toString());
 		} catch (UnsupportedEncodingException e) {
 			JenkinsPlugInLogger.info("Error in callUpdateAttributeAPI ->" + e.getMessage());
 		} catch (ClientProtocolException e) {
@@ -139,8 +136,7 @@ public class VertexAttributesUpdateHelper {
 				while ((line = rd.readLine()) != null) {
 					result.append(line);
 				}
-				// JenkinsPlugInLogger.info("***Response of updating vertex
-				// attributes***"+result);
+				
 			} catch (IOException e) {
 				JenkinsPlugInLogger.info("Error in callUpdateAttributeAPI ->" + e.getMessage());
 			}
@@ -193,14 +189,7 @@ public class VertexAttributesUpdateHelper {
 
 		applicationName = applicationName.replace(" ", "%20C");
 
-		/*
-		 * httpGet = new HttpGet( vertexIdsURL +
-		 * "?q=attributes.applicationName:" + applicationName +
-		 * "&attributes.agent:" + agent);
-		 */
 		httpGet = new HttpGet(vertexIdsURL + "?q=attributes.applicationName:" + applicationName);
-
-		//JenkinsPlugInLogger.info("***Fetching the graph data, URL is ****" + httpGet.getURI().toString());
 
 		try {
 			httpGet.addHeader(Constants.ContentType, Constants.APPLICATION_JSON);
@@ -279,8 +268,7 @@ public class VertexAttributesUpdateHelper {
 		}
 
 		if (vertexIdTs.isEmpty()) {
-			JenkinsPlugInLogger.severe("No vertices data is fetched for the application  " + applicationName
-					+ " and the URL  " + httpGet.getURI());
+			JenkinsPlugInLogger.severe("No vertices data is fetched for the application  " + applicationName);
 			JenkinsPlugInLogger.printLogOnConsole(2, "No vertices data is fetched for the application  "+ applicationName);
 
 		} else {

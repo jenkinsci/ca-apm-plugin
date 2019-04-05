@@ -77,7 +77,6 @@ public class MetricDataHelper {
 				+ " FROM metric_data WHERE ts >= " + startTime + " AND ts <= " + endTime
 				+ " AND agent_name like_regex '" + agentSpecifier + "' AND metric_path like_regex '" + metricSpecifier
 				+ "' limit " + Integer.parseInt(metricClamp);
-		// JenkinsPlugInLogger.printLogOnConsole(1, "query..."+query);
 		requestBodyJSON.put("query", query);
 		return requestBodyJSON.toString();
 	}

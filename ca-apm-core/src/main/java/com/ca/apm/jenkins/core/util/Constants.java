@@ -10,7 +10,6 @@ public class Constants {
   // EM REST Absolute URLs
   public static final String vertexIdByName = "/apm/appmap/vertex";
   public static final String attributeUpdate = "/apm/appmap/graph/vertex";
- // public static final String batchMetricData = "/apm/appmap/private/metric/batch";
   public static final String queryMetricDataAPI = "/apm/appmap/private/apmData/query";
   // Arguments
   public static final String BEARER = "Bearer ";
@@ -23,13 +22,7 @@ public class Constants {
 
   // Data Source
   public static final String CAAPM = "CA-APM";
-  // Load Source..........................................
-/*  public static final String blazemeter = "blazemeter";
-  public static final String jmeter = "jmeter";
-  public static final String manual = "manual";*/
-  // Comparison Strategy....................................................
-/*  public static final String meanLatencyComparison = "Mean Latency Comparison";
-  public static final String stallCountComparison = "Stall Count Comparison";*/
+  
   // Special Characters
   public static final String NewLine = "\n";
   public static final String lineBreak = "-------------------------------";
@@ -45,16 +38,11 @@ public class Constants {
   public static final String emAuthToken = "em.authtoken";
   public static final String emTimeZone = "em.timezone";
   public static final String loadGeneratorName = "loadgenerator.name";
-  //public static final String metadataReaderClassName = "metadatareader";*/
-  ///////////////////////////////////////////////////
- /* public static final String blazemeterMetadataReaderClassName = "com.ca.apm.jenkins.core.load.BlazemeterMetadataRetriever";
-  public static final String jmeterMetadataReaderClassName = "com.ca.apm.jenkins.core.load.JmeterMetadataRetriever";
-  public static final String manualMetadataReaderClassName = "com.ca.apm.jenkins.core.load.ManualMetadataRetriever";*/
+  
   public static final String benchMarkBuildNumber = "build.benchmarkbuildnumber";
   public static final String buildPassOrFail = "build.fail";
   public static final String isPublishBuildResulttoEM = "build.result.publishtoem";
-  //public static final String isReadJenkinsLoadRunnerStageDuration = "build.jenkins.loadrunnerstage.duration";
-
+ 
   public static final String comparisonStrategiesList = "metric.list";
   public static final String comparisonStrategyName = "comparisonstrategy.name";
   public static final String comparatorClasssName = "comparator";
@@ -71,8 +59,7 @@ public class Constants {
   public static final String chartOutputHandlerClasssName = "Chart";
   public static final String histogramOutputHandlerClasssName = "Histogram";
   public static final String comparatorClassPath = "com.ca.apm.jenkins.performancecomparatorplugin.comparisonstrategy";
- // public static final String jmeterOutputFileName = "jmeterOutput";
-  
+   
   public static final String agentSpecifier = "agentspecifier";
   public static final String metricSpecifier = "metricspecifier";
   public static final String threshold = "threshold";
@@ -103,12 +90,10 @@ public class Constants {
   public static final String jenkinsCurrentBuild = "jenkins.currentbuild";
   public static final String jenkinsBenchMarkBuild = "jenkins.benchmarkbuild";
   // Run-Time Method Names
- // public static final String loadRunnerMetadataExtractMethod = "fetchExtraMetadata";
   public static final String comparatorConfigMethod = "setConfiguration";
   public static final String comparatorExecuteMethod = "doCompare";
   public static final String outputHandlerConfigMethod = "setOutputConfiguration";
   public static final String outputHandlerExecuteMethod = "publishOutput";
-  //public static final String atcViewURL = "em.atc.expview.url";
   public static final String emWebViewPort = "em.webview.port";
   public static final String emExpViewURLPostfix = "ApmServer/#/home?ep=0&g=-1&cha=0&cht=0&chs=0&m=L&l=ATC&fa=%5B%5D&u=UN1&view=%7B%22drillDown%22:%5B%5D%7D";
   public static final String applicationName = "application.name";
