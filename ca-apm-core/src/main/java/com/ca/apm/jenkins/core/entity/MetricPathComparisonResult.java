@@ -15,6 +15,7 @@ public class MetricPathComparisonResult {
   private double expectedValue;
   private double actualValue;
   private double percentageChange;
+  private double thresholdPercentage;
   private List<TimeSliceValue> benchMarkBuildTimeSliceValues;
   private List<TimeSliceValue> currentBuildTimeSliceValues;
 
@@ -92,6 +93,14 @@ public class MetricPathComparisonResult {
 
   public void setCurrentBuildTimeSliceValues(List<TimeSliceValue> currentBuildTimeSliceValues) {
     this.currentBuildTimeSliceValues = currentBuildTimeSliceValues;
+  }
+
+  public double getThresholdPercentage() {
+    return thresholdPercentage;
+  }
+
+  public void setThresholdPercentage(double thresholdPercentage) {
+    this.thresholdPercentage = thresholdPercentage;
   }
 
   @Override

@@ -67,7 +67,7 @@ Here is the detailed performance report:
   <h2><caption>$strategyResult.strategyName<caption></h2>
   
    #foreach ($agentKey in ${strategyResult.result.result.entrySet()})
-   <h3><caption>Agent Name = $agentKey.getKey()</caption></h3>
+   <h3><caption>AgentName=$agentKey.getKey()</caption></h3>
    #if(($agentKey.getValue().slowEntries.size()) > 0)
     <table class="tableReport" border="1">
      <font color="red"><caption>Transactions performed above threshold limits</caption></font>

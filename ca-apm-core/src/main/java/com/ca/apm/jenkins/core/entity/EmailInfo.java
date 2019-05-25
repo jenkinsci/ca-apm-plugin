@@ -20,6 +20,9 @@ public class EmailInfo {
   private String password;
   private String smtpHost;
   private boolean mailSmtpAuth;
+  private String mailMode;
+  private String gmailSmtpPort;
+  private String gmailSocketPort;
   private List<String> toRecipients;
   private List<String> ccRecipients;
   private List<String> bccRecipients;
@@ -143,5 +146,26 @@ public class EmailInfo {
 
   public void setToRecipients(List<String> recipients) {
     this.toRecipients = recipients;
+  }
+  public String getMailMode() {
+	  return mailMode; 
+  }
+  
+  public void setMailMode(String mailMode) {
+	    this.mailMode = mailMode;
+  }
+  public String getGmailSmtpPort() {
+	  return gmailSmtpPort; 
+  }
+  
+  public void setGmailSmtpPort(String gmailSmtpPort) {
+	    this.gmailSmtpPort = gmailSmtpPort;
+  }
+  public String getGmailSocketPort() {
+	  return gmailSocketPort; 
+  }
+  
+  public void setGmailSocketPort(String gmailSocketPort) {
+	    this.gmailSocketPort = gmailSocketPort;
   }
 }

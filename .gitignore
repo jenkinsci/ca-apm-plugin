@@ -12,6 +12,7 @@ out
 .settings
 .classpath
 .project
+.metadata
 build
 
 # VSCode workspace file

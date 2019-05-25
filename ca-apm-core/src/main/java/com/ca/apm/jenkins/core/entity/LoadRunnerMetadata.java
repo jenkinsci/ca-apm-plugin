@@ -17,7 +17,7 @@ public class LoadRunnerMetadata {
   private Map<String, String> loadRunnerProperties = null;
   private BuildInfo benchMarkBuildInfo;
   private BuildInfo currentBuildInfo;
-  private List<BuildInfo> histogramBuildInfo;
+  private List<BuildInfo> histogramBuildInfoList;
 
   private JenkinsInfo jenkinsInfo;
 
@@ -25,7 +25,7 @@ public class LoadRunnerMetadata {
     loadRunnerProperties = new HashMap<String, String>();
     benchMarkBuildInfo = new BuildInfo();
     currentBuildInfo = new BuildInfo();
-    histogramBuildInfo = new ArrayList<BuildInfo>();
+    histogramBuildInfoList = new ArrayList<BuildInfo>();
   }
 
   public void addToLoadRunnerProperties(String key, String value) {
@@ -86,11 +86,11 @@ public class LoadRunnerMetadata {
     this.jenkinsInfo = jenkinsInfo;
   }
 
-  public List<BuildInfo> getHistogramBuildInfo() {
-    return histogramBuildInfo;
+  public List<BuildInfo> getHistogramBuildInfoList() {
+    return histogramBuildInfoList;
   }
 
-  public void setHistogramBuildInfo(List<BuildInfo> histogramBuildInfo) {
-    this.histogramBuildInfo = histogramBuildInfo;
+  public void setHistogramBuildInfoList(List<BuildInfo> histogramBuildInfoList) {
+    this.histogramBuildInfoList = histogramBuildInfoList;
   }
 }

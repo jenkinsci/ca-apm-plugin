@@ -1,19 +1,23 @@
 package com.ca.apm.jenkins.core.executor;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.logging.Level;
+
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+
+import com.ca.apm.jenkins.api.entity.BuildInfo;
 import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
 import com.ca.apm.jenkins.core.helper.VertexAttributesUpdateHelper;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
-import hudson.model.TaskListener;
-import java.util.logging.Level;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import com.ca.apm.jenkins.core.util.Constants;
+
+import hudson.model.TaskListener;
 
 /**
  * Main class to start the comparison strategy procedure
@@ -23,6 +27,8 @@ import com.ca.apm.jenkins.core.util.Constants;
 public class ComparisonRunner {
 
 	private JenkinsInfo jenkinsInfo;
+	private BuildInfo currentBuildInfo;
+	private BuildInfo benchmarkBuildInfo;
 	private String performanceComparatorProperties;
 	private TaskListener taskListener;
 
@@ -30,11 +36,13 @@ public class ComparisonRunner {
 		super();
 	}
 
-	public ComparisonRunner(JenkinsInfo jenkinsInfo, String performanceComparatorProperties,
-			TaskListener taskListener) {
+	public ComparisonRunner(BuildInfo currentBuildInfo, BuildInfo benchmarkBuildInfo, JenkinsInfo jenkinsInfo,
+			String performanceComparatorProperties, TaskListener taskListener) {
 		this.jenkinsInfo = jenkinsInfo;
 		this.performanceComparatorProperties = performanceComparatorProperties;
 		this.taskListener = taskListener;
+		this.currentBuildInfo = currentBuildInfo;
+		this.benchmarkBuildInfo = benchmarkBuildInfo;
 	}
 
 	public JenkinsInfo getJenkinsInfo() {
@@ -51,6 +59,22 @@ public class ComparisonRunner {
 
 	public void setPerformanceComparatorProperties(String performanceComparatorProperties) {
 		this.performanceComparatorProperties = performanceComparatorProperties;
+	}
+
+	public BuildInfo getCurrentBuildInfo() {
+		return currentBuildInfo;
+	}
+
+	public void setCurrentBuildInfo(BuildInfo currentBuildInfo) {
+		this.currentBuildInfo = currentBuildInfo;
+	}
+
+	public BuildInfo getBenchmarkBuildInfo() {
+		return benchmarkBuildInfo;
+	}
+
+	public void setBenchmarkBuildInfo(BuildInfo benchmarkBuildInfo) {
+		this.benchmarkBuildInfo = benchmarkBuildInfo;
 	}
 
 	/**
@@ -94,8 +118,9 @@ public class ComparisonRunner {
 
 		} else {
 			try {
-				ComparisonMetadataLoader metadataLoader = new ComparisonMetadataLoader(jenkinsInfo,
-						performanceComparatorProperties);
+				ComparisonMetadataLoader metadataLoader = new ComparisonMetadataLoader(currentBuildInfo,
+						benchmarkBuildInfo, jenkinsInfo, performanceComparatorProperties);
+
 				metadataLoader.loadProperties();
 				metadataLoader.validateConfigurations();
 				ComparisonExecutor comparisonExecutor = new ComparisonExecutor(metadataLoader.getComparisonMetadata());
@@ -109,6 +134,8 @@ public class ComparisonRunner {
 					isFailToBuild = decisionMaker.isFailed();
 				}
 
+				metadataLoader.getComparisonMetadata().getLoadRunnerMetadataInfo().getCurrentBuildInfo()
+						.setStatus(isFailToBuild == true ? "FAILURE" : "SUCCESS");
 				outputHandlingExecutor.execute(metadataLoader.getComparisonMetadata().getOutputConfiguration(),
 						isFailToBuild);
 

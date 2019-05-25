@@ -33,10 +33,11 @@ public class ChartOutputHandler implements OutputHandler<StrategyResult> {
     String workspaceFolder =
         outputConfiguration.getCommonPropertyValue(Constants.workSpaceDirectory);
     String jobName = outputConfiguration.getCommonPropertyValue(Constants.jenkinsJobName);
-    String appMapURL = outputConfiguration.getCommonPropertyValue(Constants.appMapURL);
+    String emWebViewPort = outputConfiguration.getCommonPropertyValue(Constants.emWebViewPort);
+    String emURL = outputConfiguration.getCommonPropertyValue(Constants.emURL);
     String startTimeMillis = outputConfiguration.getCommonPropertyValue("runner.start");
     String endTimeMillis = outputConfiguration.getCommonPropertyValue("runner.end");
-    appMapURL = appMapURL.concat("&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis);
+    String appMapURL = emURL.replace(emURL.substring(emURL.lastIndexOf(':')+1, emURL.length()-1),emWebViewPort) + Constants.emExpViewURLPostfix + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
     String startDateTime = format.format(Long.parseLong(startTimeMillis));
     String endDateTime = format.format(Long.parseLong(endTimeMillis));
     String frequency = outputConfiguration.getCommonPropertyValue("frequency") + "ms";

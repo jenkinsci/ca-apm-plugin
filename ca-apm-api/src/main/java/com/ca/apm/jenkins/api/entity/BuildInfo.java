@@ -11,16 +11,18 @@ public class BuildInfo {
   private int number;
   private long startTime;
   private long endTime;
+  private String status;
 
   public BuildInfo() {
     super();
   }
 
-  public BuildInfo(int number, long startTime, long endTime) {
+  public BuildInfo(int number, long startTime, long endTime, String status) {
     super();
     this.number = number;
     this.startTime = startTime;
     this.endTime = endTime;
+    this.status = status;
   }
 
   public int getNumber() {
@@ -46,14 +48,24 @@ public class BuildInfo {
   public void setEndTime(long buildEndTime) {
     this.endTime = buildEndTime;
   }
+    
+  public String getStatus() {
+	return status;
+}
 
-  public String toString() {
+public void setStatus(String status) {
+	this.status = status;
+}
+
+public String toString() {
     return "BuildInfo [number="
         + number
         + ", startTime="
         + startTime
         + ", endTime="
         + endTime
+        + ", status="
+        + status
         + "]";
   }
 }

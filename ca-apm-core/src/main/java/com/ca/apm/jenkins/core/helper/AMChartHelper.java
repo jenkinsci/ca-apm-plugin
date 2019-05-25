@@ -69,7 +69,7 @@ public class AMChartHelper {
     Template t = ve.getTemplate("amChartHomePage.vm");
     VelocityContext context = new VelocityContext();
     List<HashMap<String, String>> strategies = new LinkedList<HashMap<String, String>>();
-    String name = "buildtoBuildStrategy";
+    String name = "buildtoBuild";
     String link = "chartOutput/output/"+name+"-chart-output.html";
     HashMap<String, String> strategyMap = new HashMap<String, String>();
     strategyMap.put("name", name);
@@ -128,20 +128,19 @@ public class AMChartHelper {
       int categoryId = i + 1;
       JSONObject recordObj = new JSONObject();
       recordObj.put(categoryField, categoryId);
-      recordObj.put("column-1", benchMarkSlices.get(i).getValue());
+      recordObj.put("BenchMark_MetricValue", benchMarkSlices.get(i).getValue());
       double actualValue = 0.0;
       if (i <= size - 1) {
         actualValue = currentBuildSlices.get(i).getValue();
       }
-      recordObj.put("column-2", actualValue);
+      recordObj.put("CurrentBuild_MetricValue", actualValue);
       dataProviderArray.put(recordObj);
     }
     return dataProviderArray;
   }
 
   /** "categoryAxis": { "gridPosition": "start" }, */
-  private static JSONObject generateAMChartsJSON(
-      String metricPath,
+  private static JSONObject generateAMChartsJSON(String metricPath,
       String metricName,
       String benchMarkBuildNumber,
       String currentBuildNumber,
@@ -149,7 +148,7 @@ public class AMChartHelper {
       List<TimeSliceValue> currentBuildSlices) {
     JSONObject amCharts = new JSONObject();
     amCharts.put("type", "serial");
-    amCharts.put("categoryField", "category");
+    amCharts.put("categoryField", "FrequencyInterval");
     amCharts.put("startDuration", 1);
     amCharts.put("balloon", new JSONObject());
     amCharts.put("trendLines", new JSONArray());
@@ -163,7 +162,10 @@ public class AMChartHelper {
 
     JSONObject exportObj = new JSONObject();
     exportObj.put("enabled", true);
-
+    String fileName = metricName+"_"+metricPath.substring(metricPath.lastIndexOf('|')+1);
+    exportObj.put("fileName", fileName);
+    exportObj.put("pageOrigin", false);
+    
     amCharts.put("export", exportObj);
 
     JSONObject valueAxis = new JSONObject();
@@ -189,18 +191,18 @@ public class AMChartHelper {
     amCharts.put("titles", titlesArray);
 
     JSONObject benchMarkgraphObj = new JSONObject();
-    benchMarkgraphObj.put("balloonText", "[[title]] of [[category]]:[[value]]");
+    benchMarkgraphObj.put("balloonText", "[[title]] of [[FrequencyInterval]]:[[value]]");
     benchMarkgraphObj.put("bullet", "round");
     benchMarkgraphObj.put("id", "AmGraph-1");
     benchMarkgraphObj.put("title", "Build " + benchMarkBuildNumber);
-    benchMarkgraphObj.put("valueField", "column-1");
+    benchMarkgraphObj.put("valueField", "BenchMark_MetricValue");
 
     JSONObject currentgraphObj = new JSONObject();
-    currentgraphObj.put("balloonText", "[[title]] of [[category]]:[[value]]");
+    currentgraphObj.put("balloonText", "[[title]] of [[FrequencyInterval]]:[[value]]");
     currentgraphObj.put("bullet", "square");
     currentgraphObj.put("id", "AmGraph-2");
     currentgraphObj.put("title", "Build " + currentBuildNumber);
-    currentgraphObj.put("valueField", "column-2");
+    currentgraphObj.put("valueField", "CurrentBuild_MetricValue");
 
     JSONArray graphArrayObj = new JSONArray();
     graphArrayObj.put(benchMarkgraphObj);
@@ -209,13 +211,13 @@ public class AMChartHelper {
     amCharts.put("graphs", graphArrayObj);
 
     JSONArray dataProviderArray =
-        getTimeSliceFormattedArray("category", benchMarkSlices, currentBuildSlices);
+        getTimeSliceFormattedArray("FrequencyInterval", benchMarkSlices, currentBuildSlices);
 
     amCharts.put("dataProvider", dataProviderArray);
     return amCharts;
   }
 
-  private static List<JenkinsAMChart> getChartsForOneStrategy(
+  private static List<JenkinsAMChart> getChartsForOneStrategy(String strategyName,
       DefaultStrategyResult defaultStrategyResult,
       String benchMarkBuildNumber,
       String currentBuildNumber) {
@@ -231,8 +233,7 @@ public class AMChartHelper {
           String metricName = getMetricName(comparisonResult.getMetricPath());
           String transaction = getTransactionName(comparisonResult.getMetricPath());
           JSONObject amChartJSON =
-              generateAMChartsJSON(
-                  transaction,
+              generateAMChartsJSON(transaction,
                   metricName,
                   benchMarkBuildNumber,
                   currentBuildNumber,
@@ -250,8 +251,7 @@ public class AMChartHelper {
           String metricName = getMetricName(comparisonResult.getMetricPath());
           String transaction = getTransactionName(comparisonResult.getMetricPath());
           JSONObject amChartJSON =
-              generateAMChartsJSON(
-                  transaction,
+              generateAMChartsJSON(transaction,
                   metricName,
                   benchMarkBuildNumber,
                   currentBuildNumber,
@@ -312,7 +312,7 @@ public class AMChartHelper {
           DefaultStrategyResult defaultStrategyResult =
               (DefaultStrategyResult) strategyResult.getResult();
           strategyChart =
-              getChartsForOneStrategy(
+              getChartsForOneStrategy(strategyName,
                   defaultStrategyResult, benchMarkBuildNumber, currentBuildNumber);
           strategyWiseCharts.put(strategyName, strategyChart);
         }

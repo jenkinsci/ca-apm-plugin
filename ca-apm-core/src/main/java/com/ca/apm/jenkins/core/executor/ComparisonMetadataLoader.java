@@ -5,9 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,6 +13,7 @@ import java.util.NoSuchElementException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
+import com.ca.apm.jenkins.api.entity.BuildInfo;
 import com.ca.apm.jenkins.api.entity.OutputConfiguration;
 import com.ca.apm.jenkins.api.entity.StrategyConfiguration;
 import com.ca.apm.jenkins.api.exception.BuildComparatorException;
@@ -32,7 +30,6 @@ import com.ca.apm.jenkins.core.helper.EmailHelper;
 import com.ca.apm.jenkins.core.helper.FileHelper;
 import com.ca.apm.jenkins.core.helper.MetricDataHelper;
 import com.ca.apm.jenkins.core.helper.VertexAttributesUpdateHelper;
-import com.ca.apm.jenkins.core.load.LoadRunnerMetadataRetriever;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
 import com.ca.apm.jenkins.core.util.IOUtility;
@@ -41,9 +38,8 @@ import com.ca.apm.jenkins.core.util.JenkinsPluginUtility;
 /**
  * Loader Class to read all configurations provided by the user. Reads : APM
  * Connection Configuration, LoadRunner Configuration, Strategies Configuration
- * 
- * @author Avinash Chandwani
  *
+ * @author Avinash Chandwani
  */
 public class ComparisonMetadataLoader {
 
@@ -51,15 +47,21 @@ public class ComparisonMetadataLoader {
 
 	private String performanceComparatorProperties;
 
-	public ComparisonMetadataLoader(JenkinsInfo jenkinsInfo, String performanceComparatorProperties) {
+	private static String DEFAULT_METRIC_CLAMP = "10";
+
+	public ComparisonMetadataLoader(BuildInfo currentBuildInfo, BuildInfo benchmarkBuildInfo, JenkinsInfo jenkinsInfo,
+			String performanceComparatorProperties) {
 		super();
 		comparisonMetadata = new ComparisonMetadata(jenkinsInfo);
+		LoadRunnerMetadata loadRunnerMetadata = comparisonMetadata.getLoadRunnerMetadataInfo();
+		loadRunnerMetadata.setCurrentBuildInfo(currentBuildInfo);
+		loadRunnerMetadata.setBenchMarkBuildInfo(benchmarkBuildInfo);
 		this.performanceComparatorProperties = performanceComparatorProperties;
 	}
 
 	/**
 	 * The method to start the loading of the input configuration provided
-	 * 
+	 *
 	 * @throws BuildComparatorException
 	 *             In case of any error occuring during loading due to any
 	 *             incorrect property or missing property this exception will be
@@ -78,7 +80,8 @@ public class ComparisonMetadataLoader {
 		prepareOutputProperties();
 	}
 
-	private void doRead(String performanceComparatorProperties) throws BuildComparatorException, BuildExecutionException {
+	private void doRead(String performanceComparatorProperties)
+			throws BuildComparatorException, BuildExecutionException {
 		JenkinsPlugInLogger.printLogOnConsole(0, "Comparator Plugin Execution Started" + Constants.NewLine);
 		JenkinsPlugInLogger.printLogOnConsole(1, "Configuration loading started" + Constants.NewLine);
 		JenkinsPlugInLogger.printLogOnConsole(2, "File Names are ");
@@ -87,7 +90,12 @@ public class ComparisonMetadataLoader {
 		boolean isAPMSuccess = readAPMConnectionConfiguration(properties);
 		boolean isGenericSuccess = readGenericConfiguration(properties);
 		boolean isStrategiesFileSuccess = readStrategiesConfiguration(properties);
-		boolean isloadRunnerSuccess = readLoadRunnerConfigurations(properties);
+		boolean isloadRunnerSuccess = true;
+		comparisonMetadata.getLoadRunnerMetadataInfo()
+				.setHistogramBuildInfoList(comparisonMetadata.getJenkinsInfo().getHistogramBuildInfoList());
+		comparisonMetadata.getLoadRunnerMetadataInfo().addToLoadRunnerProperties(Constants.loadGeneratorName,
+				comparisonMetadata.getJenkinsInfo().getLoadGeneratorName());
+
 		checkIfFileExists(isAPMSuccess, isloadRunnerSuccess, isStrategiesFileSuccess, isIoSuccess, isGenericSuccess);
 		JenkinsPlugInLogger.printLogOnConsole(1, " Configuration loading completed" + Constants.NewLine);
 		JenkinsPlugInLogger.info("Loading of Properties file completed");
@@ -118,12 +126,19 @@ public class ComparisonMetadataLoader {
 		}
 		int benchMarkBuildNo = Integer.parseInt(benchMarkBuildNumber);
 		comparisonMetadata.getLoadRunnerMetadataInfo().setBenchMarkBuildNumber(benchMarkBuildNo);
-		boolean failTheBuild = properties.getBoolean(Constants.buildPassOrFail);
-		comparisonMetadata.setFailTheBuild(failTheBuild);
-		if(!properties.containsKey(Constants.isPublishBuildResulttoEM)||properties.getProperty(Constants.isPublishBuildResulttoEM).toString().isEmpty() ){
-		    comparisonMetadata.setPublishBuildResulttoEM(false);
-		}else {
-		    comparisonMetadata.setPublishBuildResulttoEM(properties.getBoolean(Constants.isPublishBuildResulttoEM));
+		if (!properties.containsKey(Constants.buildPassOrFail)
+				|| properties.getProperty(Constants.buildPassOrFail).toString().isEmpty()
+				|| properties.getProperty(Constants.buildPassOrFail).toString() == null) {
+			comparisonMetadata.setFailTheBuild(true);
+		} else {
+			comparisonMetadata.setFailTheBuild(properties.getBoolean(Constants.buildPassOrFail));
+		}
+		if (!properties.containsKey(Constants.isPublishBuildResulttoEM)
+				|| properties.getProperty(Constants.isPublishBuildResulttoEM).toString().isEmpty()
+				|| properties.getProperty(Constants.isPublishBuildResulttoEM).toString() == null) {
+			comparisonMetadata.setPublishBuildResulttoEM(false);
+		} else {
+			comparisonMetadata.setPublishBuildResulttoEM(properties.getBoolean(Constants.isPublishBuildResulttoEM));
 		}
 	}
 
@@ -184,6 +199,9 @@ public class ComparisonMetadataLoader {
 		while (keys.hasNext()) {
 			String key = keys.next();
 			String value = properties.getString(key);
+			if (key.equals("email.password")) {
+				value = EmailHelper.passwordEncrytion(properties, key, value, performanceComparatorProperties);
+			}
 			setEmailProperty(emailInfo, key, value);
 		}
 		EmailHelper.setEmailInfo(emailInfo);
@@ -205,8 +223,8 @@ public class ComparisonMetadataLoader {
 		return isSuccess;
 	}
 
-	private void checkIfFileExists(boolean isApm, boolean isLoadRunner, boolean isStrategies, boolean isIoProperties, boolean isGenericSuccess)
-			throws BuildComparatorException {
+	private void checkIfFileExists(boolean isApm, boolean isLoadRunner, boolean isStrategies, boolean isIoProperties,
+			boolean isGenericSuccess) throws BuildComparatorException {
 		boolean isErrorFree = true;
 		if (!isApm) {
 			isErrorFree = false;
@@ -234,7 +252,6 @@ public class ComparisonMetadataLoader {
 			throw new BuildComparatorException(
 					"Input Properties file(s) defined in parameters does not exist, please check");
 		}
-		
 	}
 
 	@SuppressWarnings("unused")
@@ -283,6 +300,7 @@ public class ComparisonMetadataLoader {
 		}
 		for (String strategyName : strategyConfigurations.keySet()) {
 			StrategyConfiguration config = strategyConfigurations.get(strategyName);
+
 			if (config.getPropertyValue(strategyName + "." + Constants.comparatorClasssName) == null
 					|| config.getPropertyValue(strategyName + "." + Constants.comparatorClasssName).isEmpty()) {
 				errorMessages.append(JenkinsPlugInLogger.getLevelString(3));
@@ -320,30 +338,49 @@ public class ComparisonMetadataLoader {
 			return;
 		}
 		for (String outputHandler : outputHandlers.keySet()) {
-			OutputHandlerConfiguration outputHandlerConfig = outputHandlers.get(outputHandler);
-			String outputHandlerClass = outputHandlerConfig.getPropertyValue(outputHandler + ".outputhandler");
+			String outputHandlerClass = null;
+			if (outputHandler.equals(Constants.emailOutputHandlerName)) {
+				outputHandlerClass = Constants.outputHandlerClassPath + "." + Constants.emailOutputHandlerClasssName
+						+ "." + Constants.outputHandlerSuffix;
+			} else if (outputHandler.equals(Constants.jsonFileOutputHandlerName)) {
+				outputHandlerClass = Constants.outputHandlerClassPath + "." + Constants.jsonFileOutputHandlerClasssName
+						+ "." + Constants.outputHandlerSuffix;
+			} else if (outputHandler.equals(Constants.chartOutputHandlerName)) {
+				outputHandlerClass = Constants.outputHandlerClassPath + "." + Constants.chartOutputHandlerClasssName
+						+ "." + Constants.outputHandlerSuffix;
+			} else if (outputHandler.equals(Constants.histogramOutputHandlerName)) {
+				outputHandlerClass = Constants.outputHandlerClassPath + "." + Constants.histogramOutputHandlerName + "."
+						+ Constants.outputHandlerSuffix;
+			} else {
+				OutputHandlerConfiguration outputHandlerConfig = outputHandlers.get(outputHandler);
+				if (outputHandlerConfig.getPropertyValue(outputHandler + ".outputhandler") != null)
+					outputHandlerClass = Constants.outputHandlerClassPath + "."
+							+ outputHandlerConfig.getPropertyValue(outputHandler + ".outputhandler") + "."
+							+ Constants.outputHandlerSuffix;
+			}
+
 			if (outputHandlerClass == null) {
-				errorMessages.append("No handler class provided for output handler " + outputHandler);
+				errorMessages.append("No handler class is provided for customized output handler " + outputHandler);
 			}
 		}
 	}
 
 	private void validateGenericProp(StringBuilder errorMessages) {
-		
-		/*if(comparisonMetadata.getCommonPropertyValue(Constants.appMapURL) == null || comparisonMetadata.getCommonPropertyValue(Constants.applicationName) == null
-		                                                   || comparisonMetadata.getCommonPropertyValue(Constants.metricClamp) == null){
-			errorMessages.append(" One or more of the properties "+Constants.appMapURL+","+Constants.applicationName+","+Constants.metricClamp+" are not found ");
-			
-		}*/
-		
-		if (comparisonMetadata.getCommonPropertyValue(Constants.appMapURL) == null
-				|| comparisonMetadata.getCommonPropertyValue(Constants.applicationName) == null) {
-			errorMessages.append(" One or more of the properties " + Constants.appMapURL + ","
-					+ Constants.applicationName + " are not found ");
 
-		}
+		if (comparisonMetadata.getCommonPropertyValue(Constants.emWebViewPort) == null
+				|| comparisonMetadata.getCommonPropertyValue(Constants.emWebViewPort).isEmpty())
+			errorMessages.append(Constants.emWebViewPort + " property value is not found");
+		if (comparisonMetadata.getCommonPropertyValue(Constants.applicationName) == null
+				|| comparisonMetadata.getCommonPropertyValue(Constants.applicationName).isEmpty())
+			errorMessages.append("application.name property value is not found");
+		if (comparisonMetadata.getCommonPropertyValue(Constants.emAuthToken) == null
+				|| comparisonMetadata.getCommonPropertyValue(Constants.emAuthToken).isEmpty())
+			errorMessages.append("em.emAuthToken property value is not found");
+		if (comparisonMetadata.getCommonPropertyValue(Constants.emURL) == null
+				|| comparisonMetadata.getCommonPropertyValue(Constants.emURL).isEmpty())
+			errorMessages.append("em.url property value is not found");
 	}
-	
+
 	private void printErrorMessages(StringBuilder errorMessages) throws BuildValidationException {
 		if (errorMessages.length() > 0) {
 			JenkinsPlugInLogger.severe(Constants.NewLine + errorMessages.toString());
@@ -378,7 +415,6 @@ public class ComparisonMetadataLoader {
 			errorMessages.append("Error : Current Build's load runner end time is less than benchmark build's end time")
 					.append(Constants.NewLine);
 		}
-
 	}
 
 	private void validateBenchMarkBuildNumber(StringBuilder errorMessages) {
@@ -409,7 +445,9 @@ public class ComparisonMetadataLoader {
 		}
 		if (benchMarkBuildNumber <= 0) {
 			comparisonMetadata.setMetadataInCorrect(true);
-			errorMessages.append("There is no previous successful build or invalid benchmark build number, please enter valid Benchmark build number").append(Constants.NewLine);
+			errorMessages
+					.append("There is no previous successful build or invalid benchmark build number, please enter valid Benchmark build number")
+					.append(Constants.NewLine);
 		}
 	}
 
@@ -439,110 +477,79 @@ public class ComparisonMetadataLoader {
 		}
 		if (benchMarkBuildNumber <= 0) {
 			comparisonMetadata.setMetadataInCorrect(true);
-			
 		}
 	}
-	
+
 	private boolean readAPMConnectionConfiguration(PropertiesConfiguration properties) {
 		boolean isSuccess = true;
 		try {
 			APMConnectionInfo apmConnectionInfo = comparisonMetadata.getApmConnectionInfo();
 			apmConnectionInfo.setEmURL(properties.getString(Constants.emURL));
-			apmConnectionInfo.setEmUserName(properties.getString(Constants.emUserName));
-			apmConnectionInfo.setEmPassword(properties.getString(Constants.emPassword));
-			if (apmConnectionInfo.getEmPassword().isEmpty())
-				apmConnectionInfo.setAuthToken(apmConnectionInfo.getEmUserName());
-			if(properties.getString(Constants.emTimeZone).isEmpty() || properties.getString(Constants.emTimeZone) == null){
-				
-				JenkinsPlugInLogger.severe(" em.timezone property value is not found");
-				JenkinsPlugInLogger.printLogOnConsole(2," em.timezone property value is not found");
+
+			if (properties.getString(Constants.emURL).isEmpty() || properties.getString(Constants.emURL) == null) {
+				comparisonMetadata.setMetadataInCorrect(true);
+				JenkinsPlugInLogger.severe(" em.url property value is not found");
+				JenkinsPlugInLogger.printLogOnConsole(2, " em.url property value is not found");
 				isSuccess = false;
-			}else{
+			} else {
+				apmConnectionInfo.setEmURL(properties.getString(Constants.emURL));
+				comparisonMetadata.addToCommonProperties(Constants.emURL, properties.getString(Constants.emURL));
+			}
+
+			if (properties.getString(Constants.emAuthToken).isEmpty()
+					|| properties.getString(Constants.emAuthToken) == null) {
+				comparisonMetadata.setMetadataInCorrect(true);
+				JenkinsPlugInLogger.severe(" em.authtoken property value is not found");
+				JenkinsPlugInLogger.printLogOnConsole(2, " em.authtoken property value is not found");
+				isSuccess = false;
+			} else {
+				apmConnectionInfo.setEmAuthToken(properties.getString(Constants.emAuthToken));
+				comparisonMetadata.addToCommonProperties(Constants.emAuthToken,
+						properties.getString(Constants.emAuthToken));
+			}
+			if (properties.getString(Constants.emTimeZone).isEmpty()
+					|| properties.getString(Constants.emTimeZone) == null) {
+
+				JenkinsPlugInLogger.severe(" em.timezone property value is not found");
+				JenkinsPlugInLogger.printLogOnConsole(2, " em.timezone property value is not found");
+				isSuccess = false;
+			} else {
 				apmConnectionInfo.setEmTimeZone(properties.getString(Constants.emTimeZone));
-			   comparisonMetadata.addToCommonProperties(Constants.emTimeZone, properties.getString(Constants.emTimeZone));
+				comparisonMetadata.addToCommonProperties(Constants.emTimeZone,
+						properties.getString(Constants.emTimeZone));
 			}
 			JenkinsPlugInLogger.printLogOnConsole(2, "APM Properties file loading done");
 			MetricDataHelper.setAPMConnectionInfo(apmConnectionInfo);
 			VertexAttributesUpdateHelper.setAPMConnectionInfo(apmConnectionInfo);
-			} catch (NoSuchElementException ex) {
+		} catch (NoSuchElementException ex) {
 			JenkinsPlugInLogger.severe("A required property not found ", ex);
 			isSuccess = false;
 		}
 		return isSuccess;
 	}
-	
-	
-	
+
 	private boolean readGenericConfiguration(PropertiesConfiguration properties) {
 		boolean isSuccess = true;
 		try {
-			comparisonMetadata.addToCommonProperties(Constants.appMapURL, properties.getString(Constants.appMapURL));
-			comparisonMetadata.addToCommonProperties(Constants.applicationName,properties.getString(Constants.applicationName));
-			/*comparisonMetadata.addToCommonProperties(Constants.metricClamp, properties.getString(Constants.metricClamp));
-			MetricDataHelper.setMetricClamp(properties.getString(Constants.metricClamp));*/
+			comparisonMetadata.addToCommonProperties(Constants.emWebViewPort,
+					properties.getString(Constants.emWebViewPort));
+			comparisonMetadata.addToCommonProperties(Constants.applicationName,
+					properties.getString(Constants.applicationName));
+			if (!properties.containsKey(Constants.metricClamp) || properties.getString(Constants.metricClamp).isEmpty()
+					|| properties.getString(Constants.metricClamp).toString() == null) {
+				comparisonMetadata.addToCommonProperties(Constants.metricClamp, DEFAULT_METRIC_CLAMP);
+
+			} else {
+				comparisonMetadata.addToCommonProperties(Constants.metricClamp,
+						properties.getString(Constants.metricClamp));
+			}
+
+			MetricDataHelper.setMetricClamp(comparisonMetadata.getCommonPropertyValue(Constants.metricClamp));
 			MetricDataHelper.setApplicationName(properties.getString(Constants.applicationName));
 		} catch (NoSuchElementException ex) {
 			JenkinsPlugInLogger.severe("A required property not found ", ex);
 			isSuccess = false;
 		}
-		return isSuccess;
-	}
-
-	public LoadRunnerMetadataRetriever loadMetaDataRetriever(LoadRunnerMetadata loadRunnerMetadata,
-			String loadRunnerClassName) throws BuildExecutionException{
-		Class<?> pluginClass = null;
-		LoadRunnerMetadataRetriever loadRunnerMetadataRetreiver = null;
-		try {
-			pluginClass = Class.forName(loadRunnerClassName);
-			Constructor<?> c = pluginClass.getConstructor(LoadRunnerMetadata.class);
-			Object loadRunnerMetadataRetriverObj = c.newInstance(loadRunnerMetadata);
-			((LoadRunnerMetadataRetriever) loadRunnerMetadataRetriverObj).setLoadRunnerMetadata(loadRunnerMetadata);
-			Method readExtraMetadataMethod = pluginClass.getDeclaredMethod(Constants.loadRunnerMetadataExtractMethod);
-			loadRunnerMetadataRetreiver = (LoadRunnerMetadataRetriever) readExtraMetadataMethod
-					.invoke(loadRunnerMetadataRetriverObj);
-		} catch (ClassNotFoundException e) {
-			JenkinsPlugInLogger.severe(loadRunnerMetadata + " class is not present in the classpath ", e);
-		} catch (InstantiationException e) {
-			JenkinsPlugInLogger.severe("Cannot instantiate " + loadRunnerClassName, e);
-		} catch (IllegalAccessException e) {
-			JenkinsPlugInLogger.severe("Error in reading load-runner metadata", e);
-		} catch (NoSuchMethodException e) {
-			JenkinsPlugInLogger.severe("The method fetchExtraMetadata doesnt exist in " + loadRunnerClassName, e);
-		} catch (SecurityException e) {
-			JenkinsPlugInLogger.severe("A security error occured while fetching load runner metadata", e);
-		} catch (IllegalArgumentException e) {
-			JenkinsPlugInLogger.severe("Illegal arguments to the load-runner retriever class ", e);
-		} catch (InvocationTargetException e) {
-			JenkinsPlugInLogger.severe("Invocation error occured while loading load-runner metadata", e);
-			throw new BuildExecutionException(e.getTargetException().getMessage());
-		}
-		return loadRunnerMetadataRetreiver;
-	}
-
-	private boolean readLoadRunnerConfigurations(PropertiesConfiguration properties) throws BuildExecutionException{
-		boolean isSuccess = true;
-		try {
-			assignBenchMarkBuildNumber();
-			LoadRunnerMetadata loadRunnerMetadataInfo = comparisonMetadata.getLoadRunnerMetadataInfo();
-			loadRunnerMetadataInfo.addToLoadRunnerProperties("currentBuildNumber",
-					"" + comparisonMetadata.getJenkinsInfo().getCurrentBuildNumber());
-			loadRunnerMetadataInfo.setCurrentBuildNumber(comparisonMetadata.getJenkinsInfo().getCurrentBuildNumber());
-			Iterator<String> propIter = properties.getKeys();
-			while (propIter.hasNext()) {
-				String key = propIter.next();
-				loadRunnerMetadataInfo.addToLoadRunnerProperties(key, properties.getString(key));
-			}
-			String loadRunnerName = properties.getString(Constants.loadGeneratorName);
-			loadRunnerMetadataInfo.addToLoadRunnerProperties(Constants.loadGeneratorName, loadRunnerName);
-			String metadataReaderClassName = properties
-					.getString(loadRunnerName + "." + Constants.metadataReaderClassName);
-			loadMetaDataRetriever(loadRunnerMetadataInfo, metadataReaderClassName);
-			JenkinsPlugInLogger.printLogOnConsole(2, "Loadrunner-metadata file loading done");
-		} catch (NoSuchElementException ex) {
-			isSuccess = false;
-			JenkinsPlugInLogger.severe("Required property not found", ex);
-		}
-
 		return isSuccess;
 	}
 
@@ -552,6 +559,12 @@ public class ComparisonMetadataLoader {
 			emailInfo.setSmtpHost(value);
 		} else if (key.equals(Constants.emailSMTPAuth)) {
 			emailInfo.setMailSmtpAuth(Boolean.parseBoolean(value));
+		} else if (key.equals(Constants.emailMode)) {
+			emailInfo.setMailMode(value);
+		} else if (key.equals(Constants.gmailSmtpPort)) {
+			emailInfo.setGmailSmtpPort(value);
+		} else if (key.equals(Constants.gmailSocketPort)) {
+			emailInfo.setGmailSocketPort(value);
 		} else if (key.equals(Constants.emailSenderId)) {
 			emailInfo.setSenderEmailId(value);
 		} else if (key.equals(Constants.emailPassword)) {
@@ -583,8 +596,16 @@ public class ComparisonMetadataLoader {
 			String loggingFolder = jInfo.getBuildWorkSpaceFolder() + File.separator + jInfo.getJobName();
 			int currentBuildNumber = jInfo.getCurrentBuildNumber();
 			JenkinsPlugInLogger.printLogOnConsole(2, "Logging folder location is " + loggingFolder);
-			String loggingLevel = properties.getString(Constants.loggingLevel);
-			FileHelper.initializeLog(loggingLevel, loggingFolder, currentBuildNumber);
+
+			if (!properties.containsKey(Constants.loggingLevel)
+					|| properties.getProperty(Constants.loggingLevel).toString().isEmpty()
+					|| properties.getProperty(Constants.loggingLevel).toString() == null) {
+				FileHelper.initializeLog(Constants.defaultLoggingLevel, loggingFolder, currentBuildNumber);
+			} else {
+				String loggingLevel = properties.getString(Constants.loggingLevel);
+				FileHelper.initializeLog(loggingLevel, loggingFolder, currentBuildNumber);
+			}
+
 			String extensionsDirectory = properties.getString(Constants.extensionsDirectory);
 			String outputDirectory = null;
 			outputDirectory = jInfo.getBuildWorkSpaceFolder() + File.separator + jInfo.getJobName() + File.separator
@@ -643,15 +664,16 @@ public class ComparisonMetadataLoader {
 				"" + comparisonMetadata.getLoadRunnerMetadataInfo().getCurrentBuildInfo().getNumber());
 		outputConfiguration.addToCommonProperties(Constants.jenkinsBenchMarkBuild,
 				"" + comparisonMetadata.getLoadRunnerMetadataInfo().getBenchMarkBuildInfo().getNumber());
-		outputConfiguration.addToCommonProperties(Constants.loadGeneratorName,
-				comparisonMetadata.getLoadRunnerMetadataInfo().getLoadRunnerPropertyValue(Constants.loadGeneratorName));
-		outputConfiguration.addToCommonProperties(Constants.emURL,""+comparisonMetadata.getApmConnectionInfo().getEmURL());
-		outputConfiguration.addToCommonProperties(Constants.emUserName,""+comparisonMetadata.getApmConnectionInfo().getEmUserName());
-		outputConfiguration.addToCommonProperties(Constants.emPassword,""+comparisonMetadata.getApmConnectionInfo().getEmPassword());
-		outputConfiguration.addToCommonProperties(Constants.applicationName,""+comparisonMetadata.getCommonPropertyValue(Constants.applicationName));
-		outputConfiguration.addToCommonProperties(Constants.appMapURL,""+comparisonMetadata.getCommonPropertyValue(Constants.appMapURL));
-		outputConfiguration.setHistogramBuildInfoList(comparisonMetadata.getLoadRunnerMetadataInfo().getHistogramBuildInfo());
-				
+		outputConfiguration.addToCommonProperties(Constants.emURL,
+				"" + comparisonMetadata.getApmConnectionInfo().getEmURL());
+		outputConfiguration.addToCommonProperties(Constants.emAuthToken,
+				"" + comparisonMetadata.getApmConnectionInfo().getEmAuthToken());
+		outputConfiguration.addToCommonProperties(Constants.applicationName,
+				"" + comparisonMetadata.getCommonPropertyValue(Constants.applicationName));
+		outputConfiguration.addToCommonProperties(Constants.emWebViewPort,
+				"" + comparisonMetadata.getCommonPropertyValue(Constants.emWebViewPort));
+		outputConfiguration
+				.setHistogramBuildInfoList(comparisonMetadata.getLoadRunnerMetadataInfo().getHistogramBuildInfoList());
 	}
 
 	public ComparisonMetadata getComparisonMetadata() {
