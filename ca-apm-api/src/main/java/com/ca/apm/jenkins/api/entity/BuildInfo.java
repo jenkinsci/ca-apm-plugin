@@ -1,5 +1,8 @@
 package com.ca.apm.jenkins.api.entity;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * This entity holds the Jenkins build information like number, start-time // * and end time of the
  * load-runner
@@ -13,16 +16,19 @@ public class BuildInfo {
   private long endTime;
   private String status;
 
+  private Map<String, String> scmRepoParams = new HashMap<String, String>();
+
   public BuildInfo() {
     super();
   }
 
-  public BuildInfo(int number, long startTime, long endTime, String status) {
+  public BuildInfo(int number, long startTime, long endTime, String status, Map<String, String> scmRepoParams) {
     super();
     this.number = number;
     this.startTime = startTime;
     this.endTime = endTime;
     this.status = status;
+    this.scmRepoParams = scmRepoParams;
   }
 
   public int getNumber() {
@@ -57,6 +63,14 @@ public void setStatus(String status) {
 	this.status = status;
 }
 
+public Map<String, String> getSCMRepoParams() {
+    return scmRepoParams;
+  }
+
+  public void addToSCMRepoParams(String key, String value) {
+	  scmRepoParams.put(key, value);
+  }
+
 public String toString() {
     return "BuildInfo [number="
         + number
@@ -66,6 +80,8 @@ public String toString() {
         + endTime
         + ", status="
         + status
+        + ", scmRepoParams="
+        + scmRepoParams
         + "]";
   }
 }

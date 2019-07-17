@@ -59,8 +59,9 @@ public class VertexAttributesUpdateHelper {
 	public VertexAttributesUpdateHelper(ComparisonMetadata comparisonMetadata) {
 		this.comparisonMetadata = comparisonMetadata;
 	}
-	
-	private static boolean callUpdateVertexAttribute(Map<String, Set<String>> vertexIdTsMap, Map attributesMap) {
+
+	private static boolean callUpdateVertexAttribute(Map<String, Set<String>> vertexIdTsMap,
+			Map<String, String> attributesMap) {
 		JenkinsPlugInLogger.info("Inside callUpdateVertexAttribute method");
 		if (vertexIdTsMap.isEmpty()) {
 			return false;
@@ -79,38 +80,111 @@ public class VertexAttributesUpdateHelper {
 			boolean isFirstID = true;
 			StringBuffer payload = new StringBuffer("{ \"items\" : [");
 			List<String> tsList = null;
+
 			for (Map.Entry<String, Set<String>> entry : vertexIdTsMap.entrySet()) {
 				tsList = new ArrayList<String>(entry.getValue());
+
 				for (int ts = 0; ts < tsList.size(); ts++) {
+
+					int attribsCount = 1;
+					StringBuffer attribs = new StringBuffer();
+					for (Map.Entry<String, String> attribsEntry : attributesMap.entrySet()) {
+						if (attribsCount != attributesMap.size()) {
+							attribs = attribs
+									.append("\"" + attribsEntry.getKey() + "\":[\"" + attribsEntry.getValue() + "\"],");
+							attribsCount++;
+						} else {
+							attribs = attribs.append(
+									"\"" + attribsEntry.getKey() + "\":[\"" + attribsEntry.getValue() + "\"]}}");
+						}
+					}
 					if (isFirstID) {
 						payload.append("{" +
 
 								"\"id\" : \"" + Integer.parseInt(entry.getKey()) + "\"," + "\"timestamp\" : \""
-								+ tsList.get(ts) + "\"," + "\"attributes\": {" + "\"currentBuildNumber\":[\""
-								+ attributesMap.get("currentBuildNumber") + "\"]," + "\"benchmarkBuildNumber\":[\""
-								+ attributesMap.get("benchMarkBuildNumber") + "\"]," + "\"buildStatus\":[\""
-								+ attributesMap.get("buildStatus") + "\"]," + "\"loadGeneratorName\":[\""
-								+ attributesMap.get("loadGeneratorName") + "\"]," + "\"loadGeneratorStartTime\":[\""
-								+ attributesMap.get("loadGeneratorStartTime") + "\"]," + "\"loadGeneratorEndTime\": [\""
-								+ attributesMap.get("loadGeneratorEndTime") + "\"]" + "}" + "}");
+								+ tsList.get(ts) + "\"," + "\"attributes\": {"
+								+ attribs.toString());/*
+														 * "\"currentBuildNumber\":[\""
+														 * + attributesMap.get(
+														 * "currentBuildNumber")
+														 * + "\"]," +
+														 * "\"benchmarkBuildNumber\":[\""
+														 * + attributesMap.get(
+														 * "benchMarkBuildNumber")
+														 * + "\"]," +
+														 * "\"buildStatus\":[\""
+														 * + attributesMap.get(
+														 * "buildStatus") +
+														 * "\"]," +
+														 * "\"currentBuildGitSHA\":[\""
+														 * + attributesMap.get(
+														 * "currentBuildGitSHA")
+														 * + "\"]," +
+														 * "\"benchMarkBuildGitSHA\": [\""
+														 * + attributesMap.get(
+														 * "benchMarkBuildGitSHA")
+														 * + "\"]," +
+														 * "\"loadGeneratorName\":[\""
+														 * + attributesMap.get(
+														 * "loadGeneratorName")
+														 * + "\"]," +
+														 * "\"loadGeneratorStartTime\":[\""
+														 * + attributesMap.get(
+														 * "loadGeneratorStartTime")
+														 * + "\"]," +
+														 * "\"loadGeneratorEndTime\": [\""
+														 * + attributesMap.get(
+														 * "loadGeneratorEndTime")
+														 * + "\"]" + "}" + "}");
+														 */
 						isFirstID = false;
 					} else {
 						payload.append(",{" +
 
 								"\"id\" : \"" + Integer.parseInt(entry.getKey()) + "\"," + "\"timestamp\" : \""
-								+ tsList.get(ts) + "\"," + "\"attributes\": {" + "\"currentBuildNumber\":[\""
-								+ attributesMap.get("currentBuildNumber") + "\"]," + "\"benchmarkBuildNumber\":[\""
-								+ attributesMap.get("benchMarkBuildNumber") + "\"]," + "\"buildStatus\":[\""
-								+ attributesMap.get("buildStatus") + "\"]," + "\"loadGeneratorName\":[\""
-								+ attributesMap.get("loadGeneratorName") + "\"]," + "\"loadGeneratorStartTime\":[\""
-								+ attributesMap.get("loadGeneratorStartTime") + "\"]," + "\"loadGeneratorEndTime\": [\""
-								+ attributesMap.get("loadGeneratorEndTime") + "\"]" + "}" + "}");
+								+ tsList.get(ts) + "\"," + "\"attributes\": {"
+								+ attribs.toString()); /*
+														 * "\"currentBuildNumber\":[\""
+														 * + attributesMap.get(
+														 * "currentBuildNumber")
+														 * + "\"]," +
+														 * "\"benchmarkBuildNumber\":[\""
+														 * + attributesMap.get(
+														 * "benchMarkBuildNumber")
+														 * + "\"]," +
+														 * "\"buildStatus\":[\""
+														 * + attributesMap.get(
+														 * "buildStatus") +
+														 * "\"]," +
+														 * "\"currentBuildGitSHA\":[\""
+														 * + attributesMap.get(
+														 * "currentBuildGitSHA")
+														 * + "\"]," +
+														 * "\"benchMarkBuildGitSHA\": [\""
+														 * + attributesMap.get(
+														 * "benchMarkBuildGitSHA")
+														 * + "\"]," +
+														 * "\"loadGeneratorName\":[\""
+														 * + attributesMap.get(
+														 * "loadGeneratorName")
+														 * + "\"]," +
+														 * "\"loadGeneratorStartTime\":[\""
+														 * + attributesMap.get(
+														 * "loadGeneratorStartTime")
+														 * + "\"]," +
+														 * "\"loadGeneratorEndTime\": [\""
+														 * + attributesMap.get(
+														 * "loadGeneratorEndTime")
+														 * + "\"]" + "}" + "}");
+														 */
 					}
+
 				}
 
 			}
 
 			payload.append("] }");
+			JenkinsPlugInLogger.printLogOnConsole(3, "........payloadString..." + payload.toString());
 			StringEntity entity = new StringEntity(payload.toString());
 			request.setEntity(entity);
 			response = client.build().execute(request);
@@ -136,7 +210,7 @@ public class VertexAttributesUpdateHelper {
 				while ((line = rd.readLine()) != null) {
 					result.append(line);
 				}
-				
+
 			} catch (IOException e) {
 				JenkinsPlugInLogger.info("Error in callUpdateAttributeAPI ->" + e.getMessage());
 			}
@@ -155,6 +229,20 @@ public class VertexAttributesUpdateHelper {
 				outputConfiguration.getCommonPropertyValue(Constants.jenkinsCurrentBuild));
 		attributesMap.put("benchMarkBuildNumber",
 				outputConfiguration.getCommonPropertyValue(Constants.jenkinsBenchMarkBuild));
+
+		if (outputConfiguration.getSCMRepoAttribValue(Constants.jenkinsCurrentBuildSCMRepoParams) != null) {
+			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
+					.getSCMRepoAttribValue(Constants.jenkinsCurrentBuildSCMRepoParams).entrySet()) {
+				attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
+			}
+		}
+
+		if (outputConfiguration.getSCMRepoAttribValue(Constants.jenkinsBenchMarkBuildSCMRepoParams) != null) {
+			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
+					.getSCMRepoAttribValue(Constants.jenkinsBenchMarkBuildSCMRepoParams).entrySet()) {
+				attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
+			}
+		}
 		attributesMap.put("buildStatus", buildStatus);
 		attributesMap.put("loadGeneratorName", outputConfiguration.getCommonPropertyValue(Constants.loadGeneratorName));
 		long startTime = 0L;
@@ -174,7 +262,7 @@ public class VertexAttributesUpdateHelper {
 		boolean processStatus = false;
 		Set<String> vertexIds = null;
 		String vertexId = null;
-		
+
 		String vertexIdsURL = generateURL(apmConnectionInfo.getEmURL(), Constants.vertexIdByName);
 
 		HttpGet httpGet = null;
@@ -269,7 +357,8 @@ public class VertexAttributesUpdateHelper {
 
 		if (vertexIdTs.isEmpty()) {
 			JenkinsPlugInLogger.severe("No vertices data is fetched for the application  " + applicationName);
-			JenkinsPlugInLogger.printLogOnConsole(2, "No vertices data is fetched for the application  "+ applicationName);
+			JenkinsPlugInLogger.printLogOnConsole(2,
+					"No vertices data is fetched for the application  " + applicationName);
 
 		} else {
 			processStatus = callUpdateVertexAttribute(vertexIdTs, attributesMap);

@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -57,15 +59,28 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	private String loadGeneratorStartTime;
 	private String loadGeneratorEndTime;
 	private String loadGeneratorName;
-	
+	private Map<String, String> attribsMap;
+
 	@DataBoundConstructor
 	public CAAPMPerformanceComparator(String performanceComparatorProperties, String loadGeneratorStartTime,
-			String loadGeneratorEndTime, String loadGeneratorName) {
+			String loadGeneratorEndTime, String loadGeneratorName, String attribsStr) {
 		this.performanceComparatorProperties = performanceComparatorProperties;
 		this.loadGeneratorStartTime = loadGeneratorStartTime;
 		this.loadGeneratorEndTime = loadGeneratorEndTime;
 		this.loadGeneratorName = loadGeneratorName;
+		convertAttribsStrToMap(attribsStr);
+	}
 
+	private void convertAttribsStrToMap(String attribsList) {
+		attribsMap = new HashMap<String, String>();
+		attribsList = attribsList.substring(1, attribsList.length() - 1);
+		String[] keyValuePairs = attribsList.split(",");
+		for (int i = 0; i < keyValuePairs.length; i++) {
+			String[] entry = keyValuePairs[i].split(":");
+			attribsMap.put(entry[0].trim(), entry[1].trim());
+		}
+
+		// return attribsMap;
 	}
 
 	@Override
@@ -230,6 +245,8 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	@Override
 	public void perform(Run<?, ?> run, FilePath filePath, Launcher launcher, TaskListener taskListener)
 			throws InterruptedException, IOException {
+
+		taskListener.getLogger().println("Attributes Map received from Jenkins" + attribsMap);
 		// set logger
 		JenkinsPlugInLogger.setTaskListener(taskListener);
 		int currentBuildNumber = run.getNumber();
@@ -245,6 +262,11 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		currentBuildInfo = new BuildInfo();
 		addOrReplaceParamValue(run, "loadGeneratorStartTime", loadGeneratorStartTime);
 		addOrReplaceParamValue(run, "loadGeneratorEndTime", loadGeneratorEndTime);
+		if (!attribsMap.isEmpty()) {
+			for (Map.Entry<String, String> scmRepoEntry : attribsMap.entrySet()) {
+				addOrReplaceParamValue(run, scmRepoEntry.getKey(), scmRepoEntry.getValue());
+			}
+		}
 		taskListener.getLogger().println("loading config file : " + this.performanceComparatorProperties);
 		try {
 			loadConfiguration();
@@ -273,17 +295,32 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		if (run != null) {
 
 			currentBuildInfo.setNumber(run.getNumber());
-				ParametersAction paramAction = run.getAction(ParametersAction.class);
-				currentBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
-				currentBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
-				currentBuildInfo.setStartTime(Long.parseLong(currentBuildStartTime));
-				currentBuildInfo.setEndTime(Long.parseLong(currentBuildEndTime));
-				taskListener.getLogger().println("currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = "
-						+ currentBuildStartTime + ", currentBuildEndTime = " + currentBuildEndTime);
-				JenkinsPlugInLogger.log(Level.INFO,
-						"currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = " + currentBuildStartTime
-								+ ", currentBuildEndTime = " + currentBuildEndTime);
-		  }
+			ParametersAction paramAction = run.getAction(ParametersAction.class);
+			currentBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
+			currentBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
+			if (!attribsMap.isEmpty()) {
+				for (Map.Entry<String, String> scmRepoEntry : attribsMap.entrySet()) {
+					currentBuildInfo.addToSCMRepoParams("currentBuild_" + scmRepoEntry.getKey(),
+							getParamValue(paramAction, scmRepoEntry.getKey()));
+				}
+			}
+			currentBuildInfo.setStartTime(Long.parseLong(currentBuildStartTime));
+			currentBuildInfo.setEndTime(Long.parseLong(currentBuildEndTime));
+			taskListener.getLogger().println("currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = "
+					+ currentBuildStartTime + ", currentBuildEndTime = " + currentBuildEndTime);
+
+			if (!currentBuildInfo.getSCMRepoParams().isEmpty()) {
+				taskListener.getLogger().println(" currentBuildScmParams = " + currentBuildInfo.getSCMRepoParams());
+			}
+
+			JenkinsPlugInLogger.log(Level.INFO, "currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = "
+					+ currentBuildStartTime + ", currentBuildEndTime = " + currentBuildEndTime);
+
+			if (!currentBuildInfo.getSCMRepoParams().isEmpty()) {
+				JenkinsPlugInLogger.log(Level.INFO, " currentBuildScmParams = " + currentBuildInfo.getSCMRepoParams());
+			}
+
+		}
 		histogramBuildInfoList.add(currentBuildInfo);
 		if (benchmarkBuildNumber == 0) {
 			if (previousSuccessfulBuildNumber > 0) {
@@ -305,19 +342,32 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 
 			if (benchmarkRun != null) {
 				benchmarkBuildInfo.setNumber(benchmarkRun.getNumber());
-					ParametersAction paramAction = benchmarkRun.getAction(ParametersAction.class);
-					benchMarkBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
-					benchMarkBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
-					benchmarkBuildInfo.setStartTime(Long.parseLong(benchMarkBuildStartTime));
-					benchmarkBuildInfo.setEndTime(Long.parseLong(benchMarkBuildEndTime));
-					taskListener.getLogger()
-							.println("benchmarkBuildNumber = " + benchmarkRun.getNumber()
-									+ " benchMarkBuildStartTime = " + benchMarkBuildStartTime
-									+ ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime);
-					JenkinsPlugInLogger.log(Level.INFO,
-							"benchmarkBuildNumber = " + benchmarkRun.getNumber() + " benchMarkBuildStartTime = "
-									+ benchMarkBuildStartTime + ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime);
-				
+				ParametersAction paramAction = benchmarkRun.getAction(ParametersAction.class);
+				benchMarkBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
+				benchMarkBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
+				benchmarkBuildInfo.setStartTime(Long.parseLong(benchMarkBuildStartTime));
+				benchmarkBuildInfo.setEndTime(Long.parseLong(benchMarkBuildEndTime));
+				if (!attribsMap.isEmpty()) {
+					for (Map.Entry<String, String> scmRepoEntry : attribsMap.entrySet()) {
+						if (getParamValue(paramAction, scmRepoEntry.getKey()) != null) {
+							benchmarkBuildInfo.addToSCMRepoParams("benchMarkBuild_" + scmRepoEntry.getKey(),
+									getParamValue(paramAction, scmRepoEntry.getKey()));
+						}
+					}
+				}
+				taskListener.getLogger()
+						.println("benchmarkBuildNumber = " + benchmarkRun.getNumber() + " benchMarkBuildStartTime = "
+								+ benchMarkBuildStartTime + ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime
+								+ ", benchMarkBuildGitSHA = " + benchmarkBuildInfo.getSCMRepoParams());
+				if (!currentBuildInfo.getSCMRepoParams().isEmpty()) {
+					taskListener.getLogger().println(" currentBuildScmParams = " + currentBuildInfo.getSCMRepoParams());
+				}
+
+				JenkinsPlugInLogger.log(Level.INFO,
+						"benchmarkBuildNumber = " + benchmarkRun.getNumber() + " benchMarkBuildStartTime = "
+								+ benchMarkBuildStartTime + ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime
+								+ ", benchMarkBuildscmRepoParams = " + benchmarkBuildInfo.getSCMRepoParams());
+
 			}
 
 			if (benchmarkRun.getResult().toString().contains("SUCCESS")) {
@@ -341,13 +391,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			run = run.getPreviousBuild();
 			histogramBuildInfo = new BuildInfo();
 			histogramBuildInfo.setNumber(run.number);
-				ParametersAction paramAction = run.getAction(ParametersAction.class);
-				if (paramAction != null) {
-					histogramBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
-					histogramBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
-					histogramBuildInfo.setStartTime(Long.parseLong(histogramBuildStartTime));
-					histogramBuildInfo.setEndTime(Long.parseLong(histogramBuildEndTime));
-				}
+			ParametersAction paramAction = run.getAction(ParametersAction.class);
+			if (paramAction != null) {
+				histogramBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
+				histogramBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
+				histogramBuildInfo.setStartTime(Long.parseLong(histogramBuildStartTime));
+				histogramBuildInfo.setEndTime(Long.parseLong(histogramBuildEndTime));
+			}
 			if (run.getResult().toString().contains("SUCCESS")) {
 				histogramBuildInfo.setStatus("SUCCESS");
 			} else if (run.getResult().toString().contains("FAILURE")) {
@@ -375,10 +425,10 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	}
 
 	public String getParamValue(ParametersAction pAction, String paramName) {
-		if(pAction != null){
-		ParameterValue parameterValue = pAction.getParameter(paramName);
-		if (parameterValue != null)
-			return (String) parameterValue.getValue();
+		if (pAction != null) {
+			ParameterValue parameterValue = pAction.getParameter(paramName);
+			if (parameterValue != null)
+				return (String) parameterValue.getValue();
 		}
 		return "0";
 	}
@@ -415,7 +465,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 				}
 			}
 		}
-		
+
 	}
 
 	@Extension
@@ -426,6 +476,8 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		private String loadGeneratorStartTime;
 		private String loadGeneratorEndTime;
 		private String loadGeneratorName;
+		private Map<String, String> gitParams;
+		private String paramsMap;
 
 		@Override
 		public CAAPMPerformanceComparator newInstance(StaplerRequest req, JSONObject formData) throws FormException {
@@ -434,7 +486,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 				this.performanceComparatorProperties = formData.getString("performanceComparatorProperties");
 				CAAPMPerformanceComparator caAPMPublisher = new CAAPMPerformanceComparator(
 						this.performanceComparatorProperties, this.loadGeneratorStartTime, this.loadGeneratorEndTime,
-						this.loadGeneratorName);
+						this.loadGeneratorName, this.paramsMap);
 				save();
 				return caAPMPublisher;
 			} catch (Exception ex) {

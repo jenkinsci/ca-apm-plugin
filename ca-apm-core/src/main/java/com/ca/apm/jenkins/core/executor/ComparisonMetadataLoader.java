@@ -664,6 +664,9 @@ public class ComparisonMetadataLoader {
 				"" + comparisonMetadata.getLoadRunnerMetadataInfo().getCurrentBuildInfo().getNumber());
 		outputConfiguration.addToCommonProperties(Constants.jenkinsBenchMarkBuild,
 				"" + comparisonMetadata.getLoadRunnerMetadataInfo().getBenchMarkBuildInfo().getNumber());
+		outputConfiguration.addToSCMRepoAttribs(Constants.jenkinsCurrentBuildSCMRepoParams, comparisonMetadata.getLoadRunnerMetadataInfo().getCurrentBuildInfo().getSCMRepoParams());
+		outputConfiguration.addToSCMRepoAttribs(Constants.jenkinsBenchMarkBuildSCMRepoParams, comparisonMetadata.getLoadRunnerMetadataInfo().getBenchMarkBuildInfo().getSCMRepoParams());
+		
 		outputConfiguration.addToCommonProperties(Constants.emURL,
 				"" + comparisonMetadata.getApmConnectionInfo().getEmURL());
 		outputConfiguration.addToCommonProperties(Constants.emAuthToken,

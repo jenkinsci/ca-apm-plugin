@@ -89,6 +89,9 @@ public class Constants {
   public static final String jenkinsJobName = "jenkins.jobname";
   public static final String jenkinsCurrentBuild = "jenkins.currentbuild";
   public static final String jenkinsBenchMarkBuild = "jenkins.benchmarkbuild";
+  
+  public static final String jenkinsCurrentBuildSCMRepoParams = "jenkins.currentbuildSCMRepoParams";
+  public static final String jenkinsBenchMarkBuildSCMRepoParams = "jenkins.benchmarkbuildSCMRepoParams";
   // Run-Time Method Names
   public static final String comparatorConfigMethod = "setConfiguration";
   public static final String comparatorExecuteMethod = "doCompare";
