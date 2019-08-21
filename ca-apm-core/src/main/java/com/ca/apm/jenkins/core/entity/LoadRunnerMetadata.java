@@ -22,10 +22,10 @@ public class LoadRunnerMetadata {
   private JenkinsInfo jenkinsInfo;
 
   public LoadRunnerMetadata() {
-    loadRunnerProperties = new HashMap<String, String>();
+    loadRunnerProperties = new HashMap<>();
     benchMarkBuildInfo = new BuildInfo();
     currentBuildInfo = new BuildInfo();
-    histogramBuildInfoList = new ArrayList<BuildInfo>();
+    histogramBuildInfoList = new ArrayList<>();
   }
 
   public void addToLoadRunnerProperties(String key, String value) {

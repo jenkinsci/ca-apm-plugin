@@ -36,26 +36,60 @@ public class StaticThresholdComparisonStrategy implements ComparisonStrategy<Def
 
 	private StrategyConfiguration strategyConfiguration;
 	private String comparisonStrategyName;
-	private String absStrategyClassName;
-	private String strategyClassName;
 
 	public void setConfiguration(StrategyConfiguration strategyConfiguration) {
 		this.strategyConfiguration = strategyConfiguration;
 		this.comparisonStrategyName = strategyConfiguration.getPropertyValue("name");
-		this.absStrategyClassName = strategyConfiguration.getPropertyValue(this.comparisonStrategyName+"."+Constants.comparatorClasssName);
-		strategyClassName = absStrategyClassName.substring(absStrategyClassName.lastIndexOf('.')+1);
+
+	}
+
+	private boolean setFrequency(AgentComparisonResult agentComparisonResult,
+			StrategyResult<DefaultStrategyResult> comparisonOutput) {
+		boolean isFrequencySet = false;
+		if (!(agentComparisonResult.getSuccessEntries().isEmpty())) {
+			if ((!(agentComparisonResult.getSuccessEntries().isEmpty())
+					&& agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues() != null
+					&& !(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty()))
+					|| agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues() != null
+							&& !(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues()
+									.isEmpty())) {
+				comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0)
+						.getCurrentBuildTimeSliceValues().get(0).getfrequency());
+				isFrequencySet = true;
+			} else if (agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues() != null
+					&& !(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues()
+							.isEmpty())) {
+				comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0)
+						.getBenchMarkBuildTimeSliceValues().get(0).getfrequency());
+				isFrequencySet = true;
+			}
+
+		} else if (!(agentComparisonResult.getSlowEntries().isEmpty())) {
+			if (agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues() != null
+					&& !(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty())) {
+				comparisonOutput.setFrequency(agentComparisonResult.getSlowEntries().get(0)
+						.getCurrentBuildTimeSliceValues().get(0).getfrequency());
+				isFrequencySet = true;
+			} else if (agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues() != null
+					&& !(agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues().isEmpty())) {
+				comparisonOutput.setFrequency(agentComparisonResult.getSlowEntries().get(0)
+						.getBenchMarkBuildTimeSliceValues().get(0).getfrequency());
+				isFrequencySet = true;
+			}
+		}
+		return isFrequencySet;
 	}
 
 	public StrategyResult<DefaultStrategyResult> doCompare(BuildInfo benchMarkBuildInfo, BuildInfo currentBuildInfo)
-			throws BuildComparatorException,BuildExecutionException {
+			throws BuildExecutionException {
 		JenkinsPlugInLogger.fine("Stall Count Comparison Strategy comparison has been started");
-		String threshold = strategyConfiguration.getPropertyValue(comparisonStrategyName + "." + Constants.threshold);
+		String threshold = strategyConfiguration.getPropertyValue(comparisonStrategyName + "." + Constants.THRESHOLD);
 		double thresholdValue = Double.parseDouble(threshold);
 		String metricSpecifier = strategyConfiguration
-				.getPropertyValue(comparisonStrategyName + "." + Constants.metricSpecifier);
+				.getPropertyValue(comparisonStrategyName + "." + Constants.METRICSPECIFIER);
 		List<String> agentSpecifiers = strategyConfiguration.getAgentSpecifiers();
 
-		StrategyResult<DefaultStrategyResult> comparisonOutput = new StrategyResult<DefaultStrategyResult>();
+		StrategyResult<DefaultStrategyResult> comparisonOutput = new StrategyResult<>();
 		DefaultStrategyResult strategyResult = new DefaultStrategyResult();
 		comparisonOutput.setResult(strategyResult);
 		boolean isFrequencySet = false;
@@ -63,7 +97,7 @@ public class StaticThresholdComparisonStrategy implements ComparisonStrategy<Def
 			AgentComparisonResult agentComparisonResult = null;
 			try {
 				BuildPerformanceData currentBuildPerformanceData = MetricDataHelper.getMetricData(agentSpecifier,
-						metricSpecifier,strategyClassName, currentBuildInfo);
+						metricSpecifier, currentBuildInfo);
 				Map<String, Double> currentAverageValues = FormulaHelper.getAverageValues(currentBuildPerformanceData);
 				agentComparisonResult = FormulaHelper.thresholdValueBasedCrossBuildMetricPathComparison(thresholdValue,
 						currentAverageValues);
@@ -71,25 +105,8 @@ public class StaticThresholdComparisonStrategy implements ComparisonStrategy<Def
 						.getTimeSliceGroupByMetricPath(currentBuildPerformanceData);
 				agentComparisonResult.attachEveryPointResult(thresholdValue, currentSliceValues);
 				if (!isFrequencySet) {
-					if(!(agentComparisonResult.getSuccessEntries().isEmpty())){
-                        if(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues()!=null || !(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty())){
-                    comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0).getCurrentBuildTimeSliceValues().get(0).getfrequency());
-                    isFrequencySet = true;
-                        }else if(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues()!=null || !(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues().isEmpty())){
-                    comparisonOutput.setFrequency(agentComparisonResult.getSuccessEntries().get(0).getBenchMarkBuildTimeSliceValues().get(0).getfrequency());
-                    isFrequencySet = true;
-                        }
-                    
-                    }else if( !(agentComparisonResult.getSlowEntries().isEmpty())){
-                        if(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues()!=null || !(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues().isEmpty())){
-                    comparisonOutput.setFrequency(agentComparisonResult.getSlowEntries().get(0).getCurrentBuildTimeSliceValues().get(0).getfrequency());
-                    isFrequencySet = true;
-                        }else if(agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues()!=null || !(agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues().isEmpty())){
-                    comparisonOutput.setFrequency(agentComparisonResult.getSlowEntries().get(0).getBenchMarkBuildTimeSliceValues().get(0).getfrequency());
-                    isFrequencySet = true;
-                        }
-                    }
-                }
+					isFrequencySet = setFrequency(agentComparisonResult, comparisonOutput);
+				}
 			} catch (BuildComparatorException e) {
 				JenkinsPlugInLogger.severe("An error has occured while collecting performance metrics for "
 						+ comparisonStrategyName + "from APM-> for agentSpecifier=" + agentSpecifier

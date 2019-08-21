@@ -17,12 +17,12 @@ public class OutputConfiguration {
   private Map<String, String> commonProperties;
   private Map<String, String> handlerSpecificProperties;
   private List<BuildInfo> histogramBuildInfoList;
-  private Map<String,Map<String, String>> scmRepoAttribs = new HashMap<String, Map<String, String>>();
+  private Map<String,Map<String, String>> scmRepoAttribs = new HashMap<>();
 
   public OutputConfiguration() {
     super();
-    commonProperties = new HashMap<String, String>();
-    histogramBuildInfoList = new ArrayList<BuildInfo>();
+    commonProperties = new HashMap<>();
+    histogramBuildInfoList = new ArrayList<>();
   }
 
   public Map<String, String> getProperties() {

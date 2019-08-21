@@ -7,9 +7,7 @@ public class DateTimeHelper {
     super();
   }
 
-  public static String getDate(long dateValue) {
-    /*SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    Timestamp ts = new Timestamp(dateValue);*/
-    return null;
+  public static String getDate() {
+       return null;
   }
 }

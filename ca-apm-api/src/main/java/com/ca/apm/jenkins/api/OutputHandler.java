@@ -49,5 +49,5 @@ public interface OutputHandler<T> {
    *     error/exception has occured during the execution
    */
   public void publishOutput(List<T> strategyResults)
-      throws BuildComparatorException, BuildExecutionException;
+      throws BuildExecutionException;
 }

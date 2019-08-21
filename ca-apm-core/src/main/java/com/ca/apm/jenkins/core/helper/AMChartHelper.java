@@ -29,328 +29,278 @@ import org.json.JSONObject;
  */
 public class AMChartHelper {
 
-  private AMChartHelper() {
-    super();
-  }
+	private static final String CHARTOUTPUT = "chartOutput";
 
-  private static void preProcessChartOutputDirectory(
-      String workspaceFolder, String jobName, String currentBuildNumber) {
-    FileHelper.createDirectory(workspaceFolder + File.separator + jobName);
-    FileHelper.createDirectory(
-        workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber);
-    FileHelper.createDirectory(
-        workspaceFolder
-            + File.separator
-            + jobName
-            + File.separator
-            + currentBuildNumber
-            + File.separator
-            + "chartOutput");
-    File targetZipFile =
-        new File(
-            workspaceFolder
-                + File.separator
-                + jobName
-                + File.separator
-                + currentBuildNumber
-                + File.separator
-                + "chartOutput"
-                + File.separator);
-    IOUtility ioUtility = new IOUtility();
-    ioUtility.extractZipFromClassPath("amcharts.zip", targetZipFile);
-  }
+	private static final String TITLE = "title";
 
-  private static String generateHomePageHtmlContent(List<StrategyResult> strategyResults) {
-    VelocityEngine ve = new VelocityEngine();
-    StringWriter writer = new StringWriter();
-    ve.setProperty("resource.loader", "classpath");
-    ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-    ve.init();
-    Template t = ve.getTemplate("amChartHomePage.vm");
-    VelocityContext context = new VelocityContext();
-    List<HashMap<String, String>> strategies = new LinkedList<HashMap<String, String>>();
-    String name = "buildtoBuild";
-    String link = "chartOutput/output/"+name+"-chart-output.html";
-    HashMap<String, String> strategyMap = new HashMap<String, String>();
-    strategyMap.put("name", name);
-    strategyMap.put("link", link);
-    strategies.add(strategyMap);
-    for (StrategyResult<?> strategyResult : strategyResults) {
-        String startegyName = strategyResult.getStrategyName();
-        String strategyLink = "chartOutput/output/" + startegyName + "-chart-output.html";
-        HashMap<String, String> strategyResultMap = new HashMap<String, String>();
-        strategyResultMap.put("name", startegyName);
-        strategyResultMap.put("link", strategyLink);
-        strategies.add(strategyResultMap);
-      }   
-    context.put("strategies", strategies);
-    t.merge(context, writer);
-    return writer.toString();
-  }
+	private static final String CHARTOUTPUTHTML = "-chart-output.html";
 
-  private static String applyToVelocityTemplate(
-      List<JenkinsAMChart> strategyCharts,
-      String appMapURL,
-      String startDateTime,
-      String endDateTime,
-      String frequency) {
-    VelocityEngine ve = new VelocityEngine();
-    StringWriter writer = new StringWriter();
-    ve.setProperty("resource.loader", "classpath");
-    ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-    ve.init();
-    Template t = ve.getTemplate("amChartsReport.vm");
-    VelocityContext context = new VelocityContext();
-    context.put("strategyCharts", strategyCharts);
-    context.put("url", appMapURL);
-    context.put("startDateTime", startDateTime);
-    context.put("endDateTime", endDateTime);
-    context.put("frequency", frequency);
-    t.merge(context, writer);
-    return writer.toString();
-  }
+	private AMChartHelper() {
+		super();
+	}
 
-  private static String getMetricName(String metricPath) {
-    return metricPath.substring(metricPath.lastIndexOf('|') + 1);
-  }
+	private static void preProcessChartOutputDirectory(String workspaceFolder, String jobName,
+			String currentBuildNumber) {
+		FileHelper.createDirectory(workspaceFolder + File.separator + jobName);
+		FileHelper.createDirectory(workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber);
+		FileHelper.createDirectory(workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber
+				+ File.separator + CHARTOUTPUT);
+		File targetZipFile = new File(workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber
+				+ File.separator + CHARTOUTPUT + File.separator);
+		IOUtility ioUtility = new IOUtility();
+		ioUtility.extractZipFromClassPath("amcharts.zip", targetZipFile);
+	}
 
-  private static String getTransactionName(String metricPath) {
-    return metricPath.substring(0, metricPath.lastIndexOf('|'));
-  }
+	private static String generateHomePageHtmlContent(List<StrategyResult> strategyResults) {
+		VelocityEngine ve = new VelocityEngine();
+		StringWriter writer = new StringWriter();
+		ve.setProperty("resource.loader", "classpath");
+		ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+		ve.init();
+		Template t = ve.getTemplate("amChartHomePage.vm");
+		VelocityContext context = new VelocityContext();
+		List<HashMap<String, String>> strategies = new LinkedList<>();
+		String name = "buildtoBuild";
+		String link = "chartOutput/output/" + name + CHARTOUTPUTHTML;
+		HashMap<String, String> strategyMap = new HashMap<>();
+		strategyMap.put("name", name);
+		strategyMap.put("link", link);
+		strategies.add(strategyMap);
+		for (StrategyResult<?> strategyResult : strategyResults) {
+			String startegyName = strategyResult.getStrategyName();
+			String strategyLink = "chartOutput/output/" + startegyName + CHARTOUTPUTHTML;
+			HashMap<String, String> strategyResultMap = new HashMap<>();
+			strategyResultMap.put("name", startegyName);
+			strategyResultMap.put("link", strategyLink);
+			strategies.add(strategyResultMap);
+		}
+		context.put("strategies", strategies);
+		t.merge(context, writer);
+		return writer.toString();
+	}
 
-  private static JSONArray getTimeSliceFormattedArray(
-      String categoryField,
-      List<TimeSliceValue> benchMarkSlices,
-      List<TimeSliceValue> currentBuildSlices) {
-    JSONArray dataProviderArray = new JSONArray();
-    int size = currentBuildSlices.size();
-    for (int i = 0; i < benchMarkSlices.size(); i++) {
-      int categoryId = i + 1;
-      JSONObject recordObj = new JSONObject();
-      recordObj.put(categoryField, categoryId);
-      recordObj.put("BenchMark_MetricValue", benchMarkSlices.get(i).getValue());
-      double actualValue = 0.0;
-      if (i <= size - 1) {
-        actualValue = currentBuildSlices.get(i).getValue();
-      }
-      recordObj.put("CurrentBuild_MetricValue", actualValue);
-      dataProviderArray.put(recordObj);
-    }
-    return dataProviderArray;
-  }
+	private static String applyToVelocityTemplate(List<JenkinsAMChart> strategyCharts, String appMapURL,
+			String startDateTime, String endDateTime, String frequency) {
+		VelocityEngine ve = new VelocityEngine();
+		StringWriter writer = new StringWriter();
+		ve.setProperty("resource.loader", "classpath");
+		ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+		ve.init();
+		Template t = ve.getTemplate("amChartsReport.vm");
+		VelocityContext context = new VelocityContext();
+		context.put("strategyCharts", strategyCharts);
+		context.put("url", appMapURL);
+		context.put("startDateTime", startDateTime);
+		context.put("endDateTime", endDateTime);
+		context.put("frequency", frequency);
+		t.merge(context, writer);
+		return writer.toString();
+	}
 
-  /** "categoryAxis": { "gridPosition": "start" }, */
-  private static JSONObject generateAMChartsJSON(String metricPath,
-      String metricName,
-      String benchMarkBuildNumber,
-      String currentBuildNumber,
-      List<TimeSliceValue> benchMarkSlices,
-      List<TimeSliceValue> currentBuildSlices) {
-    JSONObject amCharts = new JSONObject();
-    amCharts.put("type", "serial");
-    amCharts.put("categoryField", "FrequencyInterval");
-    amCharts.put("startDuration", 1);
-    amCharts.put("balloon", new JSONObject());
-    amCharts.put("trendLines", new JSONArray());
-    amCharts.put("guides", new JSONArray());
-    amCharts.put("allLabels", new JSONArray());
+	private static String getMetricName(String metricPath) {
+		return metricPath.substring(metricPath.lastIndexOf('|') + 1);
+	}
 
-    JSONObject categoryAxisObj = new JSONObject();
-    categoryAxisObj.put("gridPosition", "start");
+	private static String getTransactionName(String metricPath) {
+		return metricPath.substring(0, metricPath.lastIndexOf('|'));
+	}
 
-    amCharts.put("categoryAxis", categoryAxisObj);
+	private static JSONArray getTimeSliceFormattedArray(String categoryField, List<TimeSliceValue> benchMarkSlices,
+			List<TimeSliceValue> currentBuildSlices) {
+		JSONArray dataProviderArray = new JSONArray();
+		int size = currentBuildSlices.size();
+		for (int i = 0; i < benchMarkSlices.size(); i++) {
+			int categoryId = i + 1;
+			JSONObject recordObj = new JSONObject();
+			recordObj.put(categoryField, categoryId);
+			recordObj.put("BenchMark_MetricValue", benchMarkSlices.get(i).getValue());
+			double actualValue = 0.0;
+			if (i <= size - 1) {
+				actualValue = currentBuildSlices.get(i).getValue();
+			}
+			recordObj.put("CurrentBuild_MetricValue", actualValue);
+			dataProviderArray.put(recordObj);
+		}
+		return dataProviderArray;
+	}
 
-    JSONObject exportObj = new JSONObject();
-    exportObj.put("enabled", true);
-    String fileName = metricName+"_"+metricPath.substring(metricPath.lastIndexOf('|')+1);
-    exportObj.put("fileName", fileName);
-    exportObj.put("pageOrigin", false);
-    
-    amCharts.put("export", exportObj);
+	/** "categoryAxis": { "gridPosition": "start" }, */
+	private static JSONObject generateAMChartsJSON(String metricPath, String metricName, String benchMarkBuildNumber,
+			String currentBuildNumber, List<TimeSliceValue> benchMarkSlices, List<TimeSliceValue> currentBuildSlices) {
+		JSONObject amCharts = new JSONObject();
+		amCharts.put("type", "serial");
+		amCharts.put("categoryField", "FrequencyInterval");
+		amCharts.put("startDuration", 1);
+		amCharts.put("balloon", new JSONObject());
+		amCharts.put("trendLines", new JSONArray());
+		amCharts.put("guides", new JSONArray());
+		amCharts.put("allLabels", new JSONArray());
 
-    JSONObject valueAxis = new JSONObject();
-    valueAxis.put("id", "ValueAxis-1");
-    valueAxis.put("title", metricName);
-    JSONArray valueAxesArray = new JSONArray();
-    valueAxesArray.put(valueAxis);
+		JSONObject categoryAxisObj = new JSONObject();
+		categoryAxisObj.put("gridPosition", "start");
 
-    amCharts.put("valueAxes", valueAxesArray);
+		amCharts.put("categoryAxis", categoryAxisObj);
 
-    JSONObject legendObj = new JSONObject();
-    legendObj.put("enabled", true);
-    legendObj.put("useGraphSettings", true);
+		JSONObject exportObj = new JSONObject();
+		exportObj.put("enabled", true);
+		String fileName = metricName + "_" + metricPath.substring(metricPath.lastIndexOf('|') + 1);
+		exportObj.put("fileName", fileName);
+		exportObj.put("pageOrigin", false);
 
-    amCharts.put("legend", legendObj);
+		amCharts.put("export", exportObj);
 
-    JSONObject titleObj = new JSONObject();
-    titleObj.put("id", "Title-1");
-    titleObj.put("text", metricPath);
-    JSONArray titlesArray = new JSONArray();
-    titlesArray.put(titleObj);
+		JSONObject valueAxis = new JSONObject();
+		valueAxis.put("id", "ValueAxis-1");
+		valueAxis.put(TITLE, metricName);
+		JSONArray valueAxesArray = new JSONArray();
+		valueAxesArray.put(valueAxis);
 
-    amCharts.put("titles", titlesArray);
+		amCharts.put("valueAxes", valueAxesArray);
 
-    JSONObject benchMarkgraphObj = new JSONObject();
-    benchMarkgraphObj.put("balloonText", "[[title]] of [[FrequencyInterval]]:[[value]]");
-    benchMarkgraphObj.put("bullet", "round");
-    benchMarkgraphObj.put("id", "AmGraph-1");
-    benchMarkgraphObj.put("title", "Build " + benchMarkBuildNumber);
-    benchMarkgraphObj.put("valueField", "BenchMark_MetricValue");
+		JSONObject legendObj = new JSONObject();
+		legendObj.put("enabled", true);
+		legendObj.put("useGraphSettings", true);
 
-    JSONObject currentgraphObj = new JSONObject();
-    currentgraphObj.put("balloonText", "[[title]] of [[FrequencyInterval]]:[[value]]");
-    currentgraphObj.put("bullet", "square");
-    currentgraphObj.put("id", "AmGraph-2");
-    currentgraphObj.put("title", "Build " + currentBuildNumber);
-    currentgraphObj.put("valueField", "CurrentBuild_MetricValue");
+		amCharts.put("legend", legendObj);
 
-    JSONArray graphArrayObj = new JSONArray();
-    graphArrayObj.put(benchMarkgraphObj);
-    graphArrayObj.put(currentgraphObj);
+		JSONObject titleObj = new JSONObject();
+		titleObj.put("id", "Title-1");
+		titleObj.put("text", metricPath);
+		JSONArray titlesArray = new JSONArray();
+		titlesArray.put(titleObj);
 
-    amCharts.put("graphs", graphArrayObj);
+		amCharts.put("titles", titlesArray);
 
-    JSONArray dataProviderArray =
-        getTimeSliceFormattedArray("FrequencyInterval", benchMarkSlices, currentBuildSlices);
+		JSONObject benchMarkgraphObj = new JSONObject();
+		benchMarkgraphObj.put("balloonText", "[[title]] of [[FrequencyInterval]]:[[value]]");
+		benchMarkgraphObj.put("bullet", "round");
+		benchMarkgraphObj.put("id", "AmGraph-1");
+		benchMarkgraphObj.put(TITLE, "Build " + benchMarkBuildNumber);
+		benchMarkgraphObj.put("valueField", "BenchMark_MetricValue");
 
-    amCharts.put("dataProvider", dataProviderArray);
-    return amCharts;
-  }
+		JSONObject currentgraphObj = new JSONObject();
+		currentgraphObj.put("balloonText", "[[title]] of [[FrequencyInterval]]:[[value]]");
+		currentgraphObj.put("bullet", "square");
+		currentgraphObj.put("id", "AmGraph-2");
+		currentgraphObj.put(TITLE, "Build " + currentBuildNumber);
+		currentgraphObj.put("valueField", "CurrentBuild_MetricValue");
 
-  private static List<JenkinsAMChart> getChartsForOneStrategy(String strategyName,
-      DefaultStrategyResult defaultStrategyResult,
-      String benchMarkBuildNumber,
-      String currentBuildNumber) {
-    List<JenkinsAMChart> amCharts = null;
-    if (defaultStrategyResult != null) {
-      amCharts = new LinkedList<JenkinsAMChart>();
-      int divId = 1;
-      for (String agentSpecifier : defaultStrategyResult.getResult().keySet()) {
-        AgentComparisonResult agentComparisonResult =
-            defaultStrategyResult.getResult().get(agentSpecifier);
-        for (MetricPathComparisonResult comparisonResult : agentComparisonResult.getSlowEntries()) {
+		JSONArray graphArrayObj = new JSONArray();
+		graphArrayObj.put(benchMarkgraphObj);
+		graphArrayObj.put(currentgraphObj);
 
-          String metricName = getMetricName(comparisonResult.getMetricPath());
-          String transaction = getTransactionName(comparisonResult.getMetricPath());
-          JSONObject amChartJSON =
-              generateAMChartsJSON(transaction,
-                  metricName,
-                  benchMarkBuildNumber,
-                  currentBuildNumber,
-                  comparisonResult.getBenchMarkBuildTimeSliceValues(),
-                  comparisonResult.getCurrentBuildTimeSliceValues());
+		amCharts.put("graphs", graphArrayObj);
 
-          JenkinsAMChart amChart = new JenkinsAMChart();
-          amChart.setChartJSONObject(amChartJSON);
-          amChart.setDivId("div" + divId);
-          amCharts.add(amChart);
-          divId++;
-        }
-        for (MetricPathComparisonResult comparisonResult :
-            agentComparisonResult.getSuccessEntries()) {
-          String metricName = getMetricName(comparisonResult.getMetricPath());
-          String transaction = getTransactionName(comparisonResult.getMetricPath());
-          JSONObject amChartJSON =
-              generateAMChartsJSON(transaction,
-                  metricName,
-                  benchMarkBuildNumber,
-                  currentBuildNumber,
-                  comparisonResult.getBenchMarkBuildTimeSliceValues(),
-                  comparisonResult.getCurrentBuildTimeSliceValues());
-          JenkinsAMChart amChart = new JenkinsAMChart();
-          amChart.setChartJSONObject(amChartJSON);
-          amChart.setDivId("div" + divId);
-          amCharts.add(amChart);
-          divId++;
-        }
-      }
-    }
-    return amCharts;
-  }
+		JSONArray dataProviderArray = getTimeSliceFormattedArray("FrequencyInterval", benchMarkSlices,
+				currentBuildSlices);
 
-  /**
-   * This method generates the chart output for all the strategy results provided to it It generates
-   * one chart per comparison-strategy in the chartoutput folder current build's workspace directory
-   * The HTML output file is present in output folder inside chartoutput folder
-   *
-   * @param strategyResults The list of strategy results which are mapped to this output-handler
-   * @param workspaceFolder The Jenkins workspace folder
-   * @param jobName The Jenkins Job Name
-   * @param benchMarkBuildNumber Benchmarck build number
-   * @param currentBuildNumber Current Build Number
-   */
-  @SuppressWarnings("rawtypes")
-  public static void produceChartOutput(
-      List<StrategyResult> strategyResults,
-      String workspaceFolder,
-      String jobName,
-      String benchMarkBuildNumber,
-      String currentBuildNumber,
-      String appMapURL,
-      String startDateTime,
-      String endDateTime,
-      String frequency) {
-    Map<String, List<JenkinsAMChart>> strategyWiseCharts = null;
+		amCharts.put("dataProvider", dataProviderArray);
+		return amCharts;
+	}
 
-    strategyWiseCharts = new LinkedHashMap<String, List<JenkinsAMChart>>();
-    for (StrategyResult<?> strategyResult : strategyResults) {
-      String strategyName = strategyResult.getStrategyName();
-      if (strategyResult
-          .getResult()
-          .getClass()
-          .getName()
-          .equals("com.ca.apm.jenkins.core.entity.DefaultStrategyResult")) {
-        if (strategyResult.getResult() == null) {
+	private static List<JenkinsAMChart> getChartsForOneStrategy(DefaultStrategyResult defaultStrategyResult,
+			String benchMarkBuildNumber, String currentBuildNumber) {
+		List<JenkinsAMChart> amCharts = null;
+		if (defaultStrategyResult != null) {
+			amCharts = new LinkedList<>();
+			int divId = 1;
+			for (String agentSpecifier : defaultStrategyResult.getResult().keySet()) {
+				AgentComparisonResult agentComparisonResult = defaultStrategyResult.getResult().get(agentSpecifier);
+				for (MetricPathComparisonResult comparisonResult : agentComparisonResult.getSlowEntries()) {
 
-          JenkinsPlugInLogger.warning(
-              strategyName
-                  + " is not a default strategy implementation, hence the result will not be presented on chart output");
-          continue;
-        } else {
+					String metricName = getMetricName(comparisonResult.getMetricPath());
+					String transaction = getTransactionName(comparisonResult.getMetricPath());
+					JSONObject amChartJSON = generateAMChartsJSON(transaction, metricName, benchMarkBuildNumber,
+							currentBuildNumber, comparisonResult.getBenchMarkBuildTimeSliceValues(),
+							comparisonResult.getCurrentBuildTimeSliceValues());
 
-          List<JenkinsAMChart> strategyChart = null;
-          DefaultStrategyResult defaultStrategyResult =
-              (DefaultStrategyResult) strategyResult.getResult();
-          strategyChart =
-              getChartsForOneStrategy(strategyName,
-                  defaultStrategyResult, benchMarkBuildNumber, currentBuildNumber);
-          strategyWiseCharts.put(strategyName, strategyChart);
-        }
+					JenkinsAMChart amChart = new JenkinsAMChart();
+					amChart.setChartJSONObject(amChartJSON);
+					amChart.setDivId("div" + divId);
+					amCharts.add(amChart);
+					divId++;
+				}
+				for (MetricPathComparisonResult comparisonResult : agentComparisonResult.getSuccessEntries()) {
+					String metricName = getMetricName(comparisonResult.getMetricPath());
+					String transaction = getTransactionName(comparisonResult.getMetricPath());
+					JSONObject amChartJSON = generateAMChartsJSON(transaction, metricName, benchMarkBuildNumber,
+							currentBuildNumber, comparisonResult.getBenchMarkBuildTimeSliceValues(),
+							comparisonResult.getCurrentBuildTimeSliceValues());
+					JenkinsAMChart amChart = new JenkinsAMChart();
+					amChart.setChartJSONObject(amChartJSON);
+					amChart.setDivId("div" + divId);
+					amCharts.add(amChart);
+					divId++;
+				}
+			}
+		}
+		return amCharts;
+	}
 
-      } else {
-        JenkinsPlugInLogger.warning(
-            "Your strategy Result is of "
-                + strategyResult.getResult().getClass().getName()
-                + " this cannot be processed by ChartOutputHandler");
-      }
-    }
-    if (!strategyWiseCharts.isEmpty()) {
+	/**
+	 * This method generates the chart output for all the strategy results
+	 * provided to it It generates one chart per comparison-strategy in the
+	 * chartoutput folder current build's workspace directory The HTML output
+	 * file is present in output folder inside chartoutput folder
+	 *
+	 * @param strategyResults
+	 *            The list of strategy results which are mapped to this
+	 *            output-handler
+	 * @param workspaceFolder
+	 *            The Jenkins workspace folder
+	 * @param jobName
+	 *            The Jenkins Job Name
+	 * @param benchMarkBuildNumber
+	 *            Benchmarck build number
+	 * @param currentBuildNumber
+	 *            Current Build Number
+	 */
+	@SuppressWarnings("rawtypes")
+	public static void produceChartOutput(List<StrategyResult> strategyResults, String workspaceFolder, String jobName,
+			String benchMarkBuildNumber, String currentBuildNumber, String appMapURL, String[] graphAttribs) {
+		Map<String, List<JenkinsAMChart>> strategyWiseCharts = null;
+		strategyWiseCharts = new LinkedHashMap<>();
+		for (StrategyResult<?> strategyResult : strategyResults) {
+			String strategyName = strategyResult.getStrategyName();
+			if (strategyResult.getResult().getClass().getName()
+					.equals("com.ca.apm.jenkins.core.entity.DefaultStrategyResult")) {
 
-      preProcessChartOutputDirectory(workspaceFolder, jobName, currentBuildNumber);
-      String homePageHtmlOutput = generateHomePageHtmlContent(strategyResults);
-      FileHelper.exportOutputToFile(
-          workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber,
-          "chart-output.html",
-          homePageHtmlOutput);
-      for (String comparisonStrategyName : strategyWiseCharts.keySet()) {
-        String htmlOutput = null;
-        List<JenkinsAMChart> strategyCharts = strategyWiseCharts.get(comparisonStrategyName);
-        htmlOutput =
-            applyToVelocityTemplate(
-                strategyCharts, appMapURL, startDateTime, endDateTime, frequency);
-        FileHelper.exportOutputToFile(
-            workspaceFolder
-                + File.separator
-                + jobName
-                + File.separator
-                + currentBuildNumber
-                + File.separator
-                + "chartOutput"
-                + File.separator
-                + "output",
-            comparisonStrategyName + "-chart-output.html",
-            htmlOutput);
-      }
-    }
-  }
+				if (strategyResult.getResult() != null) {
+
+					List<JenkinsAMChart> strategyChart = null;
+					DefaultStrategyResult defaultStrategyResult = (DefaultStrategyResult) strategyResult.getResult();
+					strategyChart = getChartsForOneStrategy(defaultStrategyResult, benchMarkBuildNumber,
+							currentBuildNumber);
+					strategyWiseCharts.put(strategyName, strategyChart);
+				} else {
+					JenkinsPlugInLogger.warning(strategyName
+							+ " is not a default strategy implementation, hence the result will not be presented on chart output");
+					continue;
+				}
+
+			} else {
+				JenkinsPlugInLogger
+						.warning("Your strategy Result is of " + strategyResult.getResult().getClass().getName()
+								+ " this cannot be processed by ChartOutputHandler");
+			}
+		}
+		if (!strategyWiseCharts.isEmpty()) {
+
+			preProcessChartOutputDirectory(workspaceFolder, jobName, currentBuildNumber);
+			String homePageHtmlOutput = generateHomePageHtmlContent(strategyResults);
+			FileHelper.exportOutputToFile(
+					workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber,
+					"chart-output.html", homePageHtmlOutput);
+			for (Map.Entry<String, List<JenkinsAMChart>> comparisonStrategyEntry : strategyWiseCharts.entrySet()) {
+				String htmlOutput = null;
+				List<JenkinsAMChart> strategyCharts = strategyWiseCharts.get(comparisonStrategyEntry.getKey());
+				htmlOutput = applyToVelocityTemplate(strategyCharts, appMapURL, graphAttribs[0], graphAttribs[1],
+						graphAttribs[2]);
+				FileHelper.exportOutputToFile(
+						workspaceFolder + File.separator + jobName + File.separator + currentBuildNumber
+								+ File.separator + CHARTOUTPUT + File.separator + "output",
+						comparisonStrategyEntry.getKey() + CHARTOUTPUTHTML, htmlOutput);
+			}
+		}
+	}
 }

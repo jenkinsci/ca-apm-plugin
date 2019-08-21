@@ -1,16 +1,16 @@
 package com.ca.apm.jenkins.performancecomparatorplugin.outputhandler;
 
+import java.util.List;
+
 import com.ca.apm.jenkins.api.OutputHandler;
 import com.ca.apm.jenkins.api.entity.OutputConfiguration;
 import com.ca.apm.jenkins.api.entity.StrategyResult;
-import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.core.entity.EmailInfo;
 import com.ca.apm.jenkins.core.helper.DataFormatHelper;
 import com.ca.apm.jenkins.core.helper.EmailHelper;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
-import java.util.List;
 
 /**
  * A basic implementation of Output-Strategy which takes the selected comparison-strategy results
@@ -27,7 +27,7 @@ public class PlainTextEmailOutputHandler implements OutputHandler<StrategyResult
   }
 
   public void publishOutput(List<StrategyResult> comparisonStrategyResults)
-      throws BuildComparatorException, BuildExecutionException {
+      throws BuildExecutionException {
 
     JenkinsPlugInLogger.fine("Executing publishOutput of PlainTextEmailOutputHandler");
     String htmlOutput =
@@ -36,7 +36,7 @@ public class PlainTextEmailOutputHandler implements OutputHandler<StrategyResult
     emailInfo.setMessageContentType("text/html");
     emailInfo.setMessageSubject(
         "Build Performance Report for "
-            + outputConfiguration.getCommonPropertyValue(Constants.jenkinsCurrentBuild));
+            + outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD));
     emailInfo.setMessageBody(htmlOutput);
     boolean emailSendStatus = false;
     try {

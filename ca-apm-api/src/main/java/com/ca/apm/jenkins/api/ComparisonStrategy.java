@@ -41,5 +41,5 @@ public interface ComparisonStrategy<T> {
    *     detailed transaction to transaction metric comparison values
    */
   public StrategyResult<T> doCompare(BuildInfo benchMarkBuild, BuildInfo currentBuild)
-      throws BuildComparatorException, BuildExecutionException;
+      throws BuildExecutionException;
 }

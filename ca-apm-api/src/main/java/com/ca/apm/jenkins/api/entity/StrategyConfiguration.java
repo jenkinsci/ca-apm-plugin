@@ -33,7 +33,7 @@ public class StrategyConfiguration {
 
   public void addProperty(String key, String value) {
     if (properties == null) {
-      properties = new HashMap<String, String>();
+      properties = new HashMap<>();
     }
     properties.put(key, value);
   }

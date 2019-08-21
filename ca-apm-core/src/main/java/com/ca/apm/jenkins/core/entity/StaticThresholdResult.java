@@ -9,7 +9,7 @@ public class StaticThresholdResult {
   private boolean passed = false;
   private int thresholdInMillis = 0;
   private Map<String, List<TimeSliceValue>> metricSeries =
-      new TreeMap<String, List<TimeSliceValue>>();
+      new TreeMap<>();
   private int buildNumber;
 
   public boolean isPassed() {

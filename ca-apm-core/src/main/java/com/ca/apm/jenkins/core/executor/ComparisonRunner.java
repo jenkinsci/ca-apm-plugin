@@ -1,7 +1,6 @@
 package com.ca.apm.jenkins.core.executor;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Level;
 
@@ -13,6 +12,7 @@ import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
+import com.ca.apm.jenkins.core.helper.DOIHelper;
 import com.ca.apm.jenkins.core.helper.VertexAttributesUpdateHelper;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
@@ -77,6 +77,42 @@ public class ComparisonRunner {
 		this.benchmarkBuildInfo = benchmarkBuildInfo;
 	}
 
+	private void execute(ComparisonMetadataLoader metadataLoader, boolean isFailtheBuild,
+			OutputHandlingExecutor outputHandlingExecutor) {
+
+		metadataLoader.getComparisonMetadata().getLoadRunnerMetadataInfo().getCurrentBuildInfo()
+				.setStatus(isFailtheBuild ? "FAILURE" : "SUCCESS");
+		outputHandlingExecutor.execute(metadataLoader.getComparisonMetadata().getOutputConfiguration(), isFailtheBuild);
+
+		if (metadataLoader.getComparisonMetadata().isPublishBuildResulttoEM()) {
+			VertexAttributesUpdateHelper vertexAttributesUpdateHelper = new VertexAttributesUpdateHelper(
+					metadataLoader.getComparisonMetadata());
+			vertexAttributesUpdateHelper.updateAttributeOfVertex(!isFailtheBuild);
+		}
+
+		if (metadataLoader.getComparisonMetadata().isBuildChangeEventtoDOI()) {
+			DOIHelper doiHelper = new DOIHelper(metadataLoader.getComparisonMetadata());
+			doiHelper.sendBuildChangeEventtoDOI();
+		}
+
+	}
+
+	private PropertiesConfiguration loadProperties() {
+		PropertiesConfiguration properties = null;
+		try {
+			properties = new PropertiesConfiguration();
+			properties.load(new FileInputStream(performanceComparatorProperties));
+
+		} catch (IOException e) {
+
+			JenkinsPlugInLogger.severe("The configuration file is not found ", e);
+
+		} catch (ConfigurationException e) {
+			JenkinsPlugInLogger.severe("The configuration file has encountered some errors ", e);
+		}
+		return properties;
+	}
+
 	/**
 	 * Main method to start the comparator-plugin execution
 	 *
@@ -87,29 +123,16 @@ public class ComparisonRunner {
 	 *             this exception is throw with appropriate message
 	 * @throws BuildValidationException
 	 */
-	public boolean executeComparison()
-			throws BuildComparatorException, BuildValidationException, BuildExecutionException {
-		boolean isFailToBuild = false;
+	public boolean executeComparison() throws BuildValidationException, BuildExecutionException {
+		boolean isFailtheBuild = false;
 
-		PropertiesConfiguration properties = null;
-		try {
-			properties = new PropertiesConfiguration();
-			properties.load(new FileInputStream(performanceComparatorProperties));
-
-		} catch (IOException e) {
-			if (e instanceof FileNotFoundException) {
-				JenkinsPlugInLogger.severe("The configuration file is not found ", e);
-			}
-		} catch (ConfigurationException e) {
-			JenkinsPlugInLogger.severe("The configuration file has encountered some errors ", e);
-		}
-
+		PropertiesConfiguration properties = loadProperties();
 		if (jenkinsInfo.getCurrentBuildNumber() == 1) {
 			JenkinsPlugInLogger.log(Level.INFO, "Current build number is first build, hence no comparison will happen");
 			taskListener.getLogger().println("Current build number is first build, hence no comparison will happen");
 
-		} else if (properties.containsKey(Constants.benchMarkBuildNumber)
-				&& properties.getProperty(Constants.benchMarkBuildNumber).toString().isEmpty()
+		} else if (properties.containsKey(Constants.BENCHMARKBUILDNUMBER)
+				&& properties.getProperty(Constants.BENCHMARKBUILDNUMBER).toString().isEmpty()
 				&& jenkinsInfo.getLastSuccessfulBuildNumber() <= 0) {
 
 			JenkinsPlugInLogger.log(Level.INFO,
@@ -131,22 +154,11 @@ public class ComparisonRunner {
 				BuildDecisionMaker decisionMaker = new BuildDecisionMaker(
 						metadataLoader.getComparisonMetadata().getComparisonResult());
 				if (metadataLoader.getComparisonMetadata().isFailTheBuild()) {
-					isFailToBuild = decisionMaker.isFailed();
+					isFailtheBuild = decisionMaker.isFailed();
 				}
-
-				metadataLoader.getComparisonMetadata().getLoadRunnerMetadataInfo().getCurrentBuildInfo()
-						.setStatus(isFailToBuild == true ? "FAILURE" : "SUCCESS");
-				outputHandlingExecutor.execute(metadataLoader.getComparisonMetadata().getOutputConfiguration(),
-						isFailToBuild);
-
-				if (metadataLoader.getComparisonMetadata().isPublishBuildResulttoEM()) {
-					VertexAttributesUpdateHelper vertexAttributesUpdateHelper = new VertexAttributesUpdateHelper(
-							metadataLoader.getComparisonMetadata());
-					vertexAttributesUpdateHelper.updateAttributeOfVertex(!isFailToBuild);
-				}
-
+				execute(metadataLoader, isFailtheBuild, outputHandlingExecutor);
 			} catch (BuildComparatorException ex) {
-				if (isFailToBuild) {
+				if (isFailtheBuild) {
 					JenkinsPlugInLogger.printLogOnConsole(0, "Comparator Plugin Execution Completed with failures");
 					throw new BuildComparatorException(ex.getMessage());
 
@@ -159,6 +171,6 @@ public class ComparisonRunner {
 				throw new BuildValidationException(ex.getMessage());
 			}
 		}
-		return !isFailToBuild;
+		return !isFailtheBuild;
 	}
 }

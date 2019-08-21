@@ -115,13 +115,9 @@ public class EmailInfo {
       throw new FileNotFoundException(attachment + " file does not exist, please check");
     }
     if (attachments == null) {
-      attachments = new LinkedList<String>();
+      attachments = new LinkedList<>();
     }
     attachments.add(attachment);
-  }
-
-  public List<String> getTORecipients() {
-    return toRecipients;
   }
 
   public List<String> getCcRecipients() {
