@@ -1,11 +1,14 @@
 package com.ca.apm.jenkins.performance_comparator_jenkinsplugin;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -33,6 +36,7 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
+import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.StringParameterValue;
 import hudson.model.TaskListener;
@@ -43,6 +47,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import jenkins.tasks.SimpleBuildStep;
+import jline.internal.InputStreamReader;
 import net.sf.json.JSONObject;
 
 /** @author Avinash Chandwani */
@@ -57,14 +62,35 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	private String loadGeneratorStartTime;
 	private String loadGeneratorEndTime;
 	private String loadGeneratorName;
-	
+	private Map<String, String> attribsMap;
+
+	private static final String PLUGINTASKFAILEDDUETO = "Plugin Task failed due to :";
+	private static final String LODGENSTARTTIME = "loadGeneratorStartTime";
+	private static final String LOADGENENDTIME = "loadGeneratorEndTime";
+	private static final String SUCCESS = "SUCCESS";
+	private static final String FAILURE = "FAILURE";
+	private static final String CURRENTBUILDSCMPARAMS = " currentBuildScmParams = ";
+
 	@DataBoundConstructor
 	public CAAPMPerformanceComparator(String performanceComparatorProperties, String loadGeneratorStartTime,
-			String loadGeneratorEndTime, String loadGeneratorName) {
+			String loadGeneratorEndTime, String loadGeneratorName, String attribsStr) {
 		this.performanceComparatorProperties = performanceComparatorProperties;
 		this.loadGeneratorStartTime = loadGeneratorStartTime;
 		this.loadGeneratorEndTime = loadGeneratorEndTime;
 		this.loadGeneratorName = loadGeneratorName;
+		convertAttribsStrToMap(attribsStr);
+	}
+
+	private void convertAttribsStrToMap(String attribsList) {
+		attribsMap = new HashMap<>();
+		if (attribsList != null && !attribsList.isEmpty()) {
+			attribsList = attribsList.substring(1, attribsList.length() - 1);
+			String[] keyValuePairs = attribsList.split(",");
+			for (int i = 0; i < keyValuePairs.length; i++) {
+				String[] entry = keyValuePairs[i].split(":");
+				attribsMap.put(entry[0].trim(), entry[1].trim());
+			}
+		}
 
 	}
 
@@ -94,9 +120,8 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	}
 
 	private boolean runAction(BuildInfo currentBuildInfo, BuildInfo benchmarkBuildInfo, int previousSuccessfulBuild,
-			List<BuildInfo> histogramBuildInfoList, String workspaceFolder, String jobName, TaskListener taskListener,
-			String loadGeneratorName)
-			throws BuildComparatorException, BuildValidationException, BuildExecutionException {
+			List<BuildInfo> histogramBuildInfoList, String workspaceFolder, String jobName, TaskListener taskListener)
+			throws BuildValidationException, BuildExecutionException {
 		boolean comparisonRunStatus = false;
 		JenkinsInfo jenkinsInfo = new JenkinsInfo(currentBuildInfo.getNumber(), previousSuccessfulBuild,
 				histogramBuildInfoList, workspaceFolder, jobName, loadGeneratorName);
@@ -109,7 +134,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	private Callable<StringBuilder, IOException> executeComparison(final BuildInfo currentBuildInfo,
 			final BuildInfo benchmarkBuildInfo, final int previousSuccessfulBuildNumber,
 			final List<BuildInfo> histogramBuildInfoList, final String workspaceFolder, final String jobName,
-			final TaskListener taskListener, final String loadGeneratorName) throws IOException, InterruptedException {
+			final TaskListener taskListener) {
 		return new Callable<StringBuilder, IOException>() {
 
 			/** */
@@ -119,103 +144,41 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 
 			public StringBuilder call() throws IOException {
 				doExecute(currentBuildInfo, benchmarkBuildInfo, previousSuccessfulBuildNumber, histogramBuildInfoList,
-						workspaceFolder, jobName, taskListener, loadGeneratorName);
+						workspaceFolder, jobName, taskListener);
 				return consoleLogString;
 			}
 
 			@Override
-			public void checkRoles(RoleChecker arg0) throws SecurityException {
+			public void checkRoles(RoleChecker arg0) {
+				// Do Nothing
 			}
 		};
 	}
 
-	/*
-	 * private FilePath prepareLocalWorkspace(FilePath masterJobLocation,
-	 * FilePath remoteWorkspace, TaskListener taskListener) throws
-	 * InterruptedException { try { FilePath localFilePath = new FilePath(new
-	 * File(masterJobLocation.getParent() + File.separator +
-	 * masterJobLocation.getBaseName() + File.separator + "properties"));
-	 * FilePath remotePath = new FilePath( new File(remoteWorkspace.getParent()
-	 * + File.separator + remoteWorkspace.getBaseName())); //
-	 * filePath.getParent() + File.separator + filePath.getBaseName() + //
-	 * File.separator taskListener.getLogger().println("Local-workspace is :" +
-	 * masterJobLocation.getParent());
-	 * taskListener.getLogger().println("Local-path is :" +
-	 * localFilePath.getParent());
-	 * taskListener.getLogger().println("Local-workspace exists? " +
-	 * masterJobLocation.exists());
-	 * taskListener.getLogger().println("Local-path exists? " +
-	 * localFilePath.exists());
-	 * taskListener.getLogger().println("Remote-workspace is :" +
-	 * remoteWorkspace.getParent());
-	 * taskListener.getLogger().println("Remote-path is :" + remotePath);
-	 * taskListener.getLogger().println("Remote-workspace exists? " +
-	 * remoteWorkspace.exists());
-	 * taskListener.getLogger().println("Remote-path exists? " +
-	 * remotePath.exists());
-	 * taskListener.getLogger().println("Local File Path  " +
-	 * localFilePath.getParent()); File apmPropertiesFile = new File(
-	 * masterJobLocation.getParent() + File.separator +
-	 * masterJobLocation.getBaseName() + File.separator + "properties" +
-	 * File.separator + "apm.properties"); FilePath apmfP = new
-	 * FilePath(apmPropertiesFile); apmfP.copyTo(remotePath); int numberCopied =
-	 * localFilePath.copyRecursiveTo(remotePath);
-	 * taskListener.getLogger().println("Number of files copied " +
-	 * numberCopied); return masterJobLocation; } catch (IOException e) {
-	 * taskListener.getLogger()
-	 * .print("Error occured while copying files, remoteWorkSpace :" +
-	 * remoteWorkspace.getParent() + ", localWorkspace is : " +
-	 * masterJobLocation.getParent() + "::" + e.getMessage());
-	 * e.printStackTrace(); } return null; }
-	 */
-
-	/*
-	 * private void doCopyIfRemote(FilePath workspace, Run<?, ?> run,
-	 * TaskListener taskListener) throws InterruptedException {
-	 *
-	 * if (workspace.isRemote()) { FilePath masterJobLocation = new
-	 * FilePath(run.getParent().getRootDir());
-	 * taskListener.getLogger().println("Root dir is " +
-	 * run.getParent().getRootDir()); workspace =
-	 * prepareLocalWorkspace(masterJobLocation, workspace, taskListener);
-	 * taskListener.getLogger().print("Copied successfully"); } else {
-	 * taskListener.getLogger().print(
-	 * "[WARNING] Remote workspace detected. Please consider enabling Master/slave mode in the plugin settings"
-	 * ); } }
-	 */
-
 	private void doExecute(BuildInfo currentBuildInfo, BuildInfo benchMarkBuildInfo, int previousSuccessfulBuildNumber,
-			List<BuildInfo> histogramBuildInfoList, String workspaceFolder, String jobName, TaskListener taskListener,
-			String loadGeneratorName) throws AbortException {
+			List<BuildInfo> histogramBuildInfoList, String workspaceFolder, String jobName, TaskListener taskListener)
+			throws AbortException {
 		boolean isSuccessful = false;
 		try {
 			isSuccessful = runAction(currentBuildInfo, benchMarkBuildInfo, previousSuccessfulBuildNumber,
-					histogramBuildInfoList, workspaceFolder, jobName, taskListener, loadGeneratorName);
-		} catch (BuildComparatorException e) {
-			taskListener.getLogger().println("Plugin Task failed due to :" + e.getMessage());
+					histogramBuildInfoList, workspaceFolder, jobName, taskListener);
+		} catch (BuildComparatorException | BuildValidationException | BuildExecutionException e) {
+			taskListener.getLogger().println(PLUGINTASKFAILEDDUETO + e.getMessage());
 			throw new AbortException(
-					"*******Performance Comparison Failed*******due to" + Constants.NewLine + e.getMessage());
-		} catch (BuildValidationException ex) {
-			taskListener.getLogger().println("Plugin Task failed due to :" + ex.getMessage());
-			throw new AbortException(
-					"*******Performance Comparison Failed******* due to" + Constants.NewLine + ex.getMessage());
-		} catch (BuildExecutionException ex) {
-			taskListener.getLogger().println("Plugin Task failed due to :" + ex.getMessage());
-			throw new AbortException(
-					"*******Performance Comparison Failed******* due to" + Constants.NewLine + ex.getMessage());
+					"*******Performance Comparison FAILED*******due to" + Constants.NEWLINE + e.getMessage());
 		}
 		if (isSuccessful) {
 			taskListener.getLogger().println("CA-APM Jenkins Plugin execution has completed successfully");
 		} else {
 			taskListener.getLogger().println("Plugin Task is not completed");
 			throw new AbortException(
-					"*******Performance Comparison Failed******* due to performance crossed the threshold mark, please review results for more details");
+					"*******Performance Comparison FAILED******* due to performance crossed the threshold mark, please review results for more details");
 		}
 	}
 
 	public void addOrReplaceParamValue(Run run, String name, String value) {
 		ParametersAction oldParam = run.getAction(ParametersAction.class);
-		ParametersAction newParam = run.getAction(ParametersAction.class);
+		ParametersAction newParam = null;
 		ArrayList paramsList = new ArrayList<StringParameterValue>();
 		paramsList.add(new StringParameterValue(name, value));
 		if (oldParam != null) {
@@ -227,64 +190,61 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		run.addAction(newParam);
 	}
 
-	@Override
-	public void perform(Run<?, ?> run, FilePath filePath, Launcher launcher, TaskListener taskListener)
-			throws InterruptedException, IOException {
-		// set logger
-		JenkinsPlugInLogger.setTaskListener(taskListener);
-		int currentBuildNumber = run.getNumber();
-		BuildInfo currentBuildInfo, benchmarkBuildInfo, histogramBuildInfo = null;
-		String jobName = filePath.getBaseName();
-		JenkinsPlugInLogger.info("jobName:" + jobName);
-		String workspaceFolder = "" + filePath.getParent();
-		int previousSuccessfulBuildNumber = 0;
-
-		List<BuildInfo> histogramBuildInfoList = new ArrayList<BuildInfo>();
-		histogramBuildInfo = new BuildInfo();
-		benchmarkBuildInfo = new BuildInfo();
-		currentBuildInfo = new BuildInfo();
-		addOrReplaceParamValue(run, "loadGeneratorStartTime", loadGeneratorStartTime);
-		addOrReplaceParamValue(run, "loadGeneratorEndTime", loadGeneratorEndTime);
-		taskListener.getLogger().println("loading config file : " + this.performanceComparatorProperties);
-		try {
-			loadConfiguration();
-		} catch (ConfigurationException | IOException e) {
-			JenkinsPlugInLogger.severe("The configuration file is not found or configuration error ", e);
-			// fail the build if configuration error
-			throw new AbortException(e.getMessage());
-		} catch (BuildValidationException e) {
-			throw new AbortException(e.getMessage());
+	private void readSCMRepoforBenchmarkBuild(ParametersAction paramAction, BuildInfo benchmarkBuildInfo) {
+		if (!attribsMap.isEmpty()) {
+			for (Map.Entry<String, String> scmRepoEntry : attribsMap.entrySet()) {
+				if (getParamValue(paramAction, scmRepoEntry.getKey()) != null) {
+					benchmarkBuildInfo.addToSCMRepoParams("benchMarkBuild_" + scmRepoEntry.getKey(),
+							getParamValue(paramAction, scmRepoEntry.getKey()));
+				}
+			}
 		}
-		if (currentBuildNumber == 1 || (benchmarkBuildNumber == 0 && run.getPreviousSuccessfulBuild() == null)) {
-			JenkinsPlugInLogger.log(Level.INFO, "Current build number is first build, hence no comparison will happen");
-			taskListener.getLogger().println("Current build number is first build, hence no comparison will happen");
-			taskListener.getLogger().println("CA-APM Jenkins Plugin execution has completed successfully");
-			return;
+	}
+
+	private void setBenchmarkBuildInfo(Run<?, ?> run, int currentBuildNumber, BuildInfo benchmarkBuildInfo,
+			TaskListener taskListener) {
+		Run benchmarkRun = (Run) (run.getParent().getBuilds().limit(currentBuildNumber - benchmarkBuildNumber + 1)
+				.toArray()[currentBuildNumber - benchmarkBuildNumber]);
+		String benchMarkBuildStartTime;
+		String benchMarkBuildEndTime;
+
+		if (benchmarkRun != null) {
+			benchmarkBuildInfo.setNumber(benchmarkRun.getNumber());
+			ParametersAction paramAction = benchmarkRun.getAction(ParametersAction.class);
+			benchMarkBuildStartTime = getParamValue(paramAction, LODGENSTARTTIME);
+			benchMarkBuildEndTime = getParamValue(paramAction, LOADGENENDTIME);
+			benchmarkBuildInfo.setStartTime(Long.parseLong(benchMarkBuildStartTime));
+			benchmarkBuildInfo.setEndTime(Long.parseLong(benchMarkBuildEndTime));
+			readSCMRepoforBenchmarkBuild(paramAction, benchmarkBuildInfo);
+			taskListener.getLogger()
+					.println("benchmarkBuildNumber = " + benchmarkRun.getNumber() + " benchMarkBuildStartTime = "
+							+ benchMarkBuildStartTime + ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime
+							+ ", benchMarkBuildScmParams = " + benchmarkBuildInfo.getSCMRepoParams());
+
+			JenkinsPlugInLogger.log(Level.INFO,
+					"benchmarkBuildNumber = " + benchmarkRun.getNumber() + " benchMarkBuildStartTime = "
+							+ benchMarkBuildStartTime + ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime
+							+ ", benchMarkBuildscmRepoParams = " + benchmarkBuildInfo.getSCMRepoParams());
+			try {
+				Result benchmarkResult = benchmarkRun.getResult();
+				if (null != benchmarkResult) {
+					if (benchmarkResult.toString().contains(SUCCESS)) {
+						benchmarkBuildInfo.setStatus(SUCCESS);
+					} else {
+						benchmarkBuildInfo.setStatus(FAILURE);
+					}
+
+				}
+			} catch (Exception ex) {
+				JenkinsPlugInLogger
+						.severe("Error during the execution of setBenchmarkBuildInfo() in  CAAPMPerformanceComparator: "
+								+ ex.getMessage());
+			}
 		}
-		if (run.getPreviousSuccessfulBuild() == null) {
-			previousSuccessfulBuildNumber = 0;
-		} else {
-			previousSuccessfulBuildNumber = run.getPreviousSuccessfulBuild().getNumber();
-		}
+	}
 
-		String currentBuildStartTime;
-		String currentBuildEndTime;
-
-		if (run != null) {
-
-			currentBuildInfo.setNumber(run.getNumber());
-				ParametersAction paramAction = run.getAction(ParametersAction.class);
-				currentBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
-				currentBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
-				currentBuildInfo.setStartTime(Long.parseLong(currentBuildStartTime));
-				currentBuildInfo.setEndTime(Long.parseLong(currentBuildEndTime));
-				taskListener.getLogger().println("currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = "
-						+ currentBuildStartTime + ", currentBuildEndTime = " + currentBuildEndTime);
-				JenkinsPlugInLogger.log(Level.INFO,
-						"currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = " + currentBuildStartTime
-								+ ", currentBuildEndTime = " + currentBuildEndTime);
-		  }
-		histogramBuildInfoList.add(currentBuildInfo);
+	private BuildInfo setBenchmarkBuildInfo(Run<?, ?> run, int currentBuildNumber, int previousSuccessfulBuildNumber,
+			BuildInfo benchmarkBuildInfo, TaskListener taskListener) throws AbortException {
 		if (benchmarkBuildNumber == 0) {
 			if (previousSuccessfulBuildNumber > 0) {
 				benchmarkBuildNumber = previousSuccessfulBuildNumber;
@@ -298,99 +258,208 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 					"There is no valid benchmarkbuild or previous successful build, hence no comparison will happen ");
 		}
 		if (benchmarkBuildNumber < currentBuildNumber) {
-			Run benchmarkRun = (Run) (run.getParent().getBuilds().limit(currentBuildNumber - benchmarkBuildNumber + 1)
-					.toArray()[currentBuildNumber - benchmarkBuildNumber]);
-			String benchMarkBuildStartTime;
-			String benchMarkBuildEndTime;
-
-			if (benchmarkRun != null) {
-				benchmarkBuildInfo.setNumber(benchmarkRun.getNumber());
-					ParametersAction paramAction = benchmarkRun.getAction(ParametersAction.class);
-					benchMarkBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
-					benchMarkBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
-					benchmarkBuildInfo.setStartTime(Long.parseLong(benchMarkBuildStartTime));
-					benchmarkBuildInfo.setEndTime(Long.parseLong(benchMarkBuildEndTime));
-					taskListener.getLogger()
-							.println("benchmarkBuildNumber = " + benchmarkRun.getNumber()
-									+ " benchMarkBuildStartTime = " + benchMarkBuildStartTime
-									+ ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime);
-					JenkinsPlugInLogger.log(Level.INFO,
-							"benchmarkBuildNumber = " + benchmarkRun.getNumber() + " benchMarkBuildStartTime = "
-									+ benchMarkBuildStartTime + ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime);
-				
-			}
-
-			if (benchmarkRun.getResult().toString().contains("SUCCESS")) {
-				benchmarkBuildInfo.setStatus("SUCCESS");
-			} else if (benchmarkRun.getResult().toString().contains("FAILURE")) {
-				benchmarkBuildInfo.setStatus("FAILURE");
-			}
+			setBenchmarkBuildInfo(run, currentBuildNumber, benchmarkBuildInfo, taskListener);
 		}
+
 		if (benchmarkBuildInfo.getStartTime() == 0 && benchmarkBuildInfo.getEndTime() == 0) {
 			JenkinsPlugInLogger.log(Level.INFO,
 					"There is no test time durations for benchmark build, hence no comparison will happen. ");
 			taskListener.getLogger()
 					.println("There is no test time durations for benchmark build, hence no comparison will happen. ");
 		}
-		String histogramBuildStartTime;
-		String histogramBuildEndTime;
-		for (int i = 1; i < this.buildsInHistogram; i++) {
-			if (run.getPreviousBuild() == null) {
-				break;
-			}
-			run = run.getPreviousBuild();
-			histogramBuildInfo = new BuildInfo();
-			histogramBuildInfo.setNumber(run.number);
-				ParametersAction paramAction = run.getAction(ParametersAction.class);
-				if (paramAction != null) {
-					histogramBuildStartTime = getParamValue(paramAction, "loadGeneratorStartTime");
-					histogramBuildEndTime = getParamValue(paramAction, "loadGeneratorEndTime");
-					histogramBuildInfo.setStartTime(Long.parseLong(histogramBuildStartTime));
-					histogramBuildInfo.setEndTime(Long.parseLong(histogramBuildEndTime));
+
+		return benchmarkBuildInfo;
+	}
+
+	private void setBuildParams(Run<?, ?> run) throws IOException {
+		InputStream in = run.getLogInputStream();
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+			String str = null;
+			String gitCommitMessage = null;
+			while ((str = br.readLine()) != null) {
+				if (str.contains("Commit message")) {
+					gitCommitMessage = str.substring(str.indexOf('"') + 1, str.lastIndexOf('"'));
+					JenkinsPlugInLogger.printLogOnConsole(3, "...commit message..." + gitCommitMessage);
 				}
-			if (run.getResult().toString().contains("SUCCESS")) {
-				histogramBuildInfo.setStatus("SUCCESS");
-			} else if (run.getResult().toString().contains("FAILURE")) {
-				histogramBuildInfo.setStatus("FAILURE");
+
+			}
+			attribsMap.put("GIT_COMMIT_MESSAGE", gitCommitMessage);
+
+			addOrReplaceParamValue(run, LODGENSTARTTIME, loadGeneratorStartTime);
+			addOrReplaceParamValue(run, LOADGENENDTIME, loadGeneratorEndTime);
+			if (!attribsMap.isEmpty()) {
+				for (Map.Entry<String, String> scmRepoEntry : attribsMap.entrySet()) {
+					addOrReplaceParamValue(run, scmRepoEntry.getKey(), scmRepoEntry.getValue());
+				}
+			}
+		}
+	}
+
+	private BuildInfo readAttribsMap(Run<?, ?> run, BuildInfo currentBuildInfo, TaskListener taskListener) {
+		String currentBuildStartTime;
+		String currentBuildEndTime;
+		if (run != null) {
+			currentBuildInfo.setNumber(run.getNumber());
+			ParametersAction paramAction = run.getAction(ParametersAction.class);
+			currentBuildStartTime = getParamValue(paramAction, LODGENSTARTTIME);
+			currentBuildEndTime = getParamValue(paramAction, LOADGENENDTIME);
+			if (!attribsMap.isEmpty()) {
+				for (Map.Entry<String, String> scmRepoEntry : attribsMap.entrySet()) {
+					currentBuildInfo.addToSCMRepoParams(scmRepoEntry.getKey(),
+							getParamValue(paramAction, scmRepoEntry.getKey()));
+				}
 			}
 
+			currentBuildInfo.setStartTime(Long.parseLong(currentBuildStartTime));
+			currentBuildInfo.setEndTime(Long.parseLong(currentBuildEndTime));
+			taskListener.getLogger().println("currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = "
+					+ currentBuildStartTime + ", currentBuildEndTime = " + currentBuildEndTime);
+			if (!currentBuildInfo.getSCMRepoParams().isEmpty()) {
+				taskListener.getLogger().println(CURRENTBUILDSCMPARAMS + currentBuildInfo.getSCMRepoParams());
+			}
+
+			JenkinsPlugInLogger.log(Level.INFO, "currentBuildNumber = " + run.getNumber() + " currentBuildStartTime = "
+					+ currentBuildStartTime + ", currentBuildEndTime = " + currentBuildEndTime);
+
+			if (!currentBuildInfo.getSCMRepoParams().isEmpty()) {
+				JenkinsPlugInLogger.log(Level.INFO, CURRENTBUILDSCMPARAMS + currentBuildInfo.getSCMRepoParams());
+			}
+
+		}
+		return currentBuildInfo;
+	}
+
+	private int assignPreviousSuccessfulBuild(int previousSuccessfulBuildNumber, Run<?, ?> run) {
+		try {
+			if (run != null) {
+				Run<?, ?> prevSuccessfulBuild = run.getPreviousSuccessfulBuild();
+				if (prevSuccessfulBuild != null) {
+					previousSuccessfulBuildNumber = prevSuccessfulBuild.getNumber();
+				} else {
+					previousSuccessfulBuildNumber = 0;
+				}
+			}
+		} catch (Exception ex) {
+			JenkinsPlugInLogger
+					.severe("Error during the execution of assignPreviousSuccessfulBuild() in  CAAPMPerformanceComparator: "
+							+ ex.getMessage());
+		}
+		return previousSuccessfulBuildNumber;
+	}
+
+	private void setHistogramBuildInfoSetStatus(BuildInfo histogramBuildInfo, Run<?, ?> run) {
+		try {
+			Result runResult = run.getResult();
+			if (runResult != null) {
+				if (runResult.toString().contains(SUCCESS)) {
+					histogramBuildInfo.setStatus(SUCCESS);
+				} else if (runResult.toString().contains(FAILURE)) {
+					histogramBuildInfo.setStatus(FAILURE);
+				}
+			}
+
+		} catch (Exception ex) {
+			JenkinsPlugInLogger
+					.severe("Error during the execution of setHistogramBuildInfoSetStatus() in  CAAPMPerformanceComparator: "
+							+ ex.getMessage());
+		}
+	}
+
+	private void setHistogramBuildInfo(Run<?, ?> run, BuildInfo histogramBuildInfo,
+			List<BuildInfo> histogramBuildInfoList) {
+		String histogramBuildStartTime;
+		String histogramBuildEndTime;
+		if (run != null) {
+
+			ParametersAction paramAction = run.getAction(ParametersAction.class);
+			if (paramAction != null) {
+				histogramBuildStartTime = getParamValue(paramAction, LODGENSTARTTIME);
+				histogramBuildEndTime = getParamValue(paramAction, LOADGENENDTIME);
+				histogramBuildInfo.setStartTime(Long.parseLong(histogramBuildStartTime));
+				histogramBuildInfo.setEndTime(Long.parseLong(histogramBuildEndTime));
+			}
+			setHistogramBuildInfoSetStatus(histogramBuildInfo, run);
 			histogramBuildInfoList.add(histogramBuildInfo);
+		}
+	}
+
+	@Override
+	public void perform(Run<?, ?> run, FilePath filePath, Launcher launcher, TaskListener taskListener)
+			throws InterruptedException, IOException {
+
+		taskListener.getLogger().println("Attributes Map received from Jenkins" + attribsMap);
+		// set logger
+		JenkinsPlugInLogger.setTaskListener(taskListener);
+		int currentBuildNumber = run.getNumber();
+		BuildInfo currentBuildInfo = null;
+		BuildInfo benchmarkBuildInfo = null;
+		BuildInfo histogramBuildInfo = null;
+		String jobName = filePath.getBaseName();
+		JenkinsPlugInLogger.info("jobName:" + jobName);
+		String workspaceFolder = "" + filePath.getParent();
+		int previousSuccessfulBuildNumber = 0;
+
+		List<BuildInfo> histogramBuildInfoList = new ArrayList<>();
+		benchmarkBuildInfo = new BuildInfo();
+		currentBuildInfo = new BuildInfo();
+		setBuildParams(run);
+		taskListener.getLogger().println("loading config file : " + this.performanceComparatorProperties);
+
+		loadConfiguration();
+
+		if (currentBuildNumber == 1 || (benchmarkBuildNumber == 0 && run.getPreviousSuccessfulBuild() == null)) {
+			JenkinsPlugInLogger.log(Level.INFO, "Current build number is first build, hence no comparison will happen");
+			taskListener.getLogger().println("Current build number is first build, hence no comparison will happen");
+			taskListener.getLogger().println("CA-APM Jenkins Plugin execution has completed successfully");
+			return;
+		}
+		previousSuccessfulBuildNumber = assignPreviousSuccessfulBuild(previousSuccessfulBuildNumber, run);
+		readAttribsMap(run, currentBuildInfo, taskListener);
+		histogramBuildInfoList.add(currentBuildInfo);
+		setBenchmarkBuildInfo(run, currentBuildNumber, previousSuccessfulBuildNumber, benchmarkBuildInfo, taskListener);
+
+		for (int i = 1; i < this.buildsInHistogram; i++) {
+
+			if (run != null && run.getPreviousBuild() == null) {
+				break;
+			}
+			histogramBuildInfo = new BuildInfo();
+			if (run != null) {
+				int buildNumber = run.number;
+				run = run.getPreviousBuild();
+				histogramBuildInfo.setNumber(buildNumber);
+			}
+
+			setHistogramBuildInfo(run, histogramBuildInfo, histogramBuildInfoList);
 
 		}
 
 		boolean isRemoteExecution = filePath.isRemote();
-		StringBuilder output = null;
 		if (isRemoteExecution) {
 			taskListener.getLogger().println("Launching in slave machine");
 			Callable<StringBuilder, IOException> callable = executeComparison(currentBuildInfo, benchmarkBuildInfo,
-					previousSuccessfulBuildNumber, histogramBuildInfoList, workspaceFolder, jobName, taskListener,
-					loadGeneratorName);
+					previousSuccessfulBuildNumber, histogramBuildInfoList, workspaceFolder, jobName, taskListener);
 			VirtualChannel channel = launcher.getChannel();
-			output = channel.call(callable);
+			channel.call(callable);
 		} else {
 			taskListener.getLogger().println("Launching in master machine");
 			doExecute(currentBuildInfo, benchmarkBuildInfo, previousSuccessfulBuildNumber, histogramBuildInfoList,
-					workspaceFolder, jobName, taskListener, loadGeneratorName);
+					workspaceFolder, jobName, taskListener);
 		}
 	}
 
 	public String getParamValue(ParametersAction pAction, String paramName) {
-		if(pAction != null){
-		ParameterValue parameterValue = pAction.getParameter(paramName);
-		if (parameterValue != null)
-			return (String) parameterValue.getValue();
+		if (pAction != null) {
+			ParameterValue parameterValue = pAction.getParameter(paramName);
+			if (parameterValue != null)
+				return (String) parameterValue.getValue();
 		}
 		return "0";
 	}
 
-	private void loadConfiguration() throws ConfigurationException, IOException, BuildValidationException {
-
-		PropertiesConfiguration properties = new PropertiesConfiguration();
-		InputStream input;
-		input = new FileInputStream(this.performanceComparatorProperties);
-		properties.load(input);
-		if (properties.containsKey(Constants.buildsInHistogram)) {
-			String nuOfBuildsForHistogram = properties.getString(Constants.buildsInHistogram);
+	private void readBuildsInHistogram(PropertiesConfiguration properties) {
+		if (properties.containsKey(Constants.BUILDSINHISTOGRAM)) {
+			String nuOfBuildsForHistogram = properties.getString(Constants.BUILDSINHISTOGRAM);
 			if (nuOfBuildsForHistogram == null || nuOfBuildsForHistogram.isEmpty()
 					|| Integer.parseInt(nuOfBuildsForHistogram) <= 1 || Integer.parseInt(nuOfBuildsForHistogram) > 10)
 				buildsInHistogram = 10;
@@ -400,41 +469,59 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		} else {
 			buildsInHistogram = 10;
 		}
-		if (properties.containsKey(Constants.benchMarkBuildNumber)) {
-			if (!properties.getProperty(Constants.benchMarkBuildNumber).toString().isEmpty()) {
-				if (!(Integer.parseInt(properties.getProperty(Constants.benchMarkBuildNumber).toString()) <= 0 ? true
-						: false)) {
-					benchmarkBuildNumber = Integer
-							.parseInt(properties.getProperty(Constants.benchMarkBuildNumber).toString());
-					JenkinsPlugInLogger.printLogOnConsole(1,
-							"benchmarkbuild number...." + String.valueOf(benchmarkBuildNumber));
-				} else {
-					JenkinsPlugInLogger.log(Level.INFO, "Please provide valid benchmark build number ");
-					throw new BuildValidationException("Please provide valid benchmark build number ");
+	}
 
-				}
+	private void readBenchmarkBuildNumer(PropertiesConfiguration properties) throws BuildValidationException {
+
+		if (properties.containsKey(Constants.BENCHMARKBUILDNUMBER)
+				&& !properties.getProperty(Constants.BENCHMARKBUILDNUMBER).toString().isEmpty()) {
+			if (Integer.parseInt(properties.getProperty(Constants.BENCHMARKBUILDNUMBER).toString()) > 0) {
+				benchmarkBuildNumber = Integer
+						.parseInt(properties.getProperty(Constants.BENCHMARKBUILDNUMBER).toString());
+				JenkinsPlugInLogger.printLogOnConsole(1, "benchmarkbuild number...." + benchmarkBuildNumber);
+			} else {
+				JenkinsPlugInLogger.log(Level.INFO, "Please provide valid benchmark build number ");
+				throw new BuildValidationException("Please provide valid benchmark build number ");
+
 			}
+
 		}
-		
+	}
+
+	private void loadConfiguration() throws AbortException {
+
+		try {
+			PropertiesConfiguration properties = new PropertiesConfiguration();
+			InputStream input;
+			input = new FileInputStream(this.performanceComparatorProperties);
+			properties.load(input);
+			readBuildsInHistogram(properties);
+			readBenchmarkBuildNumer(properties);
+		} catch (ConfigurationException | IOException e) {
+			JenkinsPlugInLogger.severe("The configuration file is not found or configuration error ", e);
+			// fail the build if configuration error
+			throw new AbortException(e.getMessage());
+		} catch (BuildValidationException e) {
+			throw new AbortException(e.getMessage());
+		}
 	}
 
 	@Extension
 	@Symbol("caapmplugin")
 	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-
-		private String performanceComparatorProperties;
 		private String loadGeneratorStartTime;
 		private String loadGeneratorEndTime;
 		private String loadGeneratorName;
+		private String paramsMap;
 
 		@Override
 		public CAAPMPerformanceComparator newInstance(StaplerRequest req, JSONObject formData) throws FormException {
 
 			try {
-				this.performanceComparatorProperties = formData.getString("performanceComparatorProperties");
+				String performanceComparatorProperties = formData.getString("performanceComparatorProperties");
 				CAAPMPerformanceComparator caAPMPublisher = new CAAPMPerformanceComparator(
-						this.performanceComparatorProperties, this.loadGeneratorStartTime, this.loadGeneratorEndTime,
-						this.loadGeneratorName);
+						performanceComparatorProperties, this.loadGeneratorStartTime, this.loadGeneratorEndTime,
+						this.loadGeneratorName, this.paramsMap);
 				save();
 				return caAPMPublisher;
 			} catch (Exception ex) {
@@ -447,6 +534,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			return true;
 		}
 
+		@Override
 		public String getDisplayName() {
 			return "Jenkins Plugin for CA APM";
 		}

@@ -8,38 +8,38 @@ import java.io.PrintWriter;
 
 public class TaskListenerMock implements TaskListener {
 
-  @Override
-  public PrintStream getLogger() {
-    return new PrintStream(System.out);
-  }
+	@Override
+	public PrintStream getLogger() {
+		return new PrintStream(System.out);
+	}
 
-  @Override
-  public void annotate(ConsoleNote consoleNote) throws IOException {
+	@Override
+	public void annotate(ConsoleNote consoleNote) throws IOException {
+		// Do Nothing
+	}
 
-  }
+	@Override
+	public void hyperlink(String s, String s1) throws IOException {
+		// Do Nothing
+	}
 
-  @Override
-  public void hyperlink(String s, String s1) throws IOException {
+	@Override
+	public PrintWriter error(String s) {
+		return null;
+	}
 
-  }
+	@Override
+	public PrintWriter error(String s, Object... objects) {
+		return null;
+	}
 
-  @Override
-  public PrintWriter error(String s) {
-    return null;
-  }
+	@Override
+	public PrintWriter fatalError(String s) {
+		return null;
+	}
 
-  @Override
-  public PrintWriter error(String s, Object... objects) {
-    return null;
-  }
-
-  @Override
-  public PrintWriter fatalError(String s) {
-    return null;
-  }
-
-  @Override
-  public PrintWriter fatalError(String s, Object... objects) {
-    return null;
-  }
+	@Override
+	public PrintWriter fatalError(String s, Object... objects) {
+		return null;
+	}
 }

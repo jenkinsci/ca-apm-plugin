@@ -17,7 +17,7 @@ public class MetricPerformanceData {
 
   public MetricPerformanceData() {
     super();
-    this.timeSliceValues = new LinkedList<TimeSliceValue>();
+    this.timeSliceValues = new LinkedList<>();
   }
 
   public MetricPerformanceData(String metricPath, List<TimeSliceValue> timeSliceValues) {

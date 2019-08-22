@@ -43,7 +43,7 @@ public class DataFormatHelper {
       OutputConfiguration outputConfiguration, List<StrategyResult> strategyResults) {
 
     List<StrategyResult<DefaultStrategyResult>> defaultStrategyResults =
-        new LinkedList<StrategyResult<DefaultStrategyResult>>();
+        new LinkedList<>();
     for (StrategyResult<?> strategyResult : strategyResults) {
       if (strategyResult
           .getResult()
@@ -73,16 +73,16 @@ public class DataFormatHelper {
     Template t = ve.getTemplate("emailReporthtml.vm");
     VelocityContext context = new VelocityContext();
     context.put(
-        "buildNumber", outputConfiguration.getCommonPropertyValue(Constants.jenkinsCurrentBuild));
+        "buildNumber", outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD));
     context.put(
         "benchmarkbuildnumber",
-        outputConfiguration.getCommonPropertyValue(Constants.jenkinsBenchMarkBuild));
+        outputConfiguration.getCommonPropertyValue(Constants.JENKINSBENCHMARKBUILD));
     context.put("duration", outputConfiguration.getCommonPropertyValue("runner.duration"));
     context.put("startTime", outputConfiguration.getCommonPropertyValue("runner.start"));
     context.put(
-        "loadTestName", outputConfiguration.getCommonPropertyValue(Constants.loadGeneratorName));
+        "loadTestName", outputConfiguration.getCommonPropertyValue(Constants.LOADGENERATORNAME));
     context.put("comparisonResults", defaultStrategyResults);
-    context.put("newline", Constants.NewLine);
+    context.put("newline", Constants.NEWLINE);
     StringWriter writer = new StringWriter();
     t.merge(context, writer);
     return writer.toString();
@@ -103,12 +103,12 @@ public class DataFormatHelper {
     if (result instanceof DefaultStrategyResult) {
       DefaultStrategyResult dResult = (DefaultStrategyResult) result;
       Map<String, AgentComparisonResult> agentComparisonResult = dResult.getResult();
-      for (String agentName : agentComparisonResult.keySet()) {
+      for (Map.Entry<String, AgentComparisonResult> agentEntry : agentComparisonResult.entrySet()) {
         int count = 1;
-        AgentComparisonResult agentResult = agentComparisonResult.get(agentName);
-        builder.append("Agent Specifier = " + agentName).append(Constants.NewLine);
+        AgentComparisonResult agentResult = agentComparisonResult.get(agentEntry.getKey());
+        builder.append("Agent Specifier = " + agentEntry.getKey()).append(Constants.NEWLINE);
         if (!agentResult.getSlowEntries().isEmpty()) {
-          builder.append(" ").append(Constants.NewLine);
+          builder.append(" ").append(Constants.NEWLINE);
         }
         for (MetricPathComparisonResult mResult : agentResult.getSlowEntries()) {
           builder
@@ -121,13 +121,25 @@ public class DataFormatHelper {
                       + mResult.getExpectedValue()
                       + ", actual value = "
                       + mResult.getActualValue())
-              .append(Constants.NewLine);
+              .append(Constants.NEWLINE);
         }
         if (!agentResult.getSuccessEntries().isEmpty()) {
-          builder.append(" ").append(Constants.NewLine);
+          builder.append(" ").append(Constants.NEWLINE);
         }
-        count = 1;
-        for (MetricPathComparisonResult mResult : agentResult.getSuccessEntries()) {
+         getBuilderforSuccessEntries(builder,agentResult);
+       
+      }
+    } else {
+      JenkinsPlugInLogger.warning(
+          "getPlainTextOutputForStrategy method is not supported for data formats except DefaultStrategyResult");
+    }
+
+    return builder.toString();
+  }
+
+  private static StringBuilder getBuilderforSuccessEntries(StringBuilder builder, AgentComparisonResult agentResult){
+	  int count = 1;
+	  for (MetricPathComparisonResult mResult : agentResult.getSuccessEntries()) {
           builder
               .append(
                   "  "
@@ -138,17 +150,10 @@ public class DataFormatHelper {
                       + mResult.getExpectedValue()
                       + ", actual value = "
                       + mResult.getActualValue())
-              .append(Constants.NewLine);
-        }
-      }
-    } else {
-      JenkinsPlugInLogger.warning(
-          "getPlainTextOutputForStrategy method is not supported for data formats except DefaultStrategyResult");
-    }
-
-    return builder.toString();
+              .append(Constants.NEWLINE);
+        }  
+	  return builder;
   }
-
   /**
    * The utility gives you a JSON string representation of your strategy result
    *

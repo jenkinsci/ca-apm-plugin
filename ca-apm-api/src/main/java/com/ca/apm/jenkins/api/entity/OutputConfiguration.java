@@ -17,11 +17,12 @@ public class OutputConfiguration {
   private Map<String, String> commonProperties;
   private Map<String, String> handlerSpecificProperties;
   private List<BuildInfo> histogramBuildInfoList;
+  private Map<String,Map<String, String>> scmRepoAttribs = new HashMap<>();
 
   public OutputConfiguration() {
     super();
-    commonProperties = new HashMap<String, String>();
-    histogramBuildInfoList = new ArrayList<BuildInfo>();
+    commonProperties = new HashMap<>();
+    histogramBuildInfoList = new ArrayList<>();
   }
 
   public Map<String, String> getProperties() {
@@ -57,4 +58,17 @@ public class OutputConfiguration {
   public void setHistogramBuildInfoList(List<BuildInfo> histogramBuildInfoList) {
     this.histogramBuildInfoList = histogramBuildInfoList;
   }
+  
+  public void addToSCMRepoAttribs(String key, Map<String,String> value) {
+	  scmRepoAttribs.put(key, value);
+  }
+
+  public Map<String,String> getSCMRepoAttribValue(String key) {
+	    if (scmRepoAttribs.containsKey(key)) {
+	      return scmRepoAttribs.get(key);
+	    }
+	    return null;
+  }
+  
+ 
 }

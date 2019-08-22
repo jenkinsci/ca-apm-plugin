@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ca.apm.jenkins.api.entity.BuildInfo;
-import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
@@ -21,38 +20,44 @@ import hudson.model.TaskListener;
  */
 public class PluginRunSimulation {
 
-  public static void main(String[] args)
-      throws BuildComparatorException, BuildValidationException, BuildExecutionException {
-    PluginRunSimulation runSimulation = new PluginRunSimulation();
-    String path = "C:\\APM\\AutomicJenkins\\Jenkins\\single-properties-changes";
-    runSimulation.runPluginSimulation(path, "performance-comparator.properties");
-  }
+	public static void main(String[] args) throws BuildValidationException, BuildExecutionException {
+		PluginRunSimulation runSimulation = new PluginRunSimulation();
+		runSimulation.runPluginSimulation("C:\\APM\\AutomicJenkins\\Jenkins\\single-properties-changes",
+				"performance-comparator.properties");
+	}
 
-  public void runPluginSimulation(String path, String fileName)
-      throws BuildComparatorException, BuildValidationException, BuildExecutionException {
-    List<BuildInfo> histogramBuilds = new ArrayList<BuildInfo>();
-    BuildInfo histogramBuilInfo = new BuildInfo();
-    histogramBuilInfo.setNumber(35);
-    histogramBuilds.add(histogramBuilInfo);
-    BuildInfo histogramBuilInfot = new BuildInfo();
-    histogramBuilInfo.setNumber(34);
-    histogramBuilds.add(histogramBuilInfot);
-    BuildInfo histogramBuilInfon = new BuildInfo();
-    histogramBuilInfo.setNumber(33);
-    histogramBuilds.add(histogramBuilInfon);
-    // int nuOfHistogramBuilds = 5
-   
-    TaskListener taskListener = new TaskListenerMock() ;
-    JenkinsPlugInLogger.setTaskListener(taskListener);
-    BuildInfo currentBuilInfo , benchmarkBuildInfo = null;
-    currentBuilInfo= new BuildInfo();
-    currentBuilInfo.setNumber(35);
-    benchmarkBuildInfo= new BuildInfo();
-    benchmarkBuildInfo.setNumber(29);
-    
-    JenkinsInfo jenkinsInfo =
-        new JenkinsInfo(currentBuilInfo.getNumber(), benchmarkBuildInfo.getNumber(), histogramBuilds, path + "workspace", "CIGNAOne", "LoadGeneratorName");
-    ComparisonRunner runner = new ComparisonRunner(currentBuilInfo, benchmarkBuildInfo, jenkinsInfo, path + File.separator + fileName,taskListener);
-    runner.executeComparison();
-  }
+	public void runPluginSimulation(String path, String fileName)
+			throws BuildValidationException, BuildExecutionException {
+		List<BuildInfo> histogramBuilds = new ArrayList<>();
+		BuildInfo histogramBuilInfo = new BuildInfo();
+		histogramBuilInfo.setNumber(35);
+		histogramBuilds.add(histogramBuilInfo);
+		BuildInfo histogramBuilInfot = new BuildInfo();
+		histogramBuilInfo.setNumber(34);
+		histogramBuilds.add(histogramBuilInfot);
+		BuildInfo histogramBuilInfon = new BuildInfo();
+		histogramBuilInfo.setNumber(33);
+		histogramBuilds.add(histogramBuilInfon);
+
+		TaskListener taskListener = new TaskListenerMock();
+		JenkinsPlugInLogger.setTaskListener(taskListener);
+		BuildInfo currentBuilInfo = null;
+		BuildInfo benchmarkBuildInfo = null;
+		currentBuilInfo = new BuildInfo();
+		currentBuilInfo.setNumber(35);
+
+		benchmarkBuildInfo = new BuildInfo();
+		benchmarkBuildInfo.setNumber(29);
+		/*
+		 * currentBuilInfo.setGitSHA("gidssiucsdlk");
+		 * benchmarkBuildInfo.setGitSHA("jhfsljsaidjshdgs"); int
+		 * nuOfHistogramBuilds = 5
+		 */
+
+		JenkinsInfo jenkinsInfo = new JenkinsInfo(currentBuilInfo.getNumber(), benchmarkBuildInfo.getNumber(),
+				histogramBuilds, path + "workspace", "CIGNAOne", "LoadGeneratorName");
+		ComparisonRunner runner = new ComparisonRunner(currentBuilInfo, benchmarkBuildInfo, jenkinsInfo,
+				path + File.separator + fileName, taskListener);
+		runner.executeComparison();
+	}
 }
