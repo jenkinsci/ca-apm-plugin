@@ -1,9 +1,13 @@
 package com.ca.apm.jenkins.core.helper;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
@@ -16,6 +20,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.ca.apm.jenkins.api.entity.BuildInfo;
@@ -27,6 +32,7 @@ import com.ca.apm.jenkins.core.entity.MetricPerformanceData;
 import com.ca.apm.jenkins.core.entity.TimeSliceValue;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
+import com.ca.apm.jenkins.core.util.JenkinsPluginUtility;
 
 /**
  * This utility helper class helps you to collect metrics information from APM
@@ -40,7 +46,8 @@ public class MetricDataHelper {
 
 	private static APMConnectionInfo apmConnectionInfo;
 	private static String metricClamp;
-	private static final String ERRORFETCHINGBUILDPERFORMANCEDATA = "Error while fetching BuildPerformanceData ->";
+	private static String applicationName;
+	private static String comparisonStrategyName;
 
 	private MetricDataHelper() {
 		super();
@@ -52,6 +59,10 @@ public class MetricDataHelper {
 
 	public static void setMetricClamp(String metricClamp) {
 		MetricDataHelper.metricClamp = metricClamp;
+	}
+
+	public static void setApplicationName(String applicationName) {
+		MetricDataHelper.applicationName = applicationName;
 	}
 
 	private static String generateURL(String emURL, String relativeURL) {
@@ -82,7 +93,7 @@ public class MetricDataHelper {
 	private static BuildPerformanceData parseSqlApiResponse(JSONObject metricResponseJSON) {
 		BuildPerformanceData buildPerformanceData = new BuildPerformanceData();
 		JSONArray rowArrays = (JSONArray) metricResponseJSON.get("rows");
-		Map<String, MetricPerformanceData> performanceData = new HashMap<>();
+		Map<String, MetricPerformanceData> performanceData = new HashMap<String, MetricPerformanceData>();
 		for (int i = 0; i < rowArrays.length(); i++) {
 
 			JSONArray rowArray = (JSONArray) rowArrays.get(i);
@@ -116,37 +127,6 @@ public class MetricDataHelper {
 		return buildPerformanceData;
 	}
 
-	private static JSONObject readResponse(CloseableHttpResponse metricDataResponse)
-			throws BuildExecutionException {
-		JSONObject metricDataJson = null;
-		if (metricDataResponse != null) {
-			if (Response.Status.OK.getStatusCode() == metricDataResponse.getStatusLine().getStatusCode()) {
-				HttpEntity metricDataEntity = metricDataResponse.getEntity();
-				ByteArrayOutputStream metricDataOs = new ByteArrayOutputStream();
-				try {
-					metricDataEntity.writeTo(metricDataOs);
-				} catch (IOException e) {
-					JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e.getMessage(), e);
-				}
-				String metricDataContents = new String(metricDataOs.toByteArray());
-				metricDataJson = new JSONObject(metricDataContents);
-				JenkinsPlugInLogger.fine("Response JSON Body = " + metricDataJson);
-			} else {
-				if (metricDataResponse.getStatusLine().getReasonPhrase().contains("Unauthorized")) {
-					throw new BuildExecutionException(
-							metricDataResponse.getStatusLine().getReasonPhrase() + " APM Credentials");
-				}
-				int statusCode = metricDataResponse.getStatusLine().getStatusCode();
-				JenkinsPlugInLogger.severe("Metric data capture from CA-APM failed with status code " + statusCode);
-				JenkinsPlugInLogger.severe("Detailed Response from EM is  " + metricDataResponse.toString());
-
-				throw new BuildComparatorException(
-						"Error occured while fetching metrics from CA-APM with response code ->" + statusCode);
-			}
-		}
-		return metricDataJson;
-	}
-
 	/**
 	 * This method return all the performance metrics for a given metric name
 	 * for given agent specifier, metric specifier and the time range selected
@@ -164,25 +144,30 @@ public class MetricDataHelper {
 	 *             Throws when any error occurs during execution, proper message
 	 *             is supplied to the exception
 	 */
-	public static BuildPerformanceData getMetricData(String agentSpecifier, String metricSpecifier, BuildInfo build)
-			throws BuildExecutionException {
+	public static BuildPerformanceData getMetricData(String agentSpecifier, String metricSpecifier, BuildInfo build) throws BuildComparatorException, BuildExecutionException {
 		if (agentSpecifier == null || metricSpecifier == null) {
 			throw new BuildComparatorException(
 					"Mandatory parameters to the query are null. Please enter non null values for the arguments");
 		}
 		JenkinsPlugInLogger.finest("Entering fetchBatchMetricDataFromEM method");
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+		//comparisonStrategyName = strategyName;
 		long startTime = build.getStartTime();
 		long endTime = build.getEndTime();
 		JenkinsPlugInLogger.fine("MetricDataHelper input query ->" + "agentSpecifier = " + agentSpecifier
 				+ ", metricSpecifier=" + metricSpecifier + ", startTime=" + startTime + ",endTime=" + endTime);
 		String body = prepareSqlRequestBody(agentSpecifier, metricSpecifier, startTime, endTime);
 		JenkinsPlugInLogger.fine("Request Body = " + body);
-		CloseableHttpClient httpClient = null;
-		//JSONObject metricDataJson = null;
+		StringEntity bodyEntity;
+		JSONObject metricDataJson = null;
+		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), Constants.QUERYMETRICDATAAPI));
+		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
+		httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
 		CloseableHttpResponse metricDataResponse = null;
 		try {
-			httpClient = HttpClients.createDefault();
-			metricDataResponse = getMetricDataResponse(httpClient, body, Constants.QUERYMETRICDATAAPI);
+			bodyEntity = new StringEntity(body);
+			httpPost.setEntity(bodyEntity);
+			metricDataResponse = httpClient.execute(httpPost);
 			if (metricDataResponse == null) {
 				metricDataResponse = getMetricDataResponse(httpClient, body, Constants.QUERYMETRICDATAAPIPRIVATE);
 				if (metricDataResponse == null) {
@@ -190,38 +175,6 @@ public class MetricDataHelper {
 					return null;
 				}
 			}
-		} finally {
-			try {
-				if (httpClient != null) {
-					httpClient.close();
-				}
-			} catch (IOException ie) {
-				JenkinsPlugInLogger.severe("Error while closing the httpClient ->" + ie.getMessage(), ie);
-			}
-		}
-		JSONObject metricDataJson = readResponse(metricDataResponse);
-		JenkinsPlugInLogger.finest("Exiting fetchBatchMetricDataFromEM method");
-		
-			BuildPerformanceData buildPerformanceData = parseSqlApiResponse(metricDataJson);
-		
-		if (buildPerformanceData.getMetricData().isEmpty()) {
-			JenkinsPlugInLogger.severe("No metric data available in APM with the given arguments ->" + agentSpecifier
-					+ "," + metricSpecifier);
-		}
-		return buildPerformanceData;
-	}
-
-	private static CloseableHttpResponse getMetricDataResponse(CloseableHttpClient httpClient, String body,
-			String queryMetricDataAPI) throws BuildExecutionException {
-		StringEntity bodyEntity;
-		CloseableHttpResponse metricDataResponse = null;
-		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), queryMetricDataAPI));
-		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
-		httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
-		try {
-			bodyEntity = new StringEntity(body);
-			httpPost.setEntity(bodyEntity);
-			metricDataResponse = httpClient.execute(httpPost);
 			if (metricDataResponse.getStatusLine().getReasonPhrase().contains("BAD_REQUEST")) {
 				body = body.substring(0, body.indexOf("limit") - 1).concat("\"}");
 				JenkinsPlugInLogger.fine("Request Body = " + body);
@@ -230,21 +183,57 @@ public class MetricDataHelper {
 				metricDataResponse = httpClient.execute(httpPost);
 			}
 
-		} catch (UnsupportedEncodingException | ClientProtocolException e1) {
-			JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
+		} catch (UnsupportedEncodingException e1) {
+			JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
+		} catch (ClientProtocolException e1) {
+			JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
 		} catch (IOException e1) {
 			if (e1.getCause().toString().contains("Connection refused")) {
 				int apmHostNameIndex = apmConnectionInfo.getEmURL().indexOf("//") + 2;
 				if (e1.getMessage().contains(apmConnectionInfo.getEmURL().substring(apmHostNameIndex,
 						apmConnectionInfo.getEmURL().lastIndexOf(':')))) {
-					JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
+					JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
 					throw new BuildExecutionException(e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')));
 				}
 			} else {
-				JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
+				JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
 			}
 		}
-		return metricDataResponse;
+		if (metricDataResponse == null) {
+			JenkinsPlugInLogger.severe("No response from APM REST API, hence returning null");
+			return null;
+		}
+		if (Response.Status.OK.getStatusCode() == metricDataResponse.getStatusLine().getStatusCode()) {
+			HttpEntity metricDataEntity = metricDataResponse.getEntity();
+			ByteArrayOutputStream metricDataOs = new ByteArrayOutputStream();
+			try {
+				metricDataEntity.writeTo(metricDataOs);
+			} catch (IOException e) {
+				JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e.getMessage(), e);
+			}
+			String metricDataContents = new String(metricDataOs.toByteArray());
+			metricDataJson = new JSONObject(metricDataContents);
+			JenkinsPlugInLogger.fine("Response JSON Body = " + metricDataJson);
+		} else {
+			if (metricDataResponse.getStatusLine().getReasonPhrase().contains("Unauthorized")) {
+				throw new BuildExecutionException(
+						metricDataResponse.getStatusLine().getReasonPhrase() + " APM Credentials");
+			}
+			int statusCode = metricDataResponse.getStatusLine().getStatusCode();
+			JenkinsPlugInLogger.severe("Metric data capture from CA-APM failed with status code " + statusCode);
+			JenkinsPlugInLogger.severe("Detailed Response from EM is  " + metricDataResponse.toString());
+
+			throw new BuildComparatorException(
+					"Error occured while fetching metrics from CA-APM with response code ->" + statusCode);
+		}
+
+		JenkinsPlugInLogger.finest("Exiting fetchBatchMetricDataFromEM method");
+		BuildPerformanceData buildPerformanceData = parseSqlApiResponse(metricDataJson);
+		if (buildPerformanceData.getMetricData().isEmpty()) {
+			JenkinsPlugInLogger.severe("No metric data available in APM with the given arguments ->" + agentSpecifier
+					+ "," + metricSpecifier);
+		}
+		return buildPerformanceData;
 	}
 
 	@SuppressWarnings("unused")
@@ -277,6 +266,80 @@ public class MetricDataHelper {
 			}
 		}
 		return performanceData;
+	}
+
+	@SuppressWarnings("unused")
+	private static JSONObject createMetricDataQueryRequestBody(String agentSpec, String metricRegex, long startTime,
+			long endTime) throws JSONException {
+		Collection<JSONObject> queries = new LinkedList<JSONObject>();
+
+		String metricSpec = metricRegex;
+		JSONObject query = new JSONObject();
+		JSONObject agentSpecifier = new JSONObject();
+		agentSpecifier.put("type", "REGEX");
+		agentSpecifier.put("specifier", agentSpec);
+		query.put("agentSpecifier", agentSpecifier);
+		JSONObject metricSpecifier = new JSONObject();
+		metricSpecifier.put("type", "REGEX");
+		metricSpecifier.put("specifier", metricSpec);
+		query.put("metricSpecifier", metricSpecifier);
+		queries.add(query);
+		JSONArray momFilterArray = new JSONArray(new JSONObject[] { null });
+		query.put("momFilter", momFilterArray);
+		JSONObject batchedMetrics = new JSONObject();
+		batchedMetrics.put("metricQueries", new JSONArray(queries));
+
+		JSONObject body = new JSONObject();
+		body.put("batchedMetrics", batchedMetrics);
+		body.put("batchId", 7);
+
+		long duration = endTime - startTime;
+
+		JSONObject queryRange = new JSONObject();
+		queryRange.put("frequency", 15000);
+		queryRange.put("rangeSize", duration);
+
+		queryRange.put("endTime", JenkinsPluginUtility.getGMTTime(endTime));
+		batchedMetrics.put("queryRange", queryRange);
+		batchedMetrics.put("aggregate", "false");
+		// batchedMetrics.put("clamp", Integer.parseInt(metricClamp));
+		return body;
+	}
+	
+	private static CloseableHttpResponse getMetricDataResponse(CloseableHttpClient httpClient, String body,
+			String queryMetricDataAPI) throws BuildExecutionException {
+		StringEntity bodyEntity;
+		CloseableHttpResponse metricDataResponse = null;
+		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), queryMetricDataAPI));
+		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
+		httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
+		try {
+			bodyEntity = new StringEntity(body);
+			httpPost.setEntity(bodyEntity);
+			metricDataResponse = httpClient.execute(httpPost);
+			if (metricDataResponse.getStatusLine().getReasonPhrase().contains("BAD_REQUEST")) {
+				body = body.substring(0, body.indexOf("limit") - 1).concat("\"}");
+				JenkinsPlugInLogger.fine("Request Body = " + body);
+				bodyEntity = new StringEntity(body);
+				httpPost.setEntity(bodyEntity);
+				metricDataResponse = httpClient.execute(httpPost);
+			}
+
+		} catch (UnsupportedEncodingException | ClientProtocolException e1) {
+			JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
+		} catch (IOException e1) {
+			if (e1.getCause().toString().contains("Connection refused")) {
+				int apmHostNameIndex = apmConnectionInfo.getEmURL().indexOf("//") + 2;
+				if (e1.getMessage().contains(apmConnectionInfo.getEmURL().substring(apmHostNameIndex,
+						apmConnectionInfo.getEmURL().lastIndexOf(':')))) {
+					JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
+					throw new BuildExecutionException(e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')));
+				}
+			} else {
+				JenkinsPlugInLogger.severe("Error while fetching BuildPerformanceData ->" + e1.getMessage(), e1);
+			}
+		}
+		return metricDataResponse;
 	}
 
 }
