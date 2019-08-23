@@ -175,8 +175,8 @@ public class VertexAttributesUpdateHelper {
 		String vertexIdsURL = null;
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		try {
-			HttpPost httpPost = new HttpPost(vertexIdsURL);
 			vertexIdsURL = generateURL(apmConnectionInfo.getEmURL(), Constants.ATTRIBUTEUPDATE);
+			HttpPost httpPost = new HttpPost(vertexIdsURL);
 			httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
 			httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 			String body = createVertexFilterQueryRequestBody(applicationName).toString();
