@@ -194,14 +194,7 @@ public class VertexAttributesUpdateHelper {
 		} catch (Exception e) {
 			JenkinsPlugInLogger.severe("Error in executing getVertexIds(String applicationName) : " + e.getMessage());
 
-		} finally {
-			try {
-				httpClient.close();
-			} catch (IOException ie) {
-				JenkinsPlugInLogger.severe("Error in closing httpClient in getVertexIds() : " + ie.getMessage());
-
-			}
-		}
+		} 
 
 		return response;
 	}
