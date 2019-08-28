@@ -309,15 +309,9 @@ public class VertexAttributesUpdateHelper {
 
 		JenkinsPlugInLogger.info("Attributes Map: "
 				+ outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS));
-		if (outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSBENCHMARKBUILDSCMREPOPARAMS) != null) {
-			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
-					.getSCMRepoAttribValue(Constants.JENKINSBENCHMARKBUILDSCMREPOPARAMS).entrySet()) {
-				attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
-			}
-		}
+		
 		attributesMap.put("buildStatus", buildStatus);
-		attributesMap.put("loadGeneratorName", outputConfiguration.getCommonPropertyValue(Constants.LOADGENERATORNAME));
-
+		
 		String applicationName = comparisonMetadata.getCommonPropertyValue(Constants.APPLICATIONNAME);
 		return getVertexIds(attributesMap, applicationName, outputConfiguration);
 

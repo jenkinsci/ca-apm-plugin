@@ -55,7 +55,7 @@ public class PluginRunSimulation {
 		 */
 
 		JenkinsInfo jenkinsInfo = new JenkinsInfo(currentBuilInfo.getNumber(), benchmarkBuildInfo.getNumber(),
-				histogramBuilds, path + "workspace", "CIGNAOne", "LoadGeneratorName");
+				histogramBuilds, path + "workspace", "CIGNAOne");
 		ComparisonRunner runner = new ComparisonRunner(currentBuilInfo, benchmarkBuildInfo, jenkinsInfo,
 				path + File.separator + fileName, taskListener);
 		runner.executeComparison();

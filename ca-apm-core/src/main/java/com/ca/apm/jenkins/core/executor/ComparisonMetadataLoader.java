@@ -92,9 +92,7 @@ public class ComparisonMetadataLoader {
 		boolean isloadRunnerSuccess = true;
 		comparisonMetadata.getLoadRunnerMetadataInfo()
 				.setHistogramBuildInfoList(comparisonMetadata.getJenkinsInfo().getHistogramBuildInfoList());
-		comparisonMetadata.getLoadRunnerMetadataInfo().addToLoadRunnerProperties(Constants.LOADGENERATORNAME,
-				comparisonMetadata.getJenkinsInfo().getLoadGeneratorName());
-
+		
 		checkIfFileExists(isAPMSuccess, isloadRunnerSuccess, isStrategiesFileSuccess, isIoSuccess, isGenericSuccess);
 		JenkinsPlugInLogger.printLogOnConsole(1, " Configuration loading completed" + Constants.NEWLINE);
 		JenkinsPlugInLogger.info("Loading of Properties file completed");
