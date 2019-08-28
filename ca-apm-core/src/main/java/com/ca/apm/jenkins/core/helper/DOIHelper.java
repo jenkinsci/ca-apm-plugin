@@ -34,7 +34,7 @@ public class DOIHelper {
 		String jarvisEndpoint = comparisonMetadata.getCommonPropertyValue(Constants.JARVISENDPOINT);
 		HttpPost httpPost = new HttpPost(jarvisEndpoint);
 		httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
-		JenkinsPlugInLogger.printLogOnConsole(3, "DOI httpPost.getRequestLine().." + httpPost.getRequestLine());
+		JenkinsPlugInLogger.info("DOI httpPost.getRequestLine().." + httpPost.getRequestLine());
 
 		CloseableHttpResponse changeEventOIResponse = null;
 
@@ -52,10 +52,6 @@ public class DOIHelper {
 			while ((line = reader.readLine()) != null) {
 				out.append(line);
 			}
-			JenkinsPlugInLogger.printLogOnConsole(3,
-					"changeEventOIResponseStatusCode : " + changeEventOIResponse.getStatusLine().getStatusCode());
-			JenkinsPlugInLogger.printLogOnConsole(3, "changeEventOIResponseStatus getReasonPhrase : "
-					+ changeEventOIResponse.getStatusLine().getReasonPhrase());
 			reader.close();
 
 		} catch (Exception ex) {
@@ -72,7 +68,7 @@ public class DOIHelper {
 		if (outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS) != null)
 			scmRepoVarsMap = outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS);
 		String currentBuildNumber = outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD);
-		JenkinsPlugInLogger.info("...DOIHELPER... : " + scmRepoVarsMap);
+		JenkinsPlugInLogger.info(" SCMRepoVarsMap in DOIHELPER : " + scmRepoVarsMap);
 
 		String applicationHost = comparisonMetadata.getCommonPropertyValue(Constants.APPLICATIONHOST);
 		String doiTenantID = comparisonMetadata.getCommonPropertyValue(Constants.DOITENANTID);

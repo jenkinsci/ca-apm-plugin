@@ -34,8 +34,14 @@ public class ChartOutputHandler implements OutputHandler<StrategyResult> {
 		String emURL = outputConfiguration.getCommonPropertyValue(Constants.EMURL);
 		String startTimeMillis = outputConfiguration.getCommonPropertyValue("runner.start");
 		String endTimeMillis = outputConfiguration.getCommonPropertyValue("runner.end");
-		String appMapURL = emURL.replace(emURL.substring(emURL.lastIndexOf(':') + 1, emURL.length() - 1), emWebViewPort)
-				+ Constants.EMEXPVIEWURLPOSTFIX + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
+		String appMapURL = null;
+		if(Character.isDigit(emURL.charAt(emURL.lastIndexOf(':')+1))){
+			 appMapURL = emURL.replace(emURL.substring(emURL.lastIndexOf(':') + 1, emURL.length() - 1), emWebViewPort)
+					+ Constants.EMEXPVIEWURLPOSTFIX + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
+		}else{
+			 appMapURL = emURL+"apm/appmap/"
+					+ Constants.EMEXPVIEWURLPOSTFIX + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
+		}
 		String startDateTime = format.format(Long.parseLong(startTimeMillis));
 		String endDateTime = format.format(Long.parseLong(endTimeMillis));
 		String frequency = outputConfiguration.getCommonPropertyValue("frequency") + "ms";

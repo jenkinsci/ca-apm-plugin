@@ -92,7 +92,7 @@ public class VertexAttributesUpdateHelper {
 
 		}
 		payload.append("] }");
-		JenkinsPlugInLogger.printLogOnConsole(3, "........payloadString..." + payload.toString());
+		JenkinsPlugInLogger.info("Custom Attribute Update PayloadString" + payload.toString());
 		return payload.toString();
 	}
 
@@ -180,7 +180,7 @@ public class VertexAttributesUpdateHelper {
 			httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
 			httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 			String body = createVertexFilterQueryRequestBody(applicationName).toString();
-			JenkinsPlugInLogger.printLogOnConsole(3, "vertex query " + body);
+			JenkinsPlugInLogger.info("GetVertexIds query payload string : " + body);
 			StringEntity bodyEntity = new StringEntity(body);
 			httpPost.setEntity(bodyEntity);
 			response = httpClient.execute(httpPost);
@@ -307,7 +307,7 @@ public class VertexAttributesUpdateHelper {
 			}
 		}
 
-		JenkinsPlugInLogger.printLogOnConsole(3, "...vertex update..git attribs. : "
+		JenkinsPlugInLogger.info("Attributes Map: "
 				+ outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS));
 		if (outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSBENCHMARKBUILDSCMREPOPARAMS) != null) {
 			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
