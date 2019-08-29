@@ -271,7 +271,9 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 				}
 
 			}
-			attribsMap.put("GIT_COMMIT_MESSAGE", gitCommitMessage);
+			if(gitCommitMessage != null){
+			  attribsMap.put("GIT_COMMIT_MESSAGE", gitCommitMessage);
+			}
 
 			addOrReplaceParamValue(run, LODGENSTARTTIME, loadGeneratorStartTime);
 			addOrReplaceParamValue(run, LOADGENENDTIME, loadGeneratorEndTime);

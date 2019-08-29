@@ -227,7 +227,7 @@ public class VertexAttributesUpdateHelper {
 			}
 		}
 		for (Map.Entry<String, Set<String>> vertexid : vertexIdTs.entrySet()) {
-			JenkinsPlugInLogger.printLogOnConsole(3, "VertexIDs...." + vertexid.getKey());
+			JenkinsPlugInLogger.info("VertexIDs...." + vertexid.getKey());
 		}
 
 		if (vertexIdTs.isEmpty()) {
@@ -303,7 +303,9 @@ public class VertexAttributesUpdateHelper {
 		if (outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS) != null) {
 			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
 					.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS).entrySet()) {
-				attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
+				if(scmRepoEntry.getValue() != null){
+				  attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
+				}
 			}
 		}
 
