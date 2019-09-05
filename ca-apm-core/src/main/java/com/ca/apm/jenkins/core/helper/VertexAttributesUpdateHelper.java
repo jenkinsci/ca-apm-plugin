@@ -92,7 +92,7 @@ public class VertexAttributesUpdateHelper {
 
 		}
 		payload.append("] }");
-		JenkinsPlugInLogger.printLogOnConsole(3, "........payloadString..." + payload.toString());
+		JenkinsPlugInLogger.info("Custom Attribute Update PayloadString" + payload.toString());
 		return payload.toString();
 	}
 
@@ -180,7 +180,7 @@ public class VertexAttributesUpdateHelper {
 			httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
 			httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 			String body = createVertexFilterQueryRequestBody(applicationName).toString();
-			JenkinsPlugInLogger.printLogOnConsole(3, "vertex query " + body);
+			JenkinsPlugInLogger.info("GetVertexIds query payload string : " + body);
 			StringEntity bodyEntity = new StringEntity(body);
 			httpPost.setEntity(bodyEntity);
 			response = httpClient.execute(httpPost);
@@ -194,14 +194,7 @@ public class VertexAttributesUpdateHelper {
 		} catch (Exception e) {
 			JenkinsPlugInLogger.severe("Error in executing getVertexIds(String applicationName) : " + e.getMessage());
 
-		} finally {
-			try {
-				httpClient.close();
-			} catch (IOException ie) {
-				JenkinsPlugInLogger.severe("Error in closing httpClient in getVertexIds() : " + ie.getMessage());
-
-			}
-		}
+		} 
 
 		return response;
 	}
@@ -234,7 +227,7 @@ public class VertexAttributesUpdateHelper {
 			}
 		}
 		for (Map.Entry<String, Set<String>> vertexid : vertexIdTs.entrySet()) {
-			JenkinsPlugInLogger.printLogOnConsole(3, "VertexIDs...." + vertexid.getKey());
+			JenkinsPlugInLogger.info("VertexIDs...." + vertexid.getKey());
 		}
 
 		if (vertexIdTs.isEmpty()) {
@@ -310,21 +303,17 @@ public class VertexAttributesUpdateHelper {
 		if (outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS) != null) {
 			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
 					.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS).entrySet()) {
-				attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
+				if(scmRepoEntry.getValue() != null){
+				  attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
+				}
 			}
 		}
 
-		JenkinsPlugInLogger.printLogOnConsole(3, "...vertex update..git attribs. : "
+		JenkinsPlugInLogger.info("Attributes Map: "
 				+ outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS));
-		if (outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSBENCHMARKBUILDSCMREPOPARAMS) != null) {
-			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
-					.getSCMRepoAttribValue(Constants.JENKINSBENCHMARKBUILDSCMREPOPARAMS).entrySet()) {
-				attributesMap.put(scmRepoEntry.getKey(), scmRepoEntry.getValue());
-			}
-		}
+		
 		attributesMap.put("buildStatus", buildStatus);
-		attributesMap.put("loadGeneratorName", outputConfiguration.getCommonPropertyValue(Constants.LOADGENERATORNAME));
-
+		
 		String applicationName = comparisonMetadata.getCommonPropertyValue(Constants.APPLICATIONNAME);
 		return getVertexIds(attributesMap, applicationName, outputConfiguration);
 

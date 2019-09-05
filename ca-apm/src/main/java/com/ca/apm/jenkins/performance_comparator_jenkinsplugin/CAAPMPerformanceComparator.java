@@ -124,7 +124,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			throws BuildValidationException, BuildExecutionException {
 		boolean comparisonRunStatus = false;
 		JenkinsInfo jenkinsInfo = new JenkinsInfo(currentBuildInfo.getNumber(), previousSuccessfulBuild,
-				histogramBuildInfoList, workspaceFolder, jobName, loadGeneratorName);
+				histogramBuildInfoList, workspaceFolder, jobName);
 		ComparisonRunner runner = new ComparisonRunner(currentBuildInfo, benchmarkBuildInfo, jenkinsInfo,
 				this.performanceComparatorProperties, taskListener);
 		comparisonRunStatus = runner.executeComparison();
@@ -190,17 +190,6 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		run.addAction(newParam);
 	}
 
-	private void readSCMRepoforBenchmarkBuild(ParametersAction paramAction, BuildInfo benchmarkBuildInfo) {
-		if (!attribsMap.isEmpty()) {
-			for (Map.Entry<String, String> scmRepoEntry : attribsMap.entrySet()) {
-				if (getParamValue(paramAction, scmRepoEntry.getKey()) != null) {
-					benchmarkBuildInfo.addToSCMRepoParams("benchMarkBuild_" + scmRepoEntry.getKey(),
-							getParamValue(paramAction, scmRepoEntry.getKey()));
-				}
-			}
-		}
-	}
-
 	private void setBenchmarkBuildInfo(Run<?, ?> run, int currentBuildNumber, BuildInfo benchmarkBuildInfo,
 			TaskListener taskListener) {
 		Run benchmarkRun = (Run) (run.getParent().getBuilds().limit(currentBuildNumber - benchmarkBuildNumber + 1)
@@ -215,7 +204,6 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			benchMarkBuildEndTime = getParamValue(paramAction, LOADGENENDTIME);
 			benchmarkBuildInfo.setStartTime(Long.parseLong(benchMarkBuildStartTime));
 			benchmarkBuildInfo.setEndTime(Long.parseLong(benchMarkBuildEndTime));
-			readSCMRepoforBenchmarkBuild(paramAction, benchmarkBuildInfo);
 			taskListener.getLogger()
 					.println("benchmarkBuildNumber = " + benchmarkRun.getNumber() + " benchMarkBuildStartTime = "
 							+ benchMarkBuildStartTime + ", bemnchMarkBuildEndTime = " + benchMarkBuildEndTime
@@ -283,7 +271,9 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 				}
 
 			}
-			attribsMap.put("GIT_COMMIT_MESSAGE", gitCommitMessage);
+			if(gitCommitMessage != null){
+			  attribsMap.put("GIT_COMMIT_MESSAGE", gitCommitMessage);
+			}
 
 			addOrReplaceParamValue(run, LODGENSTARTTIME, loadGeneratorStartTime);
 			addOrReplaceParamValue(run, LOADGENENDTIME, loadGeneratorEndTime);

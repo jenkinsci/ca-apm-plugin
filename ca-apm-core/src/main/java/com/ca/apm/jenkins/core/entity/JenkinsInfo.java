@@ -16,21 +16,19 @@ public class JenkinsInfo {
   private String buildWorkSpaceFolder;
   private String jobName;
   private List<BuildInfo> histogramBuildInfoList;
-  private String loadGeneratorName;
 
   public JenkinsInfo(
       int currentBuildNumber,
       int lastSuccessfulBuildNumber,
       List<BuildInfo> histogramBuildInfoList,
       String buildWorkSpaceFolder,
-      String jobName, String loadGeneratorName) {
+      String jobName) {
     super();
     this.currentBuildNumber = currentBuildNumber;
     this.lastSuccessfulBuildNumber = lastSuccessfulBuildNumber;
     this.buildWorkSpaceFolder = buildWorkSpaceFolder;
     this.jobName = jobName;
     this.histogramBuildInfoList = histogramBuildInfoList;
-    this.loadGeneratorName = loadGeneratorName;
   }
 
   public int getCurrentBuildNumber() {
@@ -68,14 +66,6 @@ public class JenkinsInfo {
   public List<BuildInfo> getHistogramBuildInfoList() {
     return histogramBuildInfoList;
   }
-
-public String getLoadGeneratorName() {
-	return loadGeneratorName;
-}
-
-public void setLoadGeneratorName(String loadGeneratorName) {
-	this.loadGeneratorName = loadGeneratorName;
-}
 
 public void setHistogramBuildInfoList(List<BuildInfo> histogramBuildInfoList) {
 	this.histogramBuildInfoList = histogramBuildInfoList;
