@@ -415,8 +415,8 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			}
 			histogramBuildInfo = new BuildInfo();
 			if (run != null) {
-				int buildNumber = run.number;
 				run = run.getPreviousBuild();
+				int buildNumber = run.number;
 				histogramBuildInfo.setNumber(buildNumber);
 			}
 
