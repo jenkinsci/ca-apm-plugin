@@ -14,7 +14,8 @@ public class Constants {
 	public static final String GETVERTEXIDBYNAME = "/apm/appmap/vertex";
 	// attributeUpdate
 	public static final String QUERYMETRICDATAAPI = "/apm/appmap/apmData/query";
-	public static final String QUERYMETRICDATAAPIPRIVATE = "/apm/appmap/private/apmData/query";
+	public static final String QUERYMETRICDATAAPIPRIVATE ="/atc/private/apmData/query";
+	public static final String QUERYMETRICDATAAPIPRIVATE_BACKWARD ="/apm/appmap/private/apmData/query";
 
 	// Arguments
 	public static final String BEARER = "Bearer ";
@@ -101,7 +102,8 @@ public class Constants {
 	public static final String OUTPUTHANDLERCONFIGMETHOD = "setOutputConfiguration";
 	public static final String OUTPUTHANDLEREXECUTEMETHOD = "publishOutput";
 	public static final String EMWEBVIEWPORT = "em.webview.port";
-	public static final String EMEXPVIEWURLPOSTFIX = "ApmServer/#/home?ep=0&g=-1&cha=0&cht=0&chs=0&m=L&l=ATC&fa=%5B%5D&u=UN1&view=%7B%22drillDown%22:%5B%5D%7D";
+	public static final String EMEXPVIEWURLPOSTFIX_BACKWARD = "ApmServer/#/home?ep=0&g=-1&cha=0&cht=0&chs=0&m=L&l=ATC&fa=%5B%5D&u=UN1&view=%7B%22drillDown%22:%5B%5D%7D";
+	public static final String EMEXPVIEWURLPOSTFIX = "apm/atc/#/home?ep=0&g=-1&cha=0&cht=0&chs=0&m=L&l=ATC&fa=%5B%5D&u=UN1&view=%7B%22drillDown%22:%5B%5D%7D";
 	public static final String APPLICATIONNAME = "application.name";
 	public static final String METRICCLAMP = "metric.clamp";
 	public static final String BUILDSINHISTOGRAM = "histogram.builds";
