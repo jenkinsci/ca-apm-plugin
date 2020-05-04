@@ -159,12 +159,11 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		String endTimeMillis = outputConfiguration.getCommonPropertyValue("runner.end");
 		String emWebViewPort = outputConfiguration.getCommonPropertyValue(Constants.EMWEBVIEWPORT);
 		String appMapURL = null;
-		if(Character.isDigit(emURL.charAt(emURL.lastIndexOf(':')+1))){
-			 appMapURL = emURL.replace(emURL.substring(emURL.lastIndexOf(':') + 1, emURL.length() - 1), emWebViewPort)
-					+ Constants.EMEXPVIEWURLPOSTFIX + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
+		if(emURL.length() == (emURL.indexOf("/",emURL.lastIndexOf(':'))+1)){
+			appMapURL = emURL.replace(emURL.substring(emURL.lastIndexOf(':') + 1, emURL.length() - 1), emWebViewPort)
+					+ Constants.EMEXPVIEWURLPOSTFIX_BACKWARD + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
 		}else{
-			 appMapURL = emURL+"apm/appmap/"
-					+ Constants.EMEXPVIEWURLPOSTFIX + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
+			appMapURL = emURL + Constants.EMEXPVIEWURLPOSTFIX + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
 		}
 		metricPathsChart = getChartsForMetricPaths(strategyWiseMetrictoBuildAvgValMap);
 		String htmlOutput = null;

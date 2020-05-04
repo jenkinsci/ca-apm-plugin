@@ -185,7 +185,7 @@ public class MetricDataHelper {
 		String body = prepareSqlRequestBody(agentSpecifier, metricSpecifier, startTime, endTime);
 		JenkinsPlugInLogger.fine(REQUESTBODY + body);
 		StringEntity bodyEntity;
-		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), Constants.QUERYMETRICDATAAPI));
+		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), Constants.QUERYMETRICDATAAPIPRIVATE));
 		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 		httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
 		CloseableHttpResponse metricDataResponse = null;
@@ -194,11 +194,14 @@ public class MetricDataHelper {
 			httpPost.setEntity(bodyEntity);
 			metricDataResponse = httpClient.execute(httpPost);
 			if (metricDataResponse == null) {
-				metricDataResponse = getMetricDataResponse(httpClient, body, Constants.QUERYMETRICDATAAPIPRIVATE);
+				metricDataResponse = getMetricDataResponse(httpClient, body, Constants.QUERYMETRICDATAAPIPRIVATE_BACKWARD);
 				if (metricDataResponse == null) {
-					JenkinsPlugInLogger.severe("No response from APM REST API, hence returning null");
-					return null;
+					metricDataResponse = getMetricDataResponse(httpClient, body, Constants.QUERYMETRICDATAAPI);
+				    if (metricDataResponse == null) {
+					   JenkinsPlugInLogger.severe("No response from APM REST API, hence returning null");
+					   return null;
 				}
+			  }
 			}
 			if (metricDataResponse.getStatusLine().getReasonPhrase().contains("BAD_REQUEST")) {
 				body = body.substring(0, body.indexOf("limit") - 1).concat("\"}");
