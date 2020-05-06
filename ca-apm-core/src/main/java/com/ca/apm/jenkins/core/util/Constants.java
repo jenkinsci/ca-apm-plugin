@@ -13,7 +13,6 @@ public class Constants {
 	public static final String ATTRIBUTEUPDATE = "/apm/appmap/graph/vertex";
 	public static final String GETVERTEXIDBYNAME = "/apm/appmap/vertex";
 	// attributeUpdate
-	public static final String QUERYMETRICDATAAPI = "/apm/appmap/apmData/query";
 	public static final String QUERYMETRICDATAAPIPRIVATE ="/atc/private/apmData/query";
 	public static final String QUERYMETRICDATAAPIPRIVATE_BACKWARD ="/apm/appmap/private/apmData/query";
 
