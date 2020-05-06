@@ -79,6 +79,7 @@ public class MeanLatencyComparisonStrategy implements ComparisonStrategy<Default
 				isFrequencySet = true;
 			}
 		}
+		JenkinsPlugInLogger.fine("frequency = "+comparisonOutput.getFrequency());
 		return isFrequencySet;
 	}
 

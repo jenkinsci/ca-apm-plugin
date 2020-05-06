@@ -63,10 +63,18 @@ public class MetricDataHelper {
 			long endTime) {
 		String query = null;
 		JSONObject requestBodyJSON = new JSONObject();
+		String emURL = apmConnectionInfo.getEmURL();
+		if(emURL.length() == (emURL.indexOf("/",emURL.lastIndexOf(':'))+1)){
+			query = "SELECT domain_name, agent_host,agent_process, agent_name, metric_path,  metric_attribute, ts, min_value, max_value, agg_value, value_count, frequency"
+					+ " FROM metric_data WHERE ts >= " + startTime + " AND ts <= " + endTime
+					+ " AND agent_name like_regex '" + agentSpecifier + "' AND metric_path like_regex '" + metricSpecifier + "'";
+		}else {
+		
 		query = "SELECT domain_name, agent_host,agent_process, agent_name, metric_path,  metric_attribute, ts, min_value, max_value, agg_value, value_count, frequency"
 				+ " FROM metric_data WHERE ts >= " + startTime + " AND ts <= " + endTime
 				+ " AND agent_name like_regex '" + agentSpecifier + "' AND metric_path like_regex '" + metricSpecifier
 				+ "' limit " + Integer.parseInt(metricClamp);
+		}
 		requestBodyJSON.put("query", query);
 		return requestBodyJSON.toString();
 	}
@@ -185,7 +193,18 @@ public class MetricDataHelper {
 		String body = prepareSqlRequestBody(agentSpecifier, metricSpecifier, startTime, endTime);
 		JenkinsPlugInLogger.fine(REQUESTBODY + body);
 		StringEntity bodyEntity;
-		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), Constants.QUERYMETRICDATAAPIPRIVATE));
+		String emURL = apmConnectionInfo.getEmURL();
+		String metricDataAPI = null;
+		boolean emURL_BACKWARD = (emURL.length() == emURL.indexOf("/",emURL.lastIndexOf(':'))+1);
+		if(emURL_BACKWARD){
+			metricDataAPI = Constants.QUERYMETRICDATAAPIPRIVATE_BACKWARD;
+		}else {
+			metricDataAPI = Constants.QUERYMETRICDATAAPIPRIVATE;
+		}
+		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), metricDataAPI));
+		JenkinsPlugInLogger.printLogOnConsole(3, "Metricdatahelper..metricDataAPI..entity..."+body);
+		JenkinsPlugInLogger.printLogOnConsole(3, "Metricdatahelper..metricDataAPI..path..."+httpPost.getURI().getPath());
+		JenkinsPlugInLogger.printLogOnConsole(3, "Metricdatahelper..metricDataAPI....."+metricDataAPI);
 		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 		httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
 		CloseableHttpResponse metricDataResponse = null;
@@ -193,24 +212,10 @@ public class MetricDataHelper {
 			bodyEntity = new StringEntity(body);
 			httpPost.setEntity(bodyEntity);
 			metricDataResponse = httpClient.execute(httpPost);
-			if (metricDataResponse == null) {
-				metricDataResponse = getMetricDataResponse(httpClient, body, Constants.QUERYMETRICDATAAPIPRIVATE_BACKWARD);
-				if (metricDataResponse == null) {
-					metricDataResponse = getMetricDataResponse(httpClient, body, Constants.QUERYMETRICDATAAPI);
 				    if (metricDataResponse == null) {
 					   JenkinsPlugInLogger.severe("No response from APM REST API, hence returning null");
 					   return null;
 				}
-			  }
-			}
-			if (metricDataResponse.getStatusLine().getReasonPhrase().contains("BAD_REQUEST")) {
-				body = body.substring(0, body.indexOf("limit") - 1).concat("\"}");
-				JenkinsPlugInLogger.fine(REQUESTBODY + body);
-				bodyEntity = new StringEntity(body);
-				httpPost.setEntity(bodyEntity);
-				metricDataResponse = httpClient.execute(httpPost);
-			}
-
 		} catch (UnsupportedEncodingException e1) {
 			JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
 		} catch (ClientProtocolException e1) {

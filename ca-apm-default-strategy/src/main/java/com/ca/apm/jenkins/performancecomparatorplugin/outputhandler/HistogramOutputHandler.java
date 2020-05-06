@@ -159,7 +159,8 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 		String endTimeMillis = outputConfiguration.getCommonPropertyValue("runner.end");
 		String emWebViewPort = outputConfiguration.getCommonPropertyValue(Constants.EMWEBVIEWPORT);
 		String appMapURL = null;
-		if(emURL.length() == (emURL.indexOf("/",emURL.lastIndexOf(':'))+1)){
+		boolean emURL_BACKWARD = (emURL.length() == emURL.indexOf("/",emURL.lastIndexOf(':'))+1);
+		if(emURL_BACKWARD){
 			appMapURL = emURL.replace(emURL.substring(emURL.lastIndexOf(':') + 1, emURL.length() - 1), emWebViewPort)
 					+ Constants.EMEXPVIEWURLPOSTFIX_BACKWARD + "&ts1=" + startTimeMillis + "&ts2=" + endTimeMillis;
 		}else{

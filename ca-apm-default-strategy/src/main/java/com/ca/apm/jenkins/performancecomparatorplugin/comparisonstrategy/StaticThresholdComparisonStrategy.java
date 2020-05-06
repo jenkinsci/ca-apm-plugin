@@ -77,6 +77,7 @@ public class StaticThresholdComparisonStrategy implements ComparisonStrategy<Def
 				isFrequencySet = true;
 			}
 		}
+		JenkinsPlugInLogger.fine("frequency = "+comparisonOutput.getFrequency());
 		return isFrequencySet;
 	}
 
