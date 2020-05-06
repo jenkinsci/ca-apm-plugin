@@ -202,9 +202,6 @@ public class MetricDataHelper {
 			metricDataAPI = Constants.QUERYMETRICDATAAPIPRIVATE;
 		}
 		HttpPost httpPost = new HttpPost(generateURL(apmConnectionInfo.getEmURL(), metricDataAPI));
-		JenkinsPlugInLogger.printLogOnConsole(3, "Metricdatahelper..metricDataAPI..entity..."+body);
-		JenkinsPlugInLogger.printLogOnConsole(3, "Metricdatahelper..metricDataAPI..path..."+httpPost.getURI().getPath());
-		JenkinsPlugInLogger.printLogOnConsole(3, "Metricdatahelper..metricDataAPI....."+metricDataAPI);
 		httpPost.addHeader(Constants.AUTHORIZATION, Constants.BEARER + apmConnectionInfo.getEmAuthToken());
 		httpPost.addHeader(Constants.CONTENTTYPE, Constants.APPLICATION_JSON);
 		CloseableHttpResponse metricDataResponse = null;
