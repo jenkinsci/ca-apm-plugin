@@ -1,17 +1,13 @@
 package com.ca.apm.jenkins.core.executor;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.logging.Level;
-
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.ca.apm.jenkins.api.entity.BuildInfo;
 import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
+import com.ca.apm.jenkins.core.entity.PropertiesInfo;
 import com.ca.apm.jenkins.core.helper.DOIHelper;
 import com.ca.apm.jenkins.core.helper.VertexAttributesUpdateHelper;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
@@ -29,36 +25,30 @@ public class ComparisonRunner {
 	private JenkinsInfo jenkinsInfo;
 	private BuildInfo currentBuildInfo;
 	private BuildInfo benchmarkBuildInfo;
-	private String performanceComparatorProperties;
 	private TaskListener taskListener;
-
+	private PropertiesInfo propertiesInfo;
+	
 	public ComparisonRunner() {
 		super();
 	}
 
 	public ComparisonRunner(BuildInfo currentBuildInfo, BuildInfo benchmarkBuildInfo, JenkinsInfo jenkinsInfo,
-			String performanceComparatorProperties, TaskListener taskListener) {
+			 TaskListener taskListener, PropertiesInfo propertiesInfo) {
 		this.jenkinsInfo = jenkinsInfo;
-		this.performanceComparatorProperties = performanceComparatorProperties;
 		this.taskListener = taskListener;
 		this.currentBuildInfo = currentBuildInfo;
 		this.benchmarkBuildInfo = benchmarkBuildInfo;
+		this.propertiesInfo = propertiesInfo;
+							
 	}
-
+	
+	
 	public JenkinsInfo getJenkinsInfo() {
 		return jenkinsInfo;
 	}
 
 	public void setJenkinsInfo(JenkinsInfo jenkinsInfo) {
 		this.jenkinsInfo = jenkinsInfo;
-	}
-
-	public String getPerformanceComparatorProperties() {
-		return performanceComparatorProperties;
-	}
-
-	public void setPerformanceComparatorProperties(String performanceComparatorProperties) {
-		this.performanceComparatorProperties = performanceComparatorProperties;
 	}
 
 	public BuildInfo getCurrentBuildInfo() {
@@ -97,21 +87,6 @@ public class ComparisonRunner {
 
 	}
 
-	private PropertiesConfiguration loadProperties() {
-		PropertiesConfiguration properties = null;
-		try {
-			properties = new PropertiesConfiguration();
-			properties.load(new FileInputStream(performanceComparatorProperties));
-
-		} catch (IOException e) {
-
-			JenkinsPlugInLogger.severe("The configuration file is not found ", e);
-
-		} catch (ConfigurationException e) {
-			JenkinsPlugInLogger.severe("The configuration file has encountered some errors ", e);
-		}
-		return properties;
-	}
 
 	/**
 	 * Main method to start the comparator-plugin execution
@@ -126,13 +101,11 @@ public class ComparisonRunner {
 	public boolean executeComparison() throws BuildValidationException, BuildExecutionException {
 		boolean isFailtheBuild = false;
 
-		PropertiesConfiguration properties = loadProperties();
 		if (jenkinsInfo.getCurrentBuildNumber() == 1) {
 			JenkinsPlugInLogger.log(Level.INFO, "Current build number is first build, hence no comparison will happen");
 			taskListener.getLogger().println("Current build number is first build, hence no comparison will happen");
 
-		} else if (properties.containsKey(Constants.BENCHMARKBUILDNUMBER)
-				&& properties.getProperty(Constants.BENCHMARKBUILDNUMBER).toString().isEmpty()
+		} else if ((propertiesInfo.getCommonPropertyValue(Constants.BENCHMARKBUILDNUMBER) == null || propertiesInfo.getCommonPropertyValue(Constants.BENCHMARKBUILDNUMBER).isEmpty())
 				&& jenkinsInfo.getLastSuccessfulBuildNumber() <= 0) {
 
 			JenkinsPlugInLogger.log(Level.INFO,
@@ -142,7 +115,7 @@ public class ComparisonRunner {
 		} else {
 			try {
 				ComparisonMetadataLoader metadataLoader = new ComparisonMetadataLoader(currentBuildInfo,
-						benchmarkBuildInfo, jenkinsInfo, performanceComparatorProperties);
+						benchmarkBuildInfo, jenkinsInfo, propertiesInfo);
 
 				metadataLoader.loadProperties();
 				metadataLoader.validateConfigurations();

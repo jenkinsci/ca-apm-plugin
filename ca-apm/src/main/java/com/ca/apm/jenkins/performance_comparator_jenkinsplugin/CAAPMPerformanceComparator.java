@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -19,11 +22,15 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.ca.apm.jenkins.api.entity.BuildInfo;
+import com.ca.apm.jenkins.api.entity.StrategyConfiguration;
 import com.ca.apm.jenkins.api.exception.BuildComparatorException;
 import com.ca.apm.jenkins.api.exception.BuildExecutionException;
 import com.ca.apm.jenkins.api.exception.BuildValidationException;
 import com.ca.apm.jenkins.core.entity.JenkinsInfo;
+import com.ca.apm.jenkins.core.entity.OutputHandlerConfiguration;
+import com.ca.apm.jenkins.core.entity.PropertiesInfo;
 import com.ca.apm.jenkins.core.executor.ComparisonRunner;
+import com.ca.apm.jenkins.core.helper.EmailHelper;
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import com.ca.apm.jenkins.core.util.Constants;
 
@@ -63,6 +70,8 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	private String loadGeneratorEndTime;
 	private String loadGeneratorName;
 	private Map<String, String> attribsMap;
+	private PropertiesInfo propertiesInfo;
+	private JenkinsInfo jenkinsInfo;
 
 	private static final String PLUGINTASKFAILEDDUETO = "Plugin Task failed due to :";
 	private static final String LODGENSTARTTIME = "loadGeneratorStartTime";
@@ -70,7 +79,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	private static final String SUCCESS = "SUCCESS";
 	private static final String FAILURE = "FAILURE";
 	private static final String CURRENTBUILDSCMPARAMS = " currentBuildScmParams = ";
-
+	
 	@DataBoundConstructor
 	public CAAPMPerformanceComparator(String performanceComparatorProperties, String loadGeneratorStartTime,
 			String loadGeneratorEndTime, String loadGeneratorName, String attribsStr) {
@@ -120,13 +129,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	}
 
 	private boolean runAction(BuildInfo currentBuildInfo, BuildInfo benchmarkBuildInfo, int previousSuccessfulBuild,
-			List<BuildInfo> histogramBuildInfoList, String workspaceFolder, String jobName, TaskListener taskListener)
+			List<BuildInfo> histogramBuildInfoList, String workspaceFolder, String jobName, TaskListener taskListener, PropertiesInfo propertiesInfo)
 			throws BuildValidationException, BuildExecutionException {
 		boolean comparisonRunStatus = false;
-		JenkinsInfo jenkinsInfo = new JenkinsInfo(currentBuildInfo.getNumber(), previousSuccessfulBuild,
+		 jenkinsInfo = new JenkinsInfo(currentBuildInfo.getNumber(), previousSuccessfulBuild,
 				histogramBuildInfoList, workspaceFolder, jobName);
-		ComparisonRunner runner = new ComparisonRunner(currentBuildInfo, benchmarkBuildInfo, jenkinsInfo,
-				this.performanceComparatorProperties, taskListener);
+		 ComparisonRunner runner = new ComparisonRunner(currentBuildInfo, benchmarkBuildInfo, jenkinsInfo,
+					 taskListener, propertiesInfo);
 		comparisonRunStatus = runner.executeComparison();
 		return comparisonRunStatus;
 	}
@@ -160,8 +169,9 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			throws AbortException {
 		boolean isSuccessful = false;
 		try {
+			JenkinsPlugInLogger.setTaskListener(taskListener);
 			isSuccessful = runAction(currentBuildInfo, benchMarkBuildInfo, previousSuccessfulBuildNumber,
-					histogramBuildInfoList, workspaceFolder, jobName, taskListener);
+					histogramBuildInfoList, workspaceFolder, jobName, taskListener, propertiesInfo);
 		} catch (BuildComparatorException | BuildValidationException | BuildExecutionException e) {
 			taskListener.getLogger().println(PLUGINTASKFAILEDDUETO + e.getMessage());
 			throw new AbortException(
@@ -481,12 +491,18 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	private void loadConfiguration() throws AbortException {
 
 		try {
+			
 			PropertiesConfiguration properties = new PropertiesConfiguration();
 			InputStream input;
 			input = new FileInputStream(this.performanceComparatorProperties);
 			properties.load(input);
 			readBuildsInHistogram(properties);
 			readBenchmarkBuildNumer(properties);
+			propertiesInfo =  new PropertiesInfo();
+			readCommonProperties(properties);
+			readDOIProperties(properties);
+			readStrategiesConfiguration(properties);
+						
 		} catch (ConfigurationException | IOException e) {
 			JenkinsPlugInLogger.severe("The configuration file is not found or configuration error ", e);
 			// fail the build if configuration error
@@ -495,7 +511,127 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			throw new AbortException(e.getMessage());
 		}
 	}
+	
+	private void readCommonProperties(PropertiesConfiguration properties) {
+		
+			
+			 //APMConnectionInfo
+			propertiesInfo.setEmURL(properties.getString(Constants.EMURL));
+			propertiesInfo.setEmAuthToken(properties.getString(Constants.EMAUTHTOKEN));
+			propertiesInfo.setEmTimeZone(properties.getString(Constants.EMTIMEZONE));
+					    
+			//common properties	
+			propertiesInfo.addToCommonProperties(Constants.BENCHMARKBUILDNUMBER, properties.getString(Constants.BENCHMARKBUILDNUMBER));
+			propertiesInfo.addToCommonProperties(Constants.LOGGINGLEVEL, properties.getString(Constants.LOGGINGLEVEL));
+			propertiesInfo.addToCommonProperties(Constants.EXTENSIONSDIRECTORY, properties.getString(Constants.EXTENSIONSDIRECTORY));
+			propertiesInfo.addToCommonProperties(Constants.APPLICATIONNAME, properties.getString(Constants.APPLICATIONNAME));
+			propertiesInfo.addToCommonProperties(Constants.METRICCLAMP, properties.getString(Constants.METRICCLAMP));
+			propertiesInfo.addToCommonProperties(Constants.BUILDPASSORFAIL,properties.getString(Constants.BUILDPASSORFAIL));
+			propertiesInfo.addToCommonProperties(Constants.ISPUBLISHBUILDRESULTTOEM,properties.getString(Constants.ISPUBLISHBUILDRESULTTOEM));
+			propertiesInfo.addToCommonProperties(Constants.ISBUILDCHANGEEVENTTODOI, properties.getString(Constants.ISBUILDCHANGEEVENTTODOI));
+			propertiesInfo.addToCommonProperties(Constants.EMWEBVIEWPORT, properties.getString(Constants.EMWEBVIEWPORT));
+			
+		}
+	
+	private void readDOIProperties(PropertiesConfiguration properties) {
+		
+		
+		propertiesInfo.addToDoiProperties(Constants.APPLICATIONHOST, properties.getString(Constants.APPLICATIONHOST));
+		propertiesInfo.addToDoiProperties(Constants.DOITIMEZONE, properties.getString(Constants.DOITIMEZONE));
+		propertiesInfo.addToDoiProperties(Constants.DOITENANTID, properties.getString(Constants.DOITENANTID));
+		propertiesInfo.addToDoiProperties(Constants.JARVISENDPOINT, properties.getString(Constants.JARVISENDPOINT));
+		
+	}
+	private void readStrategiesConfiguration(PropertiesConfiguration properties) {
+		try {
+			
+			readComparisonStrategiesInformation(properties);
+			readOutputHandlerStrategiesInformation(properties);
+			readEmailProperties(properties);
+		} catch (NoSuchElementException ex) {
+			
+			JenkinsPlugInLogger.severe("Required property not found ", ex);
+			JenkinsPlugInLogger.printLogOnConsole(2, "Missing strategies property, please check logs for more details");
+		}
+		
+		
+	}
+	
+		
+	private void readComparisonStrategiesInformation(PropertiesConfiguration properties) {
+		String[] comparisonStrategies = properties.getStringArray(Constants.COMPARISONSTRATEGIESLIST);
+		StrategyConfiguration strategyConfiguration;
+		for (String comparisonStrategy : comparisonStrategies) {
+			Iterator<String> strategyKeys = properties.getKeys(comparisonStrategy);
+			strategyConfiguration = new StrategyConfiguration();
+			strategyConfiguration.addProperty("name", comparisonStrategy);
+			while (strategyKeys.hasNext()) {
+				String key = strategyKeys.next();
+				if (key.endsWith("." + Constants.OUTPUTHANDLERS)) {
+					String[] outputHandlers = properties.getStringArray(key);
+					addToOutputHandlerToComparisonStrategies(outputHandlers, comparisonStrategy);
 
+				} else if (key.endsWith(Constants.AGENTSPECIFIER)) {
+					// It is mandatory field
+					strategyConfiguration.setAgentSpecifiers(Arrays.asList(properties.getStringArray(key)));
+				} else {
+					strategyConfiguration.addProperty(key, properties.getString(key));
+				}
+			}
+			
+			propertiesInfo.addStrategyConfigProperty(comparisonStrategy, strategyConfiguration);
+		}
+	}
+
+	private void addToOutputHandlerToComparisonStrategies(String[] outputHandlers, String comparisonStrategy) {
+		for (String outputHandler : outputHandlers) {
+			if (outputHandler.isEmpty()) {
+				propertiesInfo.addToNonMappedComparisonStrategies(comparisonStrategy);
+				continue;
+			}
+			
+			propertiesInfo.addToOutputHandlerToComparisonStrategies(outputHandler, comparisonStrategy);
+		}
+	}
+	
+	
+	/////
+	
+	private void readOutputHandlerStrategiesInformation(PropertiesConfiguration properties) {
+
+		
+		String[] outputStrategies = properties.getStringArray(Constants.OUTPUTHANDLERSLIST);
+		OutputHandlerConfiguration outputHandlerInfo ;
+		if (outputStrategies.length == 1 && outputStrategies[0].length() == 0) {
+			JenkinsPlugInLogger.severe("No Output Handler Defined in the configuration");
+			return;
+		}
+		for (String outputHandler : outputStrategies) {
+			outputHandlerInfo = new OutputHandlerConfiguration();
+			Iterator<String> strategyKeys = properties.getKeys(outputHandler);
+			while (strategyKeys.hasNext()) {
+				String key = strategyKeys.next();
+				outputHandlerInfo.addProperty(key, properties.getString(key));
+			}
+			outputHandlerInfo.addProperty("name", outputHandler);
+			propertiesInfo.addOutputHandlerConfig(outputHandler, outputHandlerInfo);
+			
+		}
+	}
+
+	private void readEmailProperties(PropertiesConfiguration properties){
+		Iterator<String> keys = properties.getKeys("email");
+		while (keys.hasNext()) {
+			String key = keys.next();
+			String value = properties.getString(key);
+			if (key.equals("email.password")) {
+				value = EmailHelper.passwordEncrytion(properties, key, value, performanceComparatorProperties);
+			}
+			propertiesInfo.addToEmailProperties(key, value);
+			
+		}
+	}
+	
 	@Extension
 	@Symbol("caapmplugin")
 	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {

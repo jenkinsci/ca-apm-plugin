@@ -1,5 +1,6 @@
 package com.ca.apm.jenkins.api.entity;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
  *
  * @author Avinash Chandwani
  */
-public class StrategyConfiguration {
+public class StrategyConfiguration implements Serializable {
 
   private List<String> agentSpecifiers;
   private Map<String, String> properties;

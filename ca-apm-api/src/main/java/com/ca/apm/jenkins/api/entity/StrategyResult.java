@@ -1,5 +1,7 @@
 package com.ca.apm.jenkins.api.entity;
 
+import java.io.Serializable;
+
 /**
  * A wrapper class for one comparison-strategy's result. The return type of each
  * comparison-strategy has to be of this type. You can define your own T and
@@ -16,7 +18,7 @@ package com.ca.apm.jenkins.api.entity;
  * @param <T>
  *            You can define your own T as mentioned above
  */
-public class StrategyResult<T> {
+public class StrategyResult<T> implements Serializable {
 
 	private String strategyName;
 	private T result;

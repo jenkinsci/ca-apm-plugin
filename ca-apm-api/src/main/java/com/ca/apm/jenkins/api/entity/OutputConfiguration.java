@@ -1,5 +1,6 @@
 package com.ca.apm.jenkins.api.entity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.Map;
  *
  * @author Avinash Chandwani
  */
-public class OutputConfiguration {
+public class OutputConfiguration implements Serializable {
 
   private Map<String, String> commonProperties;
   private Map<String, String> handlerSpecificProperties;

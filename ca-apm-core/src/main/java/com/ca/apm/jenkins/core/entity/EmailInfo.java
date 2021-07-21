@@ -1,10 +1,11 @@
 package com.ca.apm.jenkins.core.entity;
 
-import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 
 /**
  * This entity holds the email information which you want to send to the users on the completion of

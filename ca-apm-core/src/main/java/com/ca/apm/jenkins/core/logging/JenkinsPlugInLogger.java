@@ -1,5 +1,6 @@
 package com.ca.apm.jenkins.core.logging;
 
+import java.io.Serializable;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,7 +16,7 @@ import hudson.model.TaskListener;
  *
  * @author Avinash Chandwani
  */
-public class JenkinsPlugInLogger {
+public class JenkinsPlugInLogger implements Serializable {
 
 	private static Logger logger = Logger.getLogger("JP_LOGGER");
 
@@ -220,7 +221,9 @@ public class JenkinsPlugInLogger {
 			consoleLogString.append(" ");
 		}
 		consoleLogString.append(message);
-		taskListener.getLogger().println(consoleLogString.toString());
+		if(taskListener!=null && taskListener.getLogger()!=null) {
+			taskListener.getLogger().println(consoleLogString.toString());
+		}
 	}
 
 }

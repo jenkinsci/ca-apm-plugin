@@ -1,10 +1,11 @@
 package com.ca.apm.jenkins.core.entity;
 
-import com.ca.apm.jenkins.api.entity.BuildInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.ca.apm.jenkins.api.entity.BuildInfo;
 
 /**
  * An entity which contains the information about the metadata of the load-runner provided by the

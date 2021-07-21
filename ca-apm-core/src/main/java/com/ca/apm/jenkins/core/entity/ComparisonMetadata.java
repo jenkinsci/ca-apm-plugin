@@ -1,11 +1,12 @@
 package com.ca.apm.jenkins.core.entity;
 
-import com.ca.apm.jenkins.api.entity.OutputConfiguration;
-import com.ca.apm.jenkins.api.entity.StrategyResult;
-import com.ca.apm.jenkins.core.util.IOUtility;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.ca.apm.jenkins.api.entity.OutputConfiguration;
+import com.ca.apm.jenkins.api.entity.StrategyResult;
+import com.ca.apm.jenkins.core.util.IOUtility;
 
 /**
  * The class is responsible to read all the configurations provided by the user
