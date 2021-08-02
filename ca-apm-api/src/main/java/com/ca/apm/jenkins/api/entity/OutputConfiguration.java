@@ -19,6 +19,7 @@ public class OutputConfiguration implements Serializable {
   private Map<String, String> handlerSpecificProperties;
   private List<BuildInfo> histogramBuildInfoList;
   private Map<String,Map<String, String>> scmRepoAttribs = new HashMap<>();
+  private Map<String, BuildInfo> appToBenchmarkBuildInfo ; 
 
   public OutputConfiguration() {
     super();
@@ -70,6 +71,14 @@ public class OutputConfiguration implements Serializable {
 	    }
 	    return null;
   }
+
+	public Map<String, BuildInfo> getAppToBenchmarkBuildInfo() {
+		return appToBenchmarkBuildInfo;
+	}
+	
+	public void setAppToBenchmarkBuildInfo(Map<String, BuildInfo> appToBenchmarkBuildInfo) {
+		this.appToBenchmarkBuildInfo = appToBenchmarkBuildInfo;
+	}
   
  
 }

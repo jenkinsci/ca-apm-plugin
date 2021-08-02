@@ -29,6 +29,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.ca.apm.jenkins.api.entity.BuildInfo;
 import com.ca.apm.jenkins.api.entity.OutputConfiguration;
 import com.ca.apm.jenkins.core.entity.APMConnectionInfo;
 import com.ca.apm.jenkins.core.entity.ComparisonMetadata;
@@ -266,7 +267,7 @@ public class VertexAttributesUpdateHelper {
 		return processStatus;
 	}
 
-	private boolean getVertexIds(Map<String, String> attributesMap, String applicationName,
+	private boolean getVertexIds(Map<String, String> attributesMap, ComparisonMetadata comparisonMetadata,
 			OutputConfiguration outputConfiguration) {
 
 		boolean processStatus = false;
@@ -277,12 +278,18 @@ public class VertexAttributesUpdateHelper {
 					apmConnectionInfo.getEmTimeZone());
 			attributesMap.put("loadGeneratorStartTime", emDateTime[0]);
 			attributesMap.put("loadGeneratorEndTime", emDateTime[1]);
-			applicationName = applicationName.replace(" ", "%20C");
+			for(String applicationName : comparisonMetadata.getAppsToPublishBuildResultToEM()){
+			  
+			  for(Map.Entry<String, BuildInfo> entry : comparisonMetadata.getLoadRunnerMetadataInfo().getAppToBenchMarkBuildInfo().entrySet())
+				  if(entry.getKey().equals(applicationName))
+			  attributesMap.put("benchMarkBuildNumber", String.valueOf(entry.getValue().getNumber()));
+					  applicationName = applicationName.replace(" ", "%20C");
 			CloseableHttpResponse response = getVertexIds(applicationName);
 			if (response != null && Response.Status.OK.getStatusCode() == response.getStatusLine().getStatusCode()) {
 
 				processStatus = readResponse(response, processStatus, attributesMap, applicationName);
 
+			}
 			}
 		} catch (Exception e) {
 			JenkinsPlugInLogger.printLogOnConsole(2, e.getMessage());
@@ -297,9 +304,7 @@ public class VertexAttributesUpdateHelper {
 		OutputConfiguration outputConfiguration = comparisonMetadata.getOutputConfiguration();
 		attributesMap.put("currentBuildNumber",
 				outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD));
-		attributesMap.put("benchMarkBuildNumber",
-				outputConfiguration.getCommonPropertyValue(Constants.JENKINSBENCHMARKBUILD));
-
+		
 		if (outputConfiguration.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS) != null) {
 			for (Map.Entry<String, String> scmRepoEntry : outputConfiguration
 					.getSCMRepoAttribValue(Constants.JENKINSCURRENTBUILDSCMREPOPARAMS).entrySet()) {
@@ -314,8 +319,7 @@ public class VertexAttributesUpdateHelper {
 		
 		attributesMap.put("buildStatus", buildStatus);
 		
-		String applicationName = comparisonMetadata.getCommonPropertyValue(Constants.APPLICATIONNAME);
-		return getVertexIds(attributesMap, applicationName, outputConfiguration);
+		return getVertexIds(attributesMap, comparisonMetadata, outputConfiguration);
 
 	}
 

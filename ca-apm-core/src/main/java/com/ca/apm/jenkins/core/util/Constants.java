@@ -81,6 +81,7 @@ public class Constants {
 	public static final String EMAILSMTPHOST = "email.smtp.host";
 	public static final String EMAILSMTPAUTH = "email.smtp.auth";
 	public static final String EMAILSENDERID = "email.sender.id";
+	public static final String EMAILPWD = "email.password";
 	public static final String EMAILTORECIPIENTS = "email.recepients.to";
 	public static final String EMAILCCRECIPIENTS = "email.recepients.cc";
 	public static final String EMAILBCCRECIPIENTS = "email.recepients.bcc";

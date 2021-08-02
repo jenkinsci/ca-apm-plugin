@@ -24,7 +24,6 @@ public class ComparisonRunner {
 
 	private JenkinsInfo jenkinsInfo;
 	private BuildInfo currentBuildInfo;
-	private BuildInfo benchmarkBuildInfo;
 	private TaskListener taskListener;
 	private PropertiesInfo propertiesInfo;
 	
@@ -32,12 +31,11 @@ public class ComparisonRunner {
 		super();
 	}
 
-	public ComparisonRunner(BuildInfo currentBuildInfo, BuildInfo benchmarkBuildInfo, JenkinsInfo jenkinsInfo,
+	public ComparisonRunner(BuildInfo currentBuildInfo, JenkinsInfo jenkinsInfo,
 			 TaskListener taskListener, PropertiesInfo propertiesInfo) {
 		this.jenkinsInfo = jenkinsInfo;
 		this.taskListener = taskListener;
 		this.currentBuildInfo = currentBuildInfo;
-		this.benchmarkBuildInfo = benchmarkBuildInfo;
 		this.propertiesInfo = propertiesInfo;
 							
 	}
@@ -51,22 +49,6 @@ public class ComparisonRunner {
 		this.jenkinsInfo = jenkinsInfo;
 	}
 
-	public BuildInfo getCurrentBuildInfo() {
-		return currentBuildInfo;
-	}
-
-	public void setCurrentBuildInfo(BuildInfo currentBuildInfo) {
-		this.currentBuildInfo = currentBuildInfo;
-	}
-
-	public BuildInfo getBenchmarkBuildInfo() {
-		return benchmarkBuildInfo;
-	}
-
-	public void setBenchmarkBuildInfo(BuildInfo benchmarkBuildInfo) {
-		this.benchmarkBuildInfo = benchmarkBuildInfo;
-	}
-
 	private void execute(ComparisonMetadataLoader metadataLoader, boolean isFailtheBuild,
 			OutputHandlingExecutor outputHandlingExecutor) {
 
@@ -74,13 +56,13 @@ public class ComparisonRunner {
 				.setStatus(isFailtheBuild ? "FAILURE" : "SUCCESS");
 		outputHandlingExecutor.execute(metadataLoader.getComparisonMetadata().getOutputConfiguration(), isFailtheBuild);
 
-		if (metadataLoader.getComparisonMetadata().isPublishBuildResulttoEM()) {
+		if (metadataLoader.getComparisonMetadata().getAppsToPublishBuildResultToEM()!=null) {
 			VertexAttributesUpdateHelper vertexAttributesUpdateHelper = new VertexAttributesUpdateHelper(
 					metadataLoader.getComparisonMetadata());
 			vertexAttributesUpdateHelper.updateAttributeOfVertex(!isFailtheBuild);
 		}
 
-		if (metadataLoader.getComparisonMetadata().isBuildChangeEventtoDOI()) {
+		if (metadataLoader.getComparisonMetadata().getDoiAppsToHostname() != null && !metadataLoader.getComparisonMetadata().getDoiAppsToHostname().isEmpty()) {
 			DOIHelper doiHelper = new DOIHelper(metadataLoader.getComparisonMetadata());
 			doiHelper.sendBuildChangeEventtoDOI();
 		}
@@ -105,17 +87,10 @@ public class ComparisonRunner {
 			JenkinsPlugInLogger.log(Level.INFO, "Current build number is first build, hence no comparison will happen");
 			taskListener.getLogger().println("Current build number is first build, hence no comparison will happen");
 
-		} else if ((propertiesInfo.getCommonPropertyValue(Constants.BENCHMARKBUILDNUMBER) == null || propertiesInfo.getCommonPropertyValue(Constants.BENCHMARKBUILDNUMBER).isEmpty())
-				&& jenkinsInfo.getLastSuccessfulBuildNumber() <= 0) {
-
-			JenkinsPlugInLogger.log(Level.INFO,
-					"There is no previous successful build, hence no comparison will happen");
-			taskListener.getLogger().println("There is no previous successful build, hence no comparison will happen");
-
 		} else {
 			try {
 				ComparisonMetadataLoader metadataLoader = new ComparisonMetadataLoader(currentBuildInfo,
-						benchmarkBuildInfo, jenkinsInfo, propertiesInfo);
+						 jenkinsInfo, propertiesInfo);
 
 				metadataLoader.loadProperties();
 				metadataLoader.validateConfigurations();

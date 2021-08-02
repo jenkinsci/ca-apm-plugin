@@ -40,6 +40,8 @@ public class ComparisonExecutor {
 		APMConnectionInfo apmConnectionInfo = null;
 		StringBuilder builder = new StringBuilder();
 		StrategyConfiguration strategyConfiguration = comparisonStrategyEntry.getValue();
+		JenkinsPlugInLogger.info("Executing comparisonStrategy " + comparisonStrategyEntry.getKey());
+
 		String comparatorClass = strategyConfiguration
 				.getPropertyValue(comparisonStrategyEntry.getKey() + "." + Constants.COMPARATORCLASSSNAME);
 		try {
@@ -53,14 +55,21 @@ public class ComparisonExecutor {
 			setPropertiesMethod.invoke(comparisonStrategyObj, strategyConfiguration);
 			Method compareMethod = pluginClass.getDeclaredMethod(Constants.COMPARATOREXECUTEMETHOD, BuildInfo.class,
 					BuildInfo.class);
-
+			BuildInfo benchmarkBuildInfo = new BuildInfo();
+			for (Map.Entry<String, BuildInfo> entry : comparisonMetadata.getLoadRunnerMetadataInfo()
+					.getAppToBenchMarkBuildInfo().entrySet()) {
+				if (comparisonStrategyEntry.getKey().substring(0, comparisonStrategyEntry.getKey().indexOf('.'))
+						.equals(entry.getKey())) {
+					benchmarkBuildInfo = entry.getValue();
+					break;
+				}
+			}
 			JenkinsPlugInLogger.fine("Before calling comparison-strategy, currentBuildInfo="
 					+ comparisonMetadata.getLoadRunnerMetadataInfo().getCurrentBuildInfo() + " and benchmarkBuildInfo="
-					+ comparisonMetadata.getLoadRunnerMetadataInfo().getBenchMarkBuildInfo());
+					+ benchmarkBuildInfo);
 
 			StrategyResult<?> strategyResult = (StrategyResult<?>) compareMethod.invoke(comparisonStrategyObj,
-					comparisonMetadata.getLoadRunnerMetadataInfo().getBenchMarkBuildInfo(),
-					comparisonMetadata.getLoadRunnerMetadataInfo().getCurrentBuildInfo());
+					benchmarkBuildInfo, comparisonMetadata.getLoadRunnerMetadataInfo().getCurrentBuildInfo());
 			if (strategyResult == null) {
 				JenkinsPlugInLogger.severe("No result obtained from " + comparisonStrategyEntry.getKey());
 			} else {

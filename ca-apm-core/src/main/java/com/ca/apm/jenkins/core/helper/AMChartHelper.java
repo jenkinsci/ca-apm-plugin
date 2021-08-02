@@ -1,5 +1,7 @@
 package com.ca.apm.jenkins.core.helper;
 
+import com.ca.apm.jenkins.api.entity.BuildInfo;
+import com.ca.apm.jenkins.api.entity.OutputConfiguration;
 import com.ca.apm.jenkins.api.entity.StrategyResult;
 import com.ca.apm.jenkins.core.entity.AgentComparisonResult;
 import com.ca.apm.jenkins.core.entity.DefaultStrategyResult;
@@ -242,7 +244,8 @@ public class AMChartHelper {
 	 * provided to it It generates one chart per comparison-strategy in the
 	 * chartoutput folder current build's workspace directory The HTML output
 	 * file is present in output folder inside chartoutput folder
-	 *
+	 *@param outputConfiguration
+	 *            The OutputConfiguration
 	 * @param strategyResults
 	 *            The list of strategy results which are mapped to this
 	 *            output-handler
@@ -250,25 +253,30 @@ public class AMChartHelper {
 	 *            The Jenkins workspace folder
 	 * @param jobName
 	 *            The Jenkins Job Name
-	 * @param benchMarkBuildNumber
-	 *            Benchmarck build number
 	 * @param currentBuildNumber
 	 *            Current Build Number
 	 */
 	@SuppressWarnings("rawtypes")
-	public static void produceChartOutput(List<StrategyResult> strategyResults, String workspaceFolder, String jobName,
-			String benchMarkBuildNumber, String currentBuildNumber, String appMapURL, String[] graphAttribs) {
+	public static void produceChartOutput(OutputConfiguration outputConfiguration, List<StrategyResult> strategyResults, String workspaceFolder, String jobName,
+			 String currentBuildNumber, String appMapURL, String[] graphAttribs) {
 		Map<String, List<JenkinsAMChart>> strategyWiseCharts = null;
 		strategyWiseCharts = new LinkedHashMap<>();
 		for (StrategyResult<?> strategyResult : strategyResults) {
 			String strategyName = strategyResult.getStrategyName();
+			
 			if (strategyResult.getResult().getClass().getName()
 					.equals("com.ca.apm.jenkins.core.entity.DefaultStrategyResult")) {
-
+                  String benchMarkBuildNumber = "";
 				if (strategyResult.getResult() != null) {
 
 					List<JenkinsAMChart> strategyChart = null;
 					DefaultStrategyResult defaultStrategyResult = (DefaultStrategyResult) strategyResult.getResult();
+					for(Map.Entry<String, BuildInfo> entry : outputConfiguration.getAppToBenchmarkBuildInfo().entrySet()){
+						if(strategyName.substring(0, strategyName.indexOf('.')).equals(entry.getKey())){
+							benchMarkBuildNumber = String.valueOf(entry.getValue().getNumber());
+						}
+					}
+					
 					strategyChart = getChartsForOneStrategy(defaultStrategyResult, benchMarkBuildNumber,
 							currentBuildNumber);
 					strategyWiseCharts.put(strategyName, strategyChart);

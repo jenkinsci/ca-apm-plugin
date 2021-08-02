@@ -41,19 +41,20 @@ public class DOIHelper {
 		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
 			StringEntity bodyEntity;
-			String body = createBuildChangeEventDataRequestBody().toString();
-			bodyEntity = new StringEntity(body);
-			httpPost.setEntity(bodyEntity);
-			changeEventOIResponse = httpClient.execute(httpPost);
-			InputStream is = changeEventOIResponse.getEntity().getContent();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-			StringBuilder out = new StringBuilder();
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				out.append(line);
+			for(Map.Entry<String, String> entry : comparisonMetadata.getDoiAppsToHostname().entrySet()){
+				String body = createBuildChangeEventDataRequestBody(entry.getKey(), entry.getValue()).toString();
+				bodyEntity = new StringEntity(body);
+				httpPost.setEntity(bodyEntity);
+				changeEventOIResponse = httpClient.execute(httpPost);
+				InputStream is = changeEventOIResponse.getEntity().getContent();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+				StringBuilder out = new StringBuilder();
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					out.append(line);
+				}
+				reader.close();
 			}
-			reader.close();
-
 		} catch (Exception ex) {
 			JenkinsPlugInLogger.severe("Error while pushing the build change event data to OI ->" + ex.getMessage(),
 					ex);
@@ -61,7 +62,7 @@ public class DOIHelper {
 	}
 
 	@SuppressWarnings("unused")
-	private JSONObject createBuildChangeEventDataRequestBody() {
+	private JSONObject createBuildChangeEventDataRequestBody(String applicationName, String applicationHost) {
 		Map<String, String> scmRepoVarsMap = null;
 		OutputConfiguration outputConfiguration = comparisonMetadata.getOutputConfiguration();
 		StringBuilder message = new StringBuilder();
@@ -70,11 +71,9 @@ public class DOIHelper {
 		String currentBuildNumber = outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD);
 		JenkinsPlugInLogger.info(" SCMRepoVarsMap in DOIHELPER : " + scmRepoVarsMap);
 
-		String applicationHost = comparisonMetadata.getCommonPropertyValue(Constants.APPLICATIONHOST);
 		String doiTenantID = comparisonMetadata.getCommonPropertyValue(Constants.DOITENANTID);
 		String doiTimeZone = comparisonMetadata.getCommonPropertyValue(Constants.DOITIMEZONE);
-		String applicationName = comparisonMetadata.getCommonPropertyValue(Constants.APPLICATIONNAME);
-
+		
 		String doiTimeStamp = JenkinsPluginUtility.getOITimeinDateFormat(doiTimeZone);
 		
 		String event_unique_id = "Jenkins-" + UUID.randomUUID().toString() + "-" + (new Date().getTime());
@@ -110,13 +109,13 @@ public class DOIHelper {
 		documentObj.put("header", header);
 		documentObj.put("body", bodyArray);
 
-		JSONObject buildChnageEventJsonObj = new JSONObject();
+		JSONObject buildChangeEventJsonObj = new JSONObject();
 		JSONArray documents = new JSONArray();
 		documents.put(documentObj);
-		buildChnageEventJsonObj.put("documents", documents);
-
-		JenkinsPlugInLogger.info("Metric JSON data..str...." + buildChnageEventJsonObj);
-		return buildChnageEventJsonObj;
+		buildChangeEventJsonObj.put("documents", documents);
+	
+		JenkinsPlugInLogger.info("Metric JSON data..str...." + buildChangeEventJsonObj);
+		return buildChangeEventJsonObj;
 	}
 
 }

@@ -27,7 +27,6 @@ public class ChartOutputHandler implements OutputHandler<StrategyResult> {
 	public void publishOutput(List<StrategyResult> strategyResults) throws BuildExecutionException {
 		SimpleDateFormat format = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss z");
 		String currentBuildNumber = outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD);
-		String benchMarkBuildNumber = outputConfiguration.getCommonPropertyValue(Constants.JENKINSBENCHMARKBUILD);
 		String workspaceFolder = outputConfiguration.getCommonPropertyValue(Constants.WORKSPACEDIRECTORY);
 		String jobName = outputConfiguration.getCommonPropertyValue(Constants.JENKINSJOBNAME);
 		String emWebViewPort = outputConfiguration.getCommonPropertyValue(Constants.EMWEBVIEWPORT);
@@ -46,7 +45,6 @@ public class ChartOutputHandler implements OutputHandler<StrategyResult> {
 		String endDateTime = format.format(Long.parseLong(endTimeMillis));
 		String frequency = outputConfiguration.getCommonPropertyValue("frequency") + "ms";
 		String[] graphAttribs = new String[] { startDateTime, endDateTime, frequency };
-		AMChartHelper.produceChartOutput(strategyResults, workspaceFolder, jobName, benchMarkBuildNumber,
-				currentBuildNumber, appMapURL, graphAttribs);
+		AMChartHelper.produceChartOutput(outputConfiguration, strategyResults, workspaceFolder, jobName, currentBuildNumber, appMapURL, graphAttribs);
 	}
 }

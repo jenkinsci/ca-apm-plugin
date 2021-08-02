@@ -2,6 +2,7 @@ package com.ca.apm.jenkins.core.entity;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.ca.apm.jenkins.api.entity.OutputConfiguration;
@@ -29,8 +30,19 @@ public class ComparisonMetadata {
 	private String jobWorkSpaceFolder;
 	private boolean failTheBuild;
 	private Map<String, String> commonProperties;
-	private boolean isPublishBuildResulttoEM;
-	private boolean isBuildChangeEventtoDOI;
+	private List<String> appsToPublishBuildResultToEM;
+	
+	//publishBuildChangeEventtoDOI application name to host map
+	 private Map<String, String> doiAppsToHostname ;
+	  
+	  
+	public Map<String, String> getDoiAppsToHostname() {
+		return doiAppsToHostname;
+	}
+
+	public void setDoiAppsToHostname(Map<String, String> doiAppsToHostname) {
+		this.doiAppsToHostname = doiAppsToHostname;
+	}
 
 	public ComparisonMetadata(JenkinsInfo jenkinsInfo) {
 		this.jenkinsInfo = jenkinsInfo;
@@ -120,22 +132,16 @@ public class ComparisonMetadata {
 		return null;
 	}
 
-	public boolean isPublishBuildResulttoEM() {
-		return isPublishBuildResulttoEM;
+
+	public List<String> getAppsToPublishBuildResultToEM() {
+		return appsToPublishBuildResultToEM;
 	}
 
-	public void setPublishBuildResulttoEM(boolean isPublishBuildResulttoEM) {
-		this.isPublishBuildResulttoEM = isPublishBuildResulttoEM;
+	public void setAppsToPublishBuildResultToEM(List<String> appsToPublishBuildResultToM) {
+		this.appsToPublishBuildResultToEM = appsToPublishBuildResultToM;
 	}
-
-	public boolean isBuildChangeEventtoDOI() {
-		return isBuildChangeEventtoDOI;
-	}
-
-	public void setBuildChangeEventtoDOI(boolean isBuildChangeEventtoDOI) {
-		this.isBuildChangeEventtoDOI = isBuildChangeEventtoDOI;
-	}
-
+	
+	
 	@Override
 	public String toString() {
 		return "ComparisonMetadata [jenkinsInfo=" + jenkinsInfo + ", apmConnectionInfo=" + apmConnectionInfo
@@ -143,7 +149,7 @@ public class ComparisonMetadata {
 				+ ", comparisonResult=" + comparisonResult + ", outputConfiguration=" + outputConfiguration
 				+ ", ioUtility=" + ioUtility + ", isMetadataIsIncorrect=" + isMetadataIsIncorrect
 				+ ", jobWorkSpaceFolder=" + jobWorkSpaceFolder + ", failTheBuild=" + failTheBuild
-				+ ", commonProperties=" + commonProperties + ", isPublishBuildResulttoEM=" + isPublishBuildResulttoEM
-				+ ", isBuildChangeEventtoDOI=" + isBuildChangeEventtoDOI + "]";
+				+ ", commonProperties=" + commonProperties + ", isPublishBuildResulttoEM=" + appsToPublishBuildResultToEM
+				+ ", isBuildChangeEventtoDOI=" + doiAppsToHostname + "]";
 	}
 }

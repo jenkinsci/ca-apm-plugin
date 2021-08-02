@@ -2,8 +2,10 @@ package com.ca.apm.jenkins.core.entity;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 
@@ -24,7 +26,9 @@ public class EmailInfo {
   private String mailMode;
   private String gmailSmtpPort;
   private String gmailSocketPort;
-  private List<String> toRecipients;
+ 
+  //to recipients
+  private Map<String, List<String>> appToRecipients;
   private List<String> ccRecipients;
   private List<String> bccRecipients;
 
@@ -36,18 +40,6 @@ public class EmailInfo {
 
   public EmailInfo() {
     super();
-  }
-
-  public void setRecipients(String recipientsList) {
-    String[] emailIds = recipientsList.split(",");
-    if (emailIds.length == 0) {
-      JenkinsPlugInLogger.warning(
-          "No Email id found in the output settings, hence email won't be sent");
-    } else {
-      for (String emailId : emailIds) {
-        toRecipients.add(emailId);
-      }
-    }
   }
 
   public String getSenderEmailId() {
@@ -137,12 +129,15 @@ public class EmailInfo {
     this.bccRecipients = bccRecipients;
   }
 
-  public List<String> getToRecipients() {
-    return toRecipients;
+  public Map<String, List<String>> getAppToRecipients() {
+    return appToRecipients;
   }
 
-  public void setToRecipients(List<String> recipients) {
-    this.toRecipients = recipients;
+  public void addAppToRecipients(String applicationName, List<String> recipients) {
+	  if(appToRecipients == null)
+		  appToRecipients = new HashMap<String, List<String>>();
+	  appToRecipients.put(applicationName, recipients);
+    
   }
   public String getMailMode() {
 	  return mailMode; 
