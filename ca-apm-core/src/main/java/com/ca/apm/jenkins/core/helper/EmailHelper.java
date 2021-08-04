@@ -132,19 +132,21 @@ public class EmailHelper {
         return false;
       }
     
-      if (emailInfo.getAppToRecipients() != null) {
-        message.setSubject(emailInfo.getMessageSubject());
-        message.setContent(emailInfo.getMessageBody(), emailInfo.getMessageContentType());
+       	message.setSubject(emailInfo.getMessageSubject());
         if (emailInfo.getAttachments() != null && !emailInfo.getAttachments().isEmpty()) {
           Multipart multipart = attachFile(emailInfo);
           message.setContent(multipart);
         }
-      }
       for(Map.Entry<String, List<String>> entry : htmlOutputToRecipients.entrySet()){
+    	  addRecipientToMessage(message, entry.getValue());
     	  emailInfo.setMessageBody(entry.getKey());
-      addRecipientToMessage(message, entry.getValue());
-      Transport.send(message);
-      JenkinsPlugInLogger.info("Email Sent Successfully");
+    	  message.setContent(emailInfo.getMessageBody(), emailInfo.getMessageContentType());
+    	  if (emailInfo.getAttachments() != null && !emailInfo.getAttachments().isEmpty()) {
+              Multipart multipart = attachFile(emailInfo);
+              message.setContent(multipart);
+           }  	 
+           Transport.send(message);
+           JenkinsPlugInLogger.info("Email Sent Successfully");
       }
       isSent = true;
     } catch (MessagingException e) {

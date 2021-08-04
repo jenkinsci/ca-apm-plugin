@@ -7,8 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
-
 /**
  * This entity holds the email information which you want to send to the users on the completion of
  * Jenkins Plugin Run The basic fields will be populated by the plug-in based upon the

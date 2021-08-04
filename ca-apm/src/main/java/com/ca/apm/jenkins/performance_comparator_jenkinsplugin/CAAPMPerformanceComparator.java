@@ -589,7 +589,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		}
 
 		if (properties.getString(Constants.ISPUBLISHBUILDRESULTTOEM) != null
-				&& properties.getString(Constants.ISPUBLISHBUILDRESULTTOEM) == "true") {
+				&& properties.getString(Constants.ISPUBLISHBUILDRESULTTOEM).equals("true")) {
 			propertiesInfo.addAppsToPublishBuildResultToEM(properties.getString(Constants.APPLICATIONNAME));
 		}
 		if (properties.getString(Constants.ISBUILDCHANGEEVENTTODOI) != null) {
@@ -597,7 +597,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 					properties.getString(Constants.ISBUILDCHANGEEVENTTODOI));
 		}
 		if (properties.getString(Constants.ISBUILDCHANGEEVENTTODOI) != null
-				&& properties.getString(Constants.ISBUILDCHANGEEVENTTODOI) == "true") {
+				&& properties.getString(Constants.ISBUILDCHANGEEVENTTODOI).equals("true")) {
 			if (properties.getString(Constants.APPLICATIONHOST) == null
 					|| properties.getString(Constants.APPLICATIONHOST).isEmpty()) {
 				JenkinsPlugInLogger.printLogOnConsole(1,
