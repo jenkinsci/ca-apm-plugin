@@ -1,6 +1,7 @@
 package com.ca.apm.jenkins.performancecomparatorplugin.outputhandler;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.List;
 
 import com.ca.apm.jenkins.api.OutputHandler;
@@ -25,6 +26,7 @@ public class ChartOutputHandler implements OutputHandler<StrategyResult> {
 	}
 
 	public void publishOutput(List<StrategyResult> strategyResults) throws BuildExecutionException {
+		Collections.sort(strategyResults, StrategyResult.nameComparator);
 		SimpleDateFormat format = new SimpleDateFormat("dd MMMM yyyy HH:mm:ss z");
 		String currentBuildNumber = outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD);
 		String workspaceFolder = outputConfiguration.getCommonPropertyValue(Constants.WORKSPACEDIRECTORY);

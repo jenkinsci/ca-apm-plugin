@@ -503,29 +503,40 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		appToBenchmarkBuildInfo.put(properties.getString(Constants.APPLICATIONNAME), benchmarkBuildInfo);
 	}
 
+	private void loadFile(File file) throws AbortException {
+		try {
+			JenkinsPlugInLogger.printLogOnConsole(1, "Loading config file  " + file.getPath());
+			InputStream input = new FileInputStream(file.toString());
+			PropertiesConfiguration properties = new PropertiesConfiguration();
+			properties.load(input);
+			readConfigFiles(properties, file.toString());
+		} catch (FileNotFoundException | ConfigurationException | AbortException e) {
+			throw new AbortException(e.getMessage());
+		}
+	}
+
 	private void getFiles(File configFolder) throws AbortException {
-		PropertiesConfiguration properties;
-		InputStream input;
 
 		if (configFolder.listFiles() != null) {
-			for (File file : configFolder.listFiles()) {
 
-				try {
-					if (!file.isDirectory()) {
-						JenkinsPlugInLogger.printLogOnConsole(1, "Loading config file  " + file.getPath());
-						input = new FileInputStream(file.toString());
-						properties = new PropertiesConfiguration();
-						properties.load(input);
-						readConfigFiles(properties, file.toString());
-					} else if ((file.isDirectory())) {
-						getFiles(file);
-					}
-				} catch (FileNotFoundException | ConfigurationException | AbortException e) {
-					throw new AbortException(e.getMessage());
+			for (File file : configFolder.listFiles()) {
+				if (!file.isDirectory()) {
+					loadFile(file);
+					break;
 				}
 			}
-		}
+			for (File file : configFolder.listFiles()) {
+				if (file.isDirectory()) {
+					for (File appfile : file.listFiles()) {
+						loadFile(appfile);
+					}
+				}
+			}
 
+		} else {
+			JenkinsPlugInLogger.severe("There are no configuration files provided ");
+			return;
+		}
 	}
 
 	private void loadConfiguration() throws AbortException {
@@ -568,6 +579,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			propertiesInfo.setEmTimeZone(properties.getString(Constants.EMTIMEZONE));
 		}
 
+		propertiesInfo.addToCommonProperties(Constants.LOADGENERATORNAME, loadGeneratorName);
 		if (properties.getString(Constants.LOGGINGLEVEL) != null) {
 			propertiesInfo.addToCommonProperties(Constants.LOGGINGLEVEL, properties.getString(Constants.LOGGINGLEVEL));
 		}

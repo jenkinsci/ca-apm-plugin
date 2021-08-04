@@ -467,6 +467,10 @@ public class ComparisonMetadataLoader {
 				comparisonMetadata.addToCommonProperties(Constants.METRICCLAMP,
 						propertiesInfo.getCommonPropertyValue(Constants.METRICCLAMP));
 			}
+			
+			comparisonMetadata.addToCommonProperties(Constants.LOADGENERATORNAME,
+					propertiesInfo.getCommonPropertyValue(Constants.LOADGENERATORNAME));
+			
 			MetricDataHelper.setMetricClamp(comparisonMetadata.getCommonPropertyValue(Constants.METRICCLAMP));
 			comparisonMetadata.setDoiAppsToHostname(propertiesInfo.getDOIAppsToHostname());
 			readDOIProperties();
@@ -580,6 +584,8 @@ public class ComparisonMetadataLoader {
 		outputConfiguration.addToCommonProperties("runner.start", "" + startTime);
 		outputConfiguration.addToCommonProperties("runner.end", "" + endTime);
 		outputConfiguration.addToCommonProperties("runner.duration", durationInString);
+		outputConfiguration.addToCommonProperties(Constants.LOADGENERATORNAME, 
+				"" + comparisonMetadata.getCommonPropertyValue(Constants.LOADGENERATORNAME));
 		outputConfiguration.addToCommonProperties(Constants.JENKINSJOBNAME,
 				"" + comparisonMetadata.getJenkinsInfo().getJobName());
 		outputConfiguration.addToCommonProperties(Constants.JENKINSCURRENTBUILD,
@@ -593,7 +599,7 @@ public class ComparisonMetadataLoader {
 				"" + comparisonMetadata.getApmConnectionInfo().getEmURL());
 		outputConfiguration.addToCommonProperties(Constants.EMAUTHTOKEN,
 				"" + comparisonMetadata.getApmConnectionInfo().getEmAuthToken());
-
+		
 		outputConfiguration.addToCommonProperties(Constants.EMWEBVIEWPORT,
 				"" + comparisonMetadata.getCommonPropertyValue(Constants.EMWEBVIEWPORT));
 		outputConfiguration

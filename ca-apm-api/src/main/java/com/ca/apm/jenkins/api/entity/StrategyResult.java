@@ -1,6 +1,7 @@
 package com.ca.apm.jenkins.api.entity;
 
 import java.io.Serializable;
+import java.util.Comparator;
 
 /**
  * A wrapper class for one comparison-strategy's result. The return type of each
@@ -48,6 +49,16 @@ public class StrategyResult<T> implements Serializable {
 		this.frequency = frequency;
 	}
 
+	 public static Comparator<StrategyResult> nameComparator = new Comparator<StrategyResult>() {
+
+	        @Override
+	        public int compare(StrategyResult e1, StrategyResult e2) {
+	           // return e1.getAge() - e2.getAge();
+	           return e1.getStrategyName().compareTo(e2.getStrategyName());
+	             
+	        }
+	    };
+	    
 	@Override
 	public String toString() {
 		return "StrategyResult [strategyName=" + strategyName + ", result=" + result + ", frequency=" + frequency + "]";
