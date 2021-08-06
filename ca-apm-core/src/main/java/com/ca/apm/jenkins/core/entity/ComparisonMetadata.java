@@ -150,6 +150,6 @@ public class ComparisonMetadata {
 				+ ", ioUtility=" + ioUtility + ", isMetadataIsIncorrect=" + isMetadataIsIncorrect
 				+ ", jobWorkSpaceFolder=" + jobWorkSpaceFolder + ", failTheBuild=" + failTheBuild
 				+ ", commonProperties=" + commonProperties + ", isPublishBuildResulttoEM=" + appsToPublishBuildResultToEM
-				+ ", isBuildChangeEventtoDOI=" + doiAppsToHostname + "]";
+				+ ", buildChangeEventtoDOIAppstoHostname=" + doiAppsToHostname + "]";
 	}
 }

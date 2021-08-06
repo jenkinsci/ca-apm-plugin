@@ -13,6 +13,11 @@ import java.util.Set;
 import com.ca.apm.jenkins.api.entity.BuildInfo;
 import com.ca.apm.jenkins.api.entity.StrategyConfiguration;
 
+/**
+ * 
+ * It is to support master - slave architecture
+ *
+ */
 public class PropertiesInfo implements Serializable {
 
 	// APMConnectionInfo

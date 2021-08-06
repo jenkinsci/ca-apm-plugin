@@ -405,11 +405,25 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 
 		loadConfiguration();
 
-		if (currentBuildNumber == 1 || run.getPreviousSuccessfulBuild() == null) {
+		if (currentBuildNumber == 1) {
 			JenkinsPlugInLogger.log(Level.INFO, "Current build number is first build, hence no comparison will happen");
 			taskListener.getLogger().println("Current build number is first build, hence no comparison will happen");
 			taskListener.getLogger().println("CA-APM Jenkins Plugin execution has completed successfully");
 			return;
+		}
+		
+		if(appToBenchmarkBuildInfo != null){
+			int appsCount = 0;
+			for(Map.Entry<String, BuildInfo> entry : appToBenchmarkBuildInfo.entrySet()) {
+				if(entry.getValue().getNumber() <=0 && run.getPreviousSuccessfulBuild() == null){
+					taskListener.getLogger().println("There is no benchmark build provided and no previous successful build, hence no comparison will happen for the application "+entry.getKey());
+				}else{
+					appsCount++;
+				}
+				
+			}
+			if (appsCount==0)
+				return;
 		}
 
 		previousSuccessfulBuildNumber = assignPreviousSuccessfulBuild(previousSuccessfulBuildNumber, run);
@@ -608,13 +622,13 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 			propertiesInfo.addToCommonProperties(Constants.ISBUILDCHANGEEVENTTODOI,
 					properties.getString(Constants.ISBUILDCHANGEEVENTTODOI));
 		}
-		if (properties.getString(Constants.ISBUILDCHANGEEVENTTODOI) != null
+		if (properties.getString(Constants.ISBUILDCHANGEEVENTTODOI) != null && !properties.getString(Constants.ISBUILDCHANGEEVENTTODOI).isEmpty()
 				&& properties.getString(Constants.ISBUILDCHANGEEVENTTODOI).equals("true")) {
 			if (properties.getString(Constants.APPLICATIONHOST) == null
 					|| properties.getString(Constants.APPLICATIONHOST).isEmpty()) {
 				JenkinsPlugInLogger.printLogOnConsole(1,
-						"Please provide valid host name to publish build change event to DOI ");
-				JenkinsPlugInLogger.severe("Please provide valid host name to publish build change event to DOI ");
+						"Please provide valid host name to publish build change event to DOI for the application "+properties.getString(Constants.APPLICATIONNAME));
+				JenkinsPlugInLogger.severe("Please provide valid host name to publish build change event to DOI "+properties.getString(Constants.APPLICATIONNAME));
 			} else {
 				propertiesInfo.addDOIAppsToHostname(properties.getString(Constants.APPLICATIONNAME),
 						properties.getString(Constants.APPLICATIONHOST));
@@ -628,11 +642,6 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 	}
 
 	private void readDOIProperties(PropertiesConfiguration properties) {
-
-		if (properties.getString(Constants.APPLICATIONHOST) != null) {
-			propertiesInfo.addToDoiProperties(Constants.APPLICATIONHOST,
-					properties.getString(Constants.APPLICATIONHOST));
-		}
 		if (properties.getString(Constants.DOITIMEZONE) != null) {
 			propertiesInfo.addToDoiProperties(Constants.DOITIMEZONE, properties.getString(Constants.DOITIMEZONE));
 		}

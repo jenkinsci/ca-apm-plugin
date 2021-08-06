@@ -100,7 +100,7 @@ public class ComparisonMetadataLoader {
 
 		if (propertiesInfo.getCommonPropertyValue(Constants.BUILDPASSORFAIL) == null
 				|| propertiesInfo.getCommonPropertyValue(Constants.BUILDPASSORFAIL).isEmpty()) {
-			comparisonMetadata.setFailTheBuild(true);
+			comparisonMetadata.setFailTheBuild(false);
 		} else {
 			comparisonMetadata.setFailTheBuild(
 					Boolean.parseBoolean(propertiesInfo.getCommonPropertyValue(Constants.BUILDPASSORFAIL)));
@@ -336,6 +336,24 @@ public class ComparisonMetadataLoader {
 				|| comparisonMetadata.getCommonPropertyValue(Constants.EMURL).isEmpty())
 			errorMessages.append("em.url property value is not found");
 	}
+	
+	private void validateDOIProp(StringBuilder errorMessages) {
+		if(comparisonMetadata.getDoiAppsToHostname() != null){
+			
+			if(comparisonMetadata.getCommonPropertyValue(Constants.DOITIMEZONE) == null || comparisonMetadata.getCommonPropertyValue(Constants.DOITIMEZONE).isEmpty()){
+				errorMessages.append("doi.timezone property value is not found");
+			}
+			
+			if(comparisonMetadata.getCommonPropertyValue(Constants.DOITENANTID) == null || comparisonMetadata.getCommonPropertyValue(Constants.DOITENANTID).isEmpty()){
+				errorMessages.append("doi.tenant.id property value is not found");
+			}
+			
+			if(comparisonMetadata.getCommonPropertyValue(Constants.JARVISENDPOINT) == null || comparisonMetadata.getCommonPropertyValue(Constants.JARVISENDPOINT).isEmpty()){
+				errorMessages.append("jarvis.endpoint property value is not found");
+			}
+			
+		}
+	}
 
 	private void printErrorMessages(StringBuilder errorMessages) throws BuildValidationException {
 		if (errorMessages.length() > 0) {
@@ -563,6 +581,7 @@ public class ComparisonMetadataLoader {
 		validateComparisonStrategies(errorMessages);
 		validateOutputHandlers(errorMessages);
 		validateGenericProp(errorMessages);
+		validateDOIProp(errorMessages);
 		printErrorMessages(errorMessages);
 		errorMessages.setLength(0);
 	}
