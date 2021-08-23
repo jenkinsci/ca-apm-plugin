@@ -1,5 +1,6 @@
 package com.ca.apm.jenkins.core.entity;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.ca.apm.jenkins.api.entity.BuildInfo;
@@ -9,7 +10,7 @@ import com.ca.apm.jenkins.api.entity.BuildInfo;
  *
  * @author Avinash Chandwani
  */
-public class JenkinsInfo {
+public class JenkinsInfo implements Serializable {
 
   private int currentBuildNumber;
   private int lastSuccessfulBuildNumber;

@@ -1,5 +1,8 @@
 package com.ca.apm.jenkins.api.entity;
 
+import java.io.Serializable;
+import java.util.Comparator;
+
 /**
  * A wrapper class for one comparison-strategy's result. The return type of each
  * comparison-strategy has to be of this type. You can define your own T and
@@ -16,7 +19,7 @@ package com.ca.apm.jenkins.api.entity;
  * @param <T>
  *            You can define your own T as mentioned above
  */
-public class StrategyResult<T> {
+public class StrategyResult<T> implements Serializable {
 
 	private String strategyName;
 	private T result;
@@ -46,6 +49,16 @@ public class StrategyResult<T> {
 		this.frequency = frequency;
 	}
 
+	 public static Comparator<StrategyResult> nameComparator = new Comparator<StrategyResult>() {
+
+	        @Override
+	        public int compare(StrategyResult e1, StrategyResult e2) {
+	           // return e1.getAge() - e2.getAge();
+	           return e1.getStrategyName().compareTo(e2.getStrategyName());
+	             
+	        }
+	    };
+	    
 	@Override
 	public String toString() {
 		return "StrategyResult [strategyName=" + strategyName + ", result=" + result + ", frequency=" + frequency + "]";

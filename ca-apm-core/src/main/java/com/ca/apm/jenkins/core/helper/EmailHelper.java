@@ -1,10 +1,5 @@
 package com.ca.apm.jenkins.core.helper;
 
-import com.ca.apm.jenkins.api.exception.BuildExecutionException;
-import com.ca.apm.jenkins.core.entity.EmailInfo;
-import com.ca.apm.jenkins.core.executor.CommonEncryptionProvider;
-import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
-
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,6 +7,8 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.crypto.BadPaddingException;
@@ -31,6 +28,11 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+
+import com.ca.apm.jenkins.api.exception.BuildExecutionException;
+import com.ca.apm.jenkins.core.entity.EmailInfo;
+import com.ca.apm.jenkins.core.executor.CommonEncryptionProvider;
+import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 
 /**
  * This utility is provided to you to send email output. For this you have to configure all email
@@ -73,9 +75,9 @@ public class EmailHelper {
 	  return multipart;
   }
   
-  private static void addRecipientToMessage(MimeMessage message) throws MessagingException, AddressException{
-	  if (emailInfo.getToRecipients() != null) {
-	        for (String toRecepient : emailInfo.getToRecipients()) {
+  private static void addRecipientToMessage(MimeMessage message,  List<String> toRecipients) throws MessagingException, AddressException{
+	  if (emailInfo.getAppToRecipients() != null) {
+	        for (String toRecepient : toRecipients) {
 	          message.addRecipient(Message.RecipientType.TO, new InternetAddress(toRecepient));
 	        }
 	      }
@@ -97,7 +99,7 @@ public class EmailHelper {
    * @throws BuildExecutionException Throws BuildExecutionException if any error occurs during
    *     sending email
    */
-  public static boolean sendEmail() throws BuildExecutionException {
+  public static boolean sendEmail(Map<String, List<String>> htmlOutputToRecipients) throws BuildExecutionException {
     boolean isSent = false;
     Properties props = new Properties();
     props.put("mail.smtp.host", emailInfo.getSmtpHost());
@@ -122,24 +124,30 @@ public class EmailHelper {
     try {
       MimeMessage message = new MimeMessage(session);
       message.setFrom(new InternetAddress(emailInfo.getSenderEmailId()));
-      if (emailInfo.getToRecipients() == null
+      if (emailInfo.getAppToRecipients() == null
           && emailInfo.getCcRecipients() == null
           && emailInfo.getBccRecipients() == null) {
         JenkinsPlugInLogger.warning(
             "No email Id provided in output configuration, hence no email will be sent.");
         return false;
       }
-      addRecipientToMessage(message);
-      if (emailInfo.getToRecipients() != null) {
-        message.setSubject(emailInfo.getMessageSubject());
-        message.setContent(emailInfo.getMessageBody(), emailInfo.getMessageContentType());
+    
+       	message.setSubject(emailInfo.getMessageSubject());
         if (emailInfo.getAttachments() != null && !emailInfo.getAttachments().isEmpty()) {
           Multipart multipart = attachFile(emailInfo);
           message.setContent(multipart);
         }
+      for(Map.Entry<String, List<String>> entry : htmlOutputToRecipients.entrySet()){
+    	  addRecipientToMessage(message, entry.getValue());
+    	  emailInfo.setMessageBody(entry.getKey());
+    	  message.setContent(emailInfo.getMessageBody(), emailInfo.getMessageContentType());
+    	  if (emailInfo.getAttachments() != null && !emailInfo.getAttachments().isEmpty()) {
+              Multipart multipart = attachFile(emailInfo);
+              message.setContent(multipart);
+           }  	 
+           Transport.send(message);
+           JenkinsPlugInLogger.info("Email Sent Successfully");
       }
-      Transport.send(message);
-      JenkinsPlugInLogger.info("Email Sent Successfully");
       isSent = true;
     } catch (MessagingException e) {
       JenkinsPlugInLogger.severe("Error occured while sending email ->" + e.getMessage(), e);
@@ -171,8 +179,7 @@ public class EmailHelper {
 		  JenkinsPlugInLogger.severe("Input-Output Operation Failed or Interrupted", e);
 	  }
   }
-  public static String passwordEncrytion(PropertiesConfiguration properties, String key, String value,
-		  String performanceComparatorProperties) {
+  public static String passwordEncrytion(PropertiesConfiguration properties, String performanceComparatorProperties, String key, String value) {
 	  CommonEncryptionProvider encryptProvider = new CommonEncryptionProvider();
 	  try {
 		  if (value.startsWith("ENC(")) {

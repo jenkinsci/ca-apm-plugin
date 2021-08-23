@@ -1,10 +1,11 @@
 package com.ca.apm.jenkins.core.entity;
 
-import com.ca.apm.jenkins.api.entity.StrategyResult;
-import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+import com.ca.apm.jenkins.api.entity.StrategyResult;
+import com.ca.apm.jenkins.core.logging.JenkinsPlugInLogger;
 
 /**
  * This POJO is the holder of the complete metric comparisonr result. It holds a

@@ -1,10 +1,11 @@
 package com.ca.apm.jenkins.core.entity;
 
-import com.ca.apm.jenkins.api.entity.BuildInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.ca.apm.jenkins.api.entity.BuildInfo;
 
 /**
  * An entity which contains the information about the metadata of the load-runner provided by the
@@ -15,7 +16,7 @@ import java.util.Map;
 public class LoadRunnerMetadata {
 
   private Map<String, String> loadRunnerProperties = null;
-  private BuildInfo benchMarkBuildInfo;
+  private Map<String, BuildInfo> appToBenchMarkBuildInfo;
   private BuildInfo currentBuildInfo;
   private List<BuildInfo> histogramBuildInfoList;
 
@@ -23,7 +24,7 @@ public class LoadRunnerMetadata {
 
   public LoadRunnerMetadata() {
     loadRunnerProperties = new HashMap<>();
-    benchMarkBuildInfo = new BuildInfo();
+  //  appToBenchMarkBuildInfo = new BuildInfo();
     currentBuildInfo = new BuildInfo();
     histogramBuildInfoList = new ArrayList<>();
   }
@@ -36,12 +37,12 @@ public class LoadRunnerMetadata {
     return loadRunnerProperties.get(key);
   }
 
-  public BuildInfo getBenchMarkBuildInfo() {
-    return benchMarkBuildInfo;
+  public Map<String, BuildInfo> getAppToBenchMarkBuildInfo() {
+    return appToBenchMarkBuildInfo;
   }
 
-  public void setBenchMarkBuildInfo(BuildInfo benchMarkBuildInfo) {
-    this.benchMarkBuildInfo = benchMarkBuildInfo;
+  public void setAppToBenchMarkBuildInfo(Map<String, BuildInfo> appToBenchMarkBuildInfo) {
+    this.appToBenchMarkBuildInfo = appToBenchMarkBuildInfo;
   }
 
   public BuildInfo getCurrentBuildInfo() {
@@ -60,18 +61,10 @@ public class LoadRunnerMetadata {
     this.currentBuildInfo.setNumber(currentBuildNumber);
   }
 
-  public int getBenchMarkBuildNumber() {
-    return benchMarkBuildInfo.getNumber();
-  }
-
-  public void setBenchMarkBuildNumber(int benchMarkBuildNumber) {
-    benchMarkBuildInfo.setNumber(benchMarkBuildNumber);
-  }
-
-  public void setBenchMarBuildTimes(long startTime, long endTime) {
-    benchMarkBuildInfo.setStartTime(startTime);
-    benchMarkBuildInfo.setEndTime(endTime);
-  }
+  /*public void setBenchMarkBuildTimes(long startTime, long endTime) {
+    appToBenchMarkBuildInfo.setStartTime(startTime);
+    appToBenchMarkBuildInfo.setEndTime(endTime);
+  }*/
 
   public void setCurrentBuildTimes(long startTime, long endTime) {
     currentBuildInfo.setStartTime(startTime);

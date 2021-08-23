@@ -62,8 +62,12 @@ public class OutputHandlingExecutor {
 						OutputConfiguration.class);
 				outputConfiguration.setHandlerSpecificProperties(outputStrategies.get(outputHandlerEntry.getKey()).getProperties());
 				outputConfiguration.addToCommonProperties("buildStatus", isFailToBuild ? "FAILURE" : "SUCCESS");
+				if(comparisonMetadata.getComparisonResult().getStrategyResults() == null || comparisonMetadata.getComparisonResult().getStrategyResults().isEmpty()){
+					JenkinsPlugInLogger.printLogOnConsole(2, "No comparison strategy results ");
+				}else{
 				outputConfiguration.addToCommonProperties("frequency", String
 						.valueOf(comparisonMetadata.getComparisonResult().getStrategyResults().get(0).getFrequency()));
+				}
 				setConfigurationMethod.invoke(outputHandlerObj, outputConfiguration);
 
 				if (outputHandlerEntry.getKey().equals(Constants.HISTOGRAMOUTPUTHTML)) {

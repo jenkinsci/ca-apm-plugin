@@ -1,6 +1,7 @@
 package com.ca.apm.jenkins.performancecomparatorplugin.outputhandler;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ca.apm.jenkins.api.OutputHandler;
 import com.ca.apm.jenkins.api.entity.OutputConfiguration;
@@ -30,18 +31,16 @@ public class PlainTextEmailOutputHandler implements OutputHandler<StrategyResult
       throws BuildExecutionException {
 
     JenkinsPlugInLogger.fine("Executing publishOutput of PlainTextEmailOutputHandler");
-    String htmlOutput =
-        DataFormatHelper.getHTMLTextOutput(outputConfiguration, comparisonStrategyResults);
+    Map<String, List<String>>  htmlOutputToRecipients =  DataFormatHelper.getHTMLTextOutput(outputConfiguration, comparisonStrategyResults);
     EmailInfo emailInfo = EmailHelper.getEMailInfo();
     emailInfo.setMessageContentType("text/html");
     emailInfo.setMessageSubject(
         "Build Performance Report for "
             + outputConfiguration.getCommonPropertyValue(Constants.JENKINSCURRENTBUILD));
-    emailInfo.setMessageBody(htmlOutput);
     boolean emailSendStatus = false;
     try {
 
-      emailSendStatus = EmailHelper.sendEmail();
+      emailSendStatus = EmailHelper.sendEmail(htmlOutputToRecipients);
       if (!emailSendStatus) {
         throw new BuildExecutionException(
             "Plain Text Email Output Handler failed due to error in sending email");

@@ -1,5 +1,6 @@
 package com.ca.apm.jenkins.api.entity;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,7 +10,7 @@ import java.util.Map;
  *
  * @author Avinash Chandwani
  */
-public class BuildInfo {
+public class BuildInfo implements Serializable {
 
 	private int number;
 	private long startTime;

@@ -6,7 +6,7 @@ package com.ca.apm.jenkins.api.exception;
  *
  * @author Avinash Chandwani
  */
-public class BuildComparatorException extends RuntimeException {
+public class BuildComparatorException extends RuntimeException  {
 
   private static final long serialVersionUID = -7441516668410176500L;
 

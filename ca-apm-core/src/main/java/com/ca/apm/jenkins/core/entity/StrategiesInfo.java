@@ -1,11 +1,12 @@
 package com.ca.apm.jenkins.core.entity;
 
-import com.ca.apm.jenkins.api.entity.StrategyConfiguration;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
+import com.ca.apm.jenkins.api.entity.StrategyConfiguration;
 
 /**
  * Entity which holds the complete comparison-strategies and output-handlers
