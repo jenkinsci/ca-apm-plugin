@@ -40,6 +40,7 @@ public class ComparisonResult {
 			if (strategyResults == null) {
 				JenkinsPlugInLogger.warning(
 						"Comparison Strategy Phase did not produce any output, hence output handler won't receive any output to process");
+				return null;
 
 			}
 			for (StrategyResult<?> strategyResult : strategyResults) {

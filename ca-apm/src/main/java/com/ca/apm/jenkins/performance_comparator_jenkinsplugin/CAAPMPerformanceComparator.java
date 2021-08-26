@@ -173,7 +173,7 @@ public class CAAPMPerformanceComparator extends Recorder implements SimpleBuildS
 		} else {
 			taskListener.getLogger().println("Plugin Task is not completed");
 			throw new AbortException(
-					"*******Performance Comparison FAILED******* due to performance crossed the threshold mark, please review results for more details");
+					"*******Performance Comparison FAILED******* due to error in getting no strategy results or performance crossed the threshold mark, please review results for more details");
 		}
 	}
 

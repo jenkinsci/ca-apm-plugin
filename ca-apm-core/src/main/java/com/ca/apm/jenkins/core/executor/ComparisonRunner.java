@@ -101,8 +101,8 @@ public class ComparisonRunner {
 
 				BuildDecisionMaker decisionMaker = new BuildDecisionMaker(
 						metadataLoader.getComparisonMetadata().getComparisonResult());
-				if (metadataLoader.getComparisonMetadata().isFailTheBuild()) {
-					isFailtheBuild = decisionMaker.isFailed();
+				if (metadataLoader.getComparisonMetadata().isFailTheBuild() || decisionMaker.isFailed()) {
+					isFailtheBuild = true;
 				}
 				execute(metadataLoader, isFailtheBuild, outputHandlingExecutor);
 			} catch (BuildComparatorException ex) {
