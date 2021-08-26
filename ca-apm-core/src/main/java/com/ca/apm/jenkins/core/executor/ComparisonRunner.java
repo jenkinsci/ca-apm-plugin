@@ -28,7 +28,7 @@ public class ComparisonRunner {
 	private PropertiesInfo propertiesInfo;
 	
 	public ComparisonRunner() {
-		super();
+		 super();
 	}
 
 	public ComparisonRunner(BuildInfo currentBuildInfo, JenkinsInfo jenkinsInfo,
