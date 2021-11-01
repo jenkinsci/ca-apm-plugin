@@ -111,6 +111,7 @@ public class HistogramOutputHandler implements OutputHandler<StrategyResult> {
 						JenkinsPlugInLogger.severe("An error has occured while collecting performance metrics for "
 								+ strategyName + "from APM-> for agentSpecifier=" + agentSpecifier
 								+ ",metricSpecifier =" + metricSpecifier + e.getMessage(), e);
+						return;
 					}
 				}
 			}

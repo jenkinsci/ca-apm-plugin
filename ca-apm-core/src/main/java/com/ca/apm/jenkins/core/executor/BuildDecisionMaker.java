@@ -22,11 +22,15 @@ public class BuildDecisionMaker {
 
 	boolean isFailed() {
 		JenkinsPlugInLogger.info("Inside isFailed Method ");
-		if (comparisonResult == null || comparisonResult.getStrategyResults() == null
-				|| comparisonResult.getStrategyResults().isEmpty()) {
+		if (comparisonResult == null || comparisonResult.getStrategyResults() == null) {
 			JenkinsPlugInLogger.severe(
 					"Comparison Result is not generated, hence cannot find out whether to fail or pass the current build");
+			isFailed = true;
 			return isFailed;
+		}else if (comparisonResult.getStrategyResults().isEmpty()) {
+				JenkinsPlugInLogger.severe(
+					"Comparison Result is not generated, hence making the build fail, check the logs for more details ");
+				return isFailed;
 		}
 
 		for (StrategyResult<?> strategyResult : comparisonResult.getStrategyResults()) {

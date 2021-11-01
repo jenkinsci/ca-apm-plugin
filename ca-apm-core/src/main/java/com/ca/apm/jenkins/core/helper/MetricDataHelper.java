@@ -214,20 +214,32 @@ public class MetricDataHelper {
 					   return null;
 				}
 		} catch (UnsupportedEncodingException e1) {
+			JenkinsPlugInLogger.printLogOnConsole(1,"ERROR: "+e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')+1)+"  Please check the logs for more details");
 			JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
 		} catch (ClientProtocolException e1) {
+			JenkinsPlugInLogger.printLogOnConsole(1, "ERROR: "+e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')+1)+"  Please check the logs for more details");
 			JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
 		} catch (IOException e1) {
 			if (e1.getCause().toString().contains("Connection refused")) {
 				int apmHostNameIndex = apmConnectionInfo.getEmURL().indexOf("//") + 2;
 				if (e1.getMessage().contains(apmConnectionInfo.getEmURL().substring(apmHostNameIndex,
 						apmConnectionInfo.getEmURL().lastIndexOf(':')))) {
+					JenkinsPlugInLogger.printLogOnConsole(1, "ERROR: "+e1.getMessage().substring(e1.getMessage().lastIndexOf(':')+1)+"  Please check the logs for more details");
+					JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
+					throw new BuildExecutionException(e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')));
+				}else {
+					JenkinsPlugInLogger.printLogOnConsole(1, "ERROR: "+e1.getMessage().substring(e1.getMessage().lastIndexOf(':')+1)+"  Please check the logs for more details");
 					JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
 					throw new BuildExecutionException(e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')));
 				}
 			} else {
 				JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
+				JenkinsPlugInLogger.printLogOnConsole(1, "ERROR: "+e1.getMessage().substring(e1.getMessage().lastIndexOf(':')+1)+"  Please check the logs for more details");
+				throw new BuildExecutionException(e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')));
 			}
+		}catch(Exception e1){
+			JenkinsPlugInLogger.severe(ERRORFETCHINGBUILDPERFORMANCEDATA + e1.getMessage(), e1);
+			throw new BuildExecutionException(e1.getMessage().substring(0, e1.getMessage().lastIndexOf(':')));
 		}
 		return readMetricDataResponse(metricDataResponse, agentSpecifier, metricSpecifier);
 		

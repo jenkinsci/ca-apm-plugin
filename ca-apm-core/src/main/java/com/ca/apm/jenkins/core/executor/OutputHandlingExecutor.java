@@ -65,8 +65,11 @@ public class OutputHandlingExecutor {
 				if(comparisonMetadata.getComparisonResult().getStrategyResults() == null || comparisonMetadata.getComparisonResult().getStrategyResults().isEmpty()){
 					JenkinsPlugInLogger.printLogOnConsole(2, "No comparison strategy results ");
 				}else{
-				outputConfiguration.addToCommonProperties("frequency", String
-						.valueOf(comparisonMetadata.getComparisonResult().getStrategyResults().get(0).getFrequency()));
+					if(comparisonMetadata.getComparisonResult().getStrategyResults() != null)
+						outputConfiguration.addToCommonProperties("frequency", String
+								.valueOf(comparisonMetadata.getComparisonResult().getStrategyResults().get(0).getFrequency()));
+					else
+						outputConfiguration.addToCommonProperties("frequency", "15000");
 				}
 				setConfigurationMethod.invoke(outputHandlerObj, outputConfiguration);
 
